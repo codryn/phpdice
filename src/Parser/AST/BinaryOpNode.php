@@ -27,7 +27,9 @@ class BinaryOpNode extends Node
             '+' => $leftValue + $rightValue,
             '-' => $leftValue - $rightValue,
             '*' => $leftValue * $rightValue,
+            '^' => pow($leftValue, $rightValue),
             '/' => $this->divide($leftValue, $rightValue),
+            '%' => $this->modulo($leftValue, $rightValue),
             default => throw new ValidationException("Unknown operator: {$this->operator}", 'operator'),
         };
     }
@@ -40,6 +42,15 @@ class BinaryOpNode extends Node
 
         return $left / $right;
     }
+
+    private function modulo(int|float $left, int|float $right): int|float
+    {
+        if ($right == 0) {
+            throw new ValidationException('Modulo by zero', 'arithmetic');
+        }
+
+        return $left % $right;
+    }    
 
     public function getLeft(): Node
     {

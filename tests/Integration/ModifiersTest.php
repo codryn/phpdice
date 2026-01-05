@@ -122,6 +122,18 @@ class ModifiersTest extends BaseTestCase
     }
 
     /**
+     * Test round function.
+     */
+    public function testAbsFunction(): void
+    {
+        $result = $this->dice->roll('abs(1d20/2)');
+
+        $this->assertCount(1, $result->diceValues);
+        $this->assertGreaterThanOrEqual(0, $result->total);
+        $this->assertLessThanOrEqual(10, $result->total);
+    }    
+
+    /**
      * Test complex expression.
      */
     public function testComplexExpression(): void
