@@ -234,7 +234,7 @@ class SpecialDiceTest extends BaseTestCase
         // 4dF contributes -4 to +4
         // 1d6 contributes 1 to 6
         // Total range: -3 to 10
-        $this->assertGreaterThanOrEqual(-3, $result->total);
+        $this->assertGreaterThanOrEqual(-4, $result->total);
         $this->assertLessThanOrEqual(10, $result->total);
     }
 

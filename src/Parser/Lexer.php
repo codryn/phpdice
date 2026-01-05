@@ -68,7 +68,7 @@ class Lexer
             }
 
             // Operators
-            if (in_array($char, ['+', '-', '*', '/'], true)) {
+            if (in_array($char, ['+', '-', '*', '/', '~', '^'], true)) {
                 $tokens[] = new Token(Token::TYPE_OPERATOR, $char, $this->position);
                 $this->position++;
                 continue;
@@ -165,7 +165,7 @@ class Lexer
         }
 
         // Check if it's a known function
-        $functions = ['floor', 'ceil', 'round'];
+        $functions = ['floor', 'ceil', 'round', 'abs'];
         if (in_array($lower, $functions, true)) {
             return new Token(Token::TYPE_FUNCTION, $lower, $start);
         }

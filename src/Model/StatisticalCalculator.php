@@ -526,6 +526,26 @@ class StatisticalCalculator
                     $left->maximum / max($right->minimum, 1),
                     round($left->expected / max($right->expected, 1), 3)
                 ),
+                '~' => new StatisticalData(
+                    0,
+                    max($right->maximum - 1, 0),
+                    round(($right->maximum - 1) / 2, 3)
+                ),
+                '^' => new StatisticalData(
+                    min(
+                        pow($left->minimum, $right->minimum),
+                        pow($left->minimum, $right->maximum),
+                        pow($left->maximum, $right->minimum),
+                        pow($left->maximum, $right->maximum)
+                    ),
+                    max(
+                        pow($left->minimum, $right->minimum),
+                        pow($left->minimum, $right->maximum),
+                        pow($left->maximum, $right->minimum),
+                        pow($left->maximum, $right->maximum)
+                    ),
+                    round(pow($left->expected, $right->expected), 3)
+                ),
                 default => new StatisticalData(0, 0, 0.0),
             };
         }
@@ -548,6 +568,11 @@ class StatisticalCalculator
                     round($arg->minimum),
                     round($arg->maximum),
                     round($arg->expected, 3)
+                ),
+                'abs' => new StatisticalData(
+                    abs($arg->minimum),
+                    abs($arg->maximum),
+                    round(abs($arg->expected), 3)
                 ),
                 default => $arg,
             };

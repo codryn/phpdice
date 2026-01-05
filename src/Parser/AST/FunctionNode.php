@@ -25,6 +25,7 @@ class FunctionNode extends Node
             'floor' => floor($value),
             'ceil' => ceil($value),
             'round' => round($value),
+            'abs' => (int)abs($value),
             default => throw new ValidationException("Unknown function: {$this->name}", 'function'),
         };
     }
