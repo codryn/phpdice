@@ -74,6 +74,22 @@ class BasicRollingTest extends BaseTestCaseMock
     }
 
     /**
+     * Test rolling multiple dice.
+     */
+    public function testRollMultipleDice(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(2, 6, 3);
+
+        $result = $this->phpdice->roll('1d10 + 2d8');
+
+        $this->assertCount(3, $result->diceValues);
+        $this->assertEquals([2, 6, 3], $result->diceValues);
+        $this->assertEquals(11, $result->total);
+    }    
+
+    /**
      * Test statistical calculations.
      */
     public function testStatistics(): void
