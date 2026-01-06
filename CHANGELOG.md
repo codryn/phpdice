@@ -7,29 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Breaking Changes
-- **DC Keyword Now Mandatory** (2026-01): The 'dc' keyword is now required before comparison operators for DC checks (e.g., `1d20+5 dc >= 15`)
-  - Old syntax without 'dc' (e.g., `1d20+5 >= 15`) is no longer supported for DC checks
-  - This prevents confusion between DC checks and success counting (e.g., `5d6 >= 4`)
-  - Migration: Add 'dc' keyword before any comparison operator in DC check expressions
-
-### Added
-- **DC Keyword** (2025-01): Added 'dc' keyword before comparison operators for clarity (e.g., `1d20+5 dc >= 15`)
-  - Distinguishes DC checks from success counting (e.g., `5d6 >= 4`)
-  - All comparison operators supported: `dc >=`, `dc >`, `dc <=`, `dc <`, `dc ==`
-
-### Fixed
-- **Critical Detection with Exploding Dice** (2025-01): Exploded dice now properly count toward critical success/failure detection
-
-### Changed  
-- **Placeholder Syntax** (2025-01): Changed from `%name%` to `$name$` to avoid conflicts with modulo operator
-
 ### Planned
 - Performance optimizations for large dice pools
 - Additional game system presets
 - Web-based dice roller demo
 
-## [1.0.0] - 2025-01-XX
+## [0.2.0] - 2025-01-06
 
 ### Added
 
@@ -133,18 +116,18 @@ N/A - Initial release
 
 ## Version History
 
-- **1.0.0** (2024-01-XX): Initial stable release with full game system support
+- **0.2.0** (2024-01-06): Initial test release with initial game system support
 - **0.1.0-dev** (2025-12-02): Development version
 
 ## Links
 
-- [GitHub Repository](https://github.com/marcowuelser/phpdice)
-- [Issue Tracker](https://github.com/marcowuelser/phpdice/issues)
+- [GitHub Repository](https://github.com/codryn/phpdice)
+- [Issue Tracker](https://github.com/codryn/phpdice/issues)
 - [API Documentation](docs/api.md)
-- [Quick Start Guide](specs/001-dice-parser-roller/quickstart.md)
+- [Quick Start Guide](doc/quickstart.md)
 
 ---
 
-[unreleased]: https://github.com/marcowuelser/phpdice/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/marcowuelser/phpdice/releases/tag/v1.0.0
-[0.1.0-dev]: https://github.com/marcowuelser/phpdice/releases/tag/v0.1.0-dev
+[unreleased]: https://github.com/codryn/phpdice/compare/v1.0.0...HEAD
+[0.2.0]: https://github.com/codryn/phpdice/releases/tag/v0.2.0
+[0.1.0-dev]: https://github.com/codryn/phpdice/releases/tag/v0.1.0-dev
