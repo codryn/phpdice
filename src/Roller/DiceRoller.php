@@ -265,16 +265,22 @@ class DiceRoller
      *
      * @param array<int> $diceValues Dice values to check
      * @param int $threshold Success threshold
-     * @param string $operator Comparison operator (>= or >)
+     * @param string $operator Comparison operator (>=, >, <=, <, ==)
      * @return int Number of successful dice
      */
     private function countSuccesses(array $diceValues, int $threshold, string $operator): int
     {
         $count = 0;
         foreach ($diceValues as $value) {
-            if ($operator === '>=' && $value >= $threshold) {
-                $count++;
-            } elseif ($operator === '>' && $value > $threshold) {
+            $matches = match ($operator) {
+                '>=' => $value >= $threshold,
+                '>' => $value > $threshold,
+                '<=' => $value <= $threshold,
+                '<' => $value < $threshold,
+                '==' => $value === $threshold,
+                default => false,
+            };
+            if ($matches) {
                 $count++;
             }
         }
