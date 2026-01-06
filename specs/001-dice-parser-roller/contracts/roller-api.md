@@ -74,8 +74,8 @@ $result = $roller->roll($expr);
 //   ...
 // )
 
-// Comparison roll
-$expr = $parser->parse("1d20+5 >=15");
+// Comparison roll (DC check)
+$expr = $parser->parse("1d20+5 dc >=15");
 $result = $roller->roll($expr);
 // If rolled 12: RollResult(
 //   total: 17,  // 12 + 5

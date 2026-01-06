@@ -170,8 +170,8 @@ class Lexer
             return new Token(Token::TYPE_FUNCTION, $lower, $start);
         }
 
-        // Check for advantage/disadvantage/success/reroll/explode/critical keywords
-        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'crit', 'critical', 'glitch', 'failure'];
+        // Check for advantage/disadvantage/success/reroll/explode/critical/dc keywords
+        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'crit', 'critical', 'glitch', 'failure', 'dc'];
         if (in_array($lower, $keywords, true)) {
             return new Token(Token::TYPE_KEYWORD, $lower, $start);
         }

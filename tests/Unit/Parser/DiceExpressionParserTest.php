@@ -144,7 +144,7 @@ class DiceExpressionParserTest extends TestCase
 
     public function testParseWithComparisonOperator(): void
     {
-        $expression = $this->parser->parse('1d20 >= 15');
+        $expression = $this->parser->parse('1d20 dc >= 15');
 
         $this->assertSame('>=', $expression->comparisonOperator);
         $this->assertSame(15, $expression->comparisonThreshold);

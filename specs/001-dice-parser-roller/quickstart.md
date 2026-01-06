@@ -373,11 +373,11 @@ echo "Dice: " . implode(", ", $result->diceValues) . "\n";
 // (Die 0 exploded 3 times: 6+5+3=14, stopped at limit)
 ```
 
-### Comparison Operators
+### Comparison Operators (DC Checks)
 
 ```php
-// Save against DC 15 (must roll 15 or higher)
-$result = $dice->roll("1d20+3 >=15");
+// Save against DC 15 using 'dc' keyword
+$result = $dice->roll("1d20+3 dc >=15");
 
 echo "Saving throw: {$result->total}\n";
 echo ($result->isSuccess ? "✓ Saved!" : "✗ Failed") . "\n";
@@ -386,8 +386,8 @@ echo ($result->isSuccess ? "✓ Saved!" : "✗ Failed") . "\n";
 ### Multiple Modifiers Combined
 
 ```php
-// Complex roll: advantage, modifier, critical, comparison
-$result = $dice->roll("1d20+5 advantage crit 20 >=15");
+// Complex roll: advantage, modifier, critical, DC check
+$result = $dice->roll("1d20+5 advantage crit 20 dc >=15");
 
 echo "Roll: {$result->total}\n";
 echo "Success: " . ($result->isSuccess ? "Yes" : "No") . "\n";

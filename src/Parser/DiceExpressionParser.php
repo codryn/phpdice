@@ -90,9 +90,19 @@ class DiceExpressionParser
         }
 
         // Parse comparison operator and threshold for success rolls (US8)
+        // Requires 'dc' keyword before comparison (e.g., "1d20+5 dc >= 15")
         $comparisonOperator = null;
         $comparisonThreshold = null;
-        if ($this->match(Token::TYPE_COMPARISON)) {
+        
+        // Check for 'dc' keyword before comparison
+        if ($this->match(Token::TYPE_KEYWORD, ['dc'])) {
+            // After 'dc', comparison operator is required
+            if (!$this->match(Token::TYPE_COMPARISON)) {
+                throw new ParseException(
+                    "Expected comparison operator after 'dc' keyword",
+                    $this->peek()->position
+                );
+            }
             $comparisonOperator = (string)$this->previous()->value;
 
             // Next token must be the threshold number or placeholder

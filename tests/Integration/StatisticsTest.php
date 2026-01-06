@@ -213,7 +213,7 @@ class StatisticsTest extends BaseTestCase
      */
     public function testComparisonDoesNotAffectStatistics(): void
     {
-        $expression = $this->phpdice->parse('1d20+5 >= 15');
+        $expression = $this->phpdice->parse('1d20+5 dc >= 15');
         $stats = $expression->getStatistics();
 
         // Statistics are for the rolled expression (1d20+5), not the comparison result

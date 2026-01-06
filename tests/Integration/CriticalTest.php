@@ -100,7 +100,7 @@ final class CriticalTest extends BaseTestCaseMock
      */
     public function testParserCapturesCriticalHitWithThrehsholdAbove(): void
     {
-        $expression = '1d20 crit 19 glitch 1 >= 21';
+        $expression = '1d20 crit 19 glitch 1 dc >= 21';
 
         $this->mockRng->expects($this->exactly(2))
             ->method('generate')
@@ -124,7 +124,7 @@ final class CriticalTest extends BaseTestCaseMock
      */
     public function testParserCapturesCriticalHitWithThrehshold(): void
     {
-        $expression = '1d20 crit 18 glitch 1 >= 19';
+        $expression = '1d20 crit 18 glitch 1 dc >= 19';
 
         $this->mockRng->expects($this->exactly(3))
             ->method('generate')
@@ -459,17 +459,17 @@ final class CriticalTest extends BaseTestCaseMock
             ->method('generate')
             ->willReturnOnConsecutiveCalls(20, 15, 14);
 
-        $result = $this->phpdice->roll('1d20 crit 20 >= 15');
+        $result = $this->phpdice->roll('1d20 crit 20 dc >= 15');
         $this->assertIsBool($result->isSuccess);
         $this->assertTrue($result->isCriticalSuccess);
         $this->assertTrue($result->isSuccess);
 
-        $result = $this->phpdice->roll('1d20 crit 20 >= 15');
+        $result = $this->phpdice->roll('1d20 crit 20 dc >= 15');
         $this->assertIsBool($result->isSuccess);
         $this->assertFalse($result->isCriticalSuccess);
         $this->assertTrue($result->isSuccess);
 
-        $result = $this->phpdice->roll('1d20 crit 20 >= 15');
+        $result = $this->phpdice->roll('1d20 crit 20 dc >= 15');
         $this->assertIsBool($result->isSuccess);
         $this->assertFalse($result->isCriticalSuccess);
         $this->assertFalse($result->isSuccess);

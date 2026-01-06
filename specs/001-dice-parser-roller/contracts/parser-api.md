@@ -185,17 +185,19 @@ XdY+$var1$+$var2$          # Multiple variables
 
 **Note**: The `$name$` syntax prevents collisions with reserved keywords like `advantage`, `disadvantage`, `keep`, etc.
 
-### Success Rolls (Comparison)
+### Success Rolls (Comparison / DC Checks)
 ```
-XdY+Z >=N                  # Roll >= target
-XdY+Z >N                   # Roll > target
-XdY+Z <=N                  # Roll <= target
-XdY+Z <N                   # Roll < target
-XdY+Z ==N                  # Roll == target
+XdY+Z dc >=N             # Roll >= target (DC check)
+XdY+Z dc >N              # Roll > target
+XdY+Z dc <=N             # Roll <= target
+XdY+Z dc <N              # Roll < target
+XdY+Z dc ==N             # Roll == target
 
-1d20+5 >=15                # DC 15 check
-2d6 >7                     # Beat 7
+1d20+5 dc >=15           # DC 15 check (dc keyword required)
+2d6 dc >7                # Beat 7
 ```
+
+**Note**: The `dc` keyword is **required** for DC checks to distinguish them from success counting (e.g., `5d6 >= 4` for success counting).
 
 ### Critical Thresholds
 ```
