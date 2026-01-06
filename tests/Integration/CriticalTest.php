@@ -333,7 +333,7 @@ final class CriticalTest extends BaseTestCaseMock
         $this->assertCount(1, $result->diceValues);
         $this->assertSame(21, $result->total);
         $this->assertTrue($result->isCriticalSuccess);
-    }    
+    }
 
     /**
      * Test critical thresholds can be anywhere in valid range.

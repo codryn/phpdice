@@ -457,4 +457,3 @@ final class ComparisonTest extends BaseTestCaseMock
         $this->assertTrue($result->isSuccess); // 17 >= 15
     }
 }
-

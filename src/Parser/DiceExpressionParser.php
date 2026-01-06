@@ -93,7 +93,7 @@ class DiceExpressionParser
         // Requires 'dc' keyword before comparison (e.g., "1d20+5 dc >= 15")
         $comparisonOperator = null;
         $comparisonThreshold = null;
-        
+
         // Check for 'dc' keyword before comparison
         if ($this->match(Token::TYPE_KEYWORD, ['dc'])) {
             // After 'dc', comparison operator is required
@@ -451,7 +451,7 @@ class DiceExpressionParser
                     $this->peek()->position
                 );
             }
-            
+
             $comparison = $this->advance();
             $operator = (string)$comparison->value;
 
