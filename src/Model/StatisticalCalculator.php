@@ -120,7 +120,7 @@ class StatisticalCalculator
                 '>' => $value > $threshold,
                 '<=' => $value <= $threshold,
                 '<' => $value < $threshold,
-                '==' => $value == $threshold,
+                '==' => $value === $threshold,
                 default => false,
             };
             if ($matches) {

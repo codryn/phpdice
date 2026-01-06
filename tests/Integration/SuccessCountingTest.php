@@ -219,7 +219,7 @@ class SuccessCountingTest extends BaseTestCase
         // Count dice == 4
         $expected = 0;
         foreach ($result->diceValues as $value) {
-            if ($value == 4) {
+            if ($value === 4) {
                 $expected++;
             }
         }
