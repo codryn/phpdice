@@ -49,8 +49,8 @@ class Lexer
                 continue;
             }
 
-            // Placeholders (%name%)
-            if ($char === '%') {
+            // Placeholders ($name$)
+            if ($char === '$') {
                 $tokens[] = $this->readPlaceholder();
                 continue;
             }
@@ -170,8 +170,8 @@ class Lexer
             return new Token(Token::TYPE_FUNCTION, $lower, $start);
         }
 
-        // Check for advantage/disadvantage/success/reroll/explode/critical keywords
-        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'crit', 'critical', 'glitch', 'failure'];
+        // Check for advantage/disadvantage/success/reroll/explode/critical/dc keywords
+        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'crit', 'critical', 'glitch', 'failure', 'dc', 'count'];
         if (in_array($lower, $keywords, true)) {
             return new Token(Token::TYPE_KEYWORD, $lower, $start);
         }
@@ -181,7 +181,7 @@ class Lexer
     }
 
     /**
-     * Read a placeholder variable (%name%).
+     * Read a placeholder variable ($name$).
      *
      * @return Token Placeholder token
      * @throws ParseException If placeholder syntax is invalid
@@ -189,10 +189,10 @@ class Lexer
     private function readPlaceholder(): Token
     {
         $start = $this->position;
-        $this->position++; // Skip opening %
+        $this->position++; // Skip opening $
 
         if ($this->position >= $this->length) {
-            throw new ParseException('Incomplete placeholder: expected variable name after %', $start);
+            throw new ParseException('Incomplete placeholder: expected variable name after $', $start);
         }
 
         // Read variable name (must be letters/digits/underscore)
@@ -200,12 +200,12 @@ class Lexer
         while ($this->position < $this->length) {
             $char = $this->input[$this->position];
 
-            if ($char === '%') {
+            if ($char === '$') {
                 // End of placeholder
-                $this->position++; // Skip closing %
+                $this->position++; // Skip closing $
 
                 if ($name === '') {
-                    throw new ParseException('Empty placeholder name: %%', $start);
+                    throw new ParseException('Empty placeholder name: $$', $start);
                 }
 
                 return new Token(Token::TYPE_PLACEHOLDER, $name, $start);
@@ -219,8 +219,8 @@ class Lexer
             }
         }
 
-        // Reached end of input without finding closing %
-        throw new ParseException('Unclosed placeholder: missing closing %', $start);
+        // Reached end of input without finding closing $
+        throw new ParseException('Unclosed placeholder: missing closing $', $start);
     }
 
     /**

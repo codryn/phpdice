@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional game system presets
 - Web-based dice roller demo
 
-## [1.0.0] - 2024-01-XX
+## [0.2.0] - 2025-01-06
 
 ### Added
 
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Advanced Mechanics
 - **Advantage/Disadvantage** (US4): Roll multiple d20s, automatically keep highest/lowest
 - **Keep/Drop Mechanics** (US4a): Keep N highest/lowest dice from any pool (e.g., `4d6 keep 3 highest`)
-- **Placeholder Variables** (US5): Dynamic values with `%variable%` syntax
+- **Placeholder Variables** (US5): Dynamic values with `$variable$` syntax
 - **Success Counting** (US5a): Count dice meeting thresholds (e.g., `5d6 >=4` for Shadowrun)
 - **Reroll Mechanics** (US6): Reroll dice meeting conditions (e.g., `2d6 reroll <=2` for D&D Great Weapon Fighting)
   - Configurable reroll limits (default: 100, prevents infinite loops)
@@ -49,13 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PHPDice Facade**: Simple, intuitive API - `$dice->roll("3d6+5")`
 - **Immutable Data Models**: Thread-safe, predictable behavior
 - **Rich Result Objects**: Complete roll information with history tracking
-- **Type Safety**: Full PHP 8.3+ type declarations with strict mode
+- **Type Safety**: Full PHP 8.0+ type declarations with strict mode
 - **Comprehensive Error Handling**: Clear, actionable error messages
 - **Zero Dependencies**: No external packages required (except dev dependencies)
 
 #### Code Quality
-- **235 Passing Tests**: 100% test coverage for critical paths (66.94% overall)
-- **1,917 Test Assertions**: Comprehensive validation of all features
+- **360 Passing Tests**: 100% test coverage for critical paths (82% overall)
+- **1510 Test Assertions**: Comprehensive validation of all features
 - **PHPStan Level 9**: Maximum static analysis strictness
 - **PSR-12 Compliant**: Industry-standard code formatting
 - **Strict Types**: All 38 source files use `declare(strict_types=1)`
@@ -81,7 +81,7 @@ This release officially supports mechanics from:
 
 ### Technical Details
 
-- **Minimum PHP Version**: 8.3.0
+- **Minimum PHP Version**: 8.0.0
 - **Architecture**: Clean separation of parsing, rolling, and statistics
 - **Performance**: Optimized for repeated rolls with cached parsing
 - **Security**: Cryptographically secure RNG, input validation, infinite loop protection
@@ -116,18 +116,18 @@ N/A - Initial release
 
 ## Version History
 
-- **1.0.0** (2024-01-XX): Initial stable release with full game system support
+- **0.2.0** (2024-01-06): Initial test release with initial game system support
 - **0.1.0-dev** (2025-12-02): Development version
 
 ## Links
 
-- [GitHub Repository](https://github.com/marcowuelser/phpdice)
-- [Issue Tracker](https://github.com/marcowuelser/phpdice/issues)
+- [GitHub Repository](https://github.com/codryn/phpdice)
+- [Issue Tracker](https://github.com/codryn/phpdice/issues)
 - [API Documentation](docs/api.md)
-- [Quick Start Guide](specs/001-dice-parser-roller/quickstart.md)
+- [Quick Start Guide](doc/quickstart.md)
 
 ---
 
-[unreleased]: https://github.com/marcowuelser/phpdice/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/marcowuelser/phpdice/releases/tag/v1.0.0
-[0.1.0-dev]: https://github.com/marcowuelser/phpdice/releases/tag/v0.1.0-dev
+[unreleased]: https://github.com/codryn/phpdice/compare/v1.0.0...HEAD
+[0.2.0]: https://github.com/codryn/phpdice/releases/tag/v0.2.0
+[0.1.0-dev]: https://github.com/codryn/phpdice/releases/tag/v0.1.0-dev

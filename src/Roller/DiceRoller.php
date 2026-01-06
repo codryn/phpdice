@@ -167,18 +167,13 @@ class DiceRoller
 
         // Check for critical success/failure (US9)
         // Criticals are based on ORIGINAL die values (before explosions, after rerolls)
-        // However, dice that exploded should NOT count as criticals (they're being rerolled)
+        // Exploded dice DO count as criticals - explosion is a separate mechanic
         $isCriticalSuccess = false;
         $isCriticalFailure = false;
 
         if ($modifiers->criticalSuccess !== null) {
             // Check if ANY die rolled the critical success value (using original values)
             foreach ($originalDiceValues as $i => $value) {
-                // Skip dice that exploded - they don't count as criticals
-                if ($explosionHistory !== null && isset($explosionHistory[$i])) {
-                    continue;
-                }
-
                 if ($value >= $modifiers->criticalSuccess) {
                     // If there's a comparison threshold, critical only counts if the roll would hit
                     // Exception: natural max (e.g., 20 on d20) always hits regardless of threshold
@@ -205,13 +200,7 @@ class DiceRoller
 
         if ($modifiers->criticalFailure !== null) {
             // Check if ANY die rolled the critical failure value (using original values)
-            // Skip dice that exploded - they don't count as criticals
             foreach ($originalDiceValues as $i => $value) {
-                // Skip dice that exploded
-                if ($explosionHistory !== null && isset($explosionHistory[$i])) {
-                    continue;
-                }
-
                 if ($value <= $modifiers->criticalFailure) {
                     $isCriticalFailure = true;
                     break;

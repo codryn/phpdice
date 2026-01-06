@@ -52,6 +52,7 @@ class DiceExpressionTest extends TestCase
             $modifiers,
             $statistics,
             $originalExpression,
+            null, // astRoot
             '>=',
             15
         );

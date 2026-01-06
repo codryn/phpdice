@@ -168,4 +168,26 @@ class BasicRollingTest extends BaseTestCaseMock
         $this->expectExceptionMessage('Dice cannot have more than 100 sides');
         $this->phpdice->parse('3d101');
     }
+
+    /**
+     * Test rolling with pre-parsed DiceExpression.
+     */
+    public function testRollExpression(): void
+    {
+        // Parse once
+        $expression = $this->phpdice->parse('2d6+3');
+
+        // Roll multiple times with the same parsed expression
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(4, 5, 2, 6);
+
+        $result1 = $this->phpdice->rollExpression($expression);
+        $this->assertEquals([4, 5], $result1->diceValues);
+        $this->assertEquals(12, $result1->total); // 4 + 5 + 3
+
+        $result2 = $this->phpdice->rollExpression($expression);
+        $this->assertEquals([2, 6], $result2->diceValues);
+        $this->assertEquals(11, $result2->total); // 2 + 6 + 3
+    }
 }

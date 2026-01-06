@@ -243,7 +243,7 @@ class SpecialDiceTest extends BaseTestCase
      */
     public function testFudgeDiceSuccessCounting(): void
     {
-        $result = $this->phpdice->roll('4dF>=0');
+        $result = $this->phpdice->roll('4dF count >=0');
 
         // Success count: how many dice rolled 0 or higher
         $this->assertGreaterThanOrEqual(0, $result->successCount);
@@ -255,7 +255,7 @@ class SpecialDiceTest extends BaseTestCase
      */
     public function testFudgeDiceSuccessCountingStatistics(): void
     {
-        $expression = $this->phpdice->parse('4dF>=0');
+        $expression = $this->phpdice->parse('4dF count >=0');
         $stats = $expression->statistics;
 
         // Each die has 2/3 chance of success (0 or +1)

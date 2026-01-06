@@ -90,9 +90,19 @@ class DiceExpressionParser
         }
 
         // Parse comparison operator and threshold for success rolls (US8)
+        // Requires 'dc' keyword before comparison (e.g., "1d20+5 dc >= 15")
         $comparisonOperator = null;
         $comparisonThreshold = null;
-        if ($this->match(Token::TYPE_COMPARISON)) {
+
+        // Check for 'dc' keyword before comparison
+        if ($this->match(Token::TYPE_KEYWORD, ['dc'])) {
+            // After 'dc', comparison operator is required
+            if (!$this->match(Token::TYPE_COMPARISON)) {
+                throw new ParseException(
+                    "Expected comparison operator after 'dc' keyword",
+                    $this->peek()->position
+                );
+            }
             $comparisonOperator = (string)$this->previous()->value;
 
             // Next token must be the threshold number or placeholder
@@ -105,7 +115,7 @@ class DiceExpressionParser
 
                 if (!array_key_exists($variableName, $this->variables)) {
                     throw new ParseException(
-                        "Unbound placeholder variable '%{$variableName}%'. Please provide a value for this variable.",
+                        "Unbound placeholder variable '\${$variableName}\$'. Please provide a value for this variable.",
                         $this->previous()->position
                     );
                 }
@@ -164,6 +174,7 @@ class DiceExpressionParser
             modifiers: $modifiers,
             statistics: $statistics,
             originalExpression: $expression,
+            astRoot: $this->astRoot,
             comparisonOperator: $comparisonOperator,
             comparisonThreshold: $comparisonThreshold
         );
@@ -268,14 +279,14 @@ class DiceExpressionParser
             }
         }
 
-        // Placeholder (%name%)
+        // Placeholder ($name$)
         if ($this->match(Token::TYPE_PLACEHOLDER)) {
             $variableName = (string)$this->previous()->value;
 
             // Check if variable is provided
             if (!array_key_exists($variableName, $this->variables)) {
                 throw new ParseException(
-                    "Unbound placeholder variable '%{$variableName}%'. Please provide a value for this variable.",
+                    "Unbound placeholder variable '\${$variableName}\$'. Please provide a value for this variable.",
                     $this->previous()->position
                 );
             }
@@ -430,22 +441,17 @@ class DiceExpressionParser
             $this->validator->validateRerollRange($spec, $rerollThreshold, $rerollOperator);
         }
 
-        // Check for success counting: "success threshold N" or ">=N" or ">N"
-        // Parsed after reroll to allow "reroll <= 2 >= 4" syntax
-        if ($this->match(Token::TYPE_KEYWORD, ['success'])) {
-            // Expect "threshold N"
-            if (!$this->match(Token::TYPE_KEYWORD, ['threshold'])) {
-                throw new ParseException('Expected "threshold" after "success"', $this->getCurrentPosition());
+        // Check for success counting: "count >=N" or "count >N" or "success threshold N" (legacy)
+        // Parsed after reroll to allow "reroll <= 2 count >= 4" syntax
+        if ($this->match(Token::TYPE_KEYWORD, ['count'])) {
+            // After 'count', comparison operator is required
+            if (!$this->check(Token::TYPE_COMPARISON)) {
+                throw new ParseException(
+                    "Expected comparison operator after 'count' keyword",
+                    $this->peek()->position
+                );
             }
-            $successThreshold = $this->consumeNumber();
-            $successOperator = '>='; // Default to >= for "success threshold N" syntax
-        } elseif ($this->match(Token::TYPE_KEYWORD, ['threshold'])) {
-            // Just "threshold N" (shorthand for "success threshold N")
-            $successThreshold = $this->consumeNumber();
-            $successOperator = '>=';
-        } elseif ($this->check(Token::TYPE_COMPARISON) && $spec->count > 1) {
-            // Direct comparison: ">=N" or ">N" - only for multiple dice (dice pools)
-            // Single die comparisons (e.g., "1d20 >= 15") are treated as expression-level success rolls
+
             $comparison = $this->advance();
             $operator = (string)$comparison->value;
 
@@ -459,6 +465,18 @@ class DiceExpressionParser
 
             $successOperator = $operator;
             $successThreshold = $this->consumeNumber();
+        } elseif ($this->match(Token::TYPE_KEYWORD, ['success'])) {
+            // Legacy syntax: "success threshold N"
+            // Expect "threshold N"
+            if (!$this->match(Token::TYPE_KEYWORD, ['threshold'])) {
+                throw new ParseException('Expected "threshold" after "success"', $this->getCurrentPosition());
+            }
+            $successThreshold = $this->consumeNumber();
+            $successOperator = '>='; // Default to >= for "success threshold N" syntax
+        } elseif ($this->match(Token::TYPE_KEYWORD, ['threshold'])) {
+            // Legacy syntax: just "threshold N" (shorthand for "success threshold N")
+            $successThreshold = $this->consumeNumber();
+            $successOperator = '>=';
         }
 
         // Check for explode: "explode [limit] [operator threshold]"

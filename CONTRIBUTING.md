@@ -28,37 +28,32 @@ This project follows a simple code of conduct:
 
 ### Prerequisites
 
-- **PHP 8.3+** (strict requirement)
+- **PHP 8.0+** (strict requirement)
 - **Composer** for dependency management
 - **Git** for version control
 - Recommended: PHPStorm or VS Code with PHP extensions
 
 ### Initial Setup
 
-1. **Fork the repository**
+1. **Clone**
    ```bash
-   # On GitHub, click "Fork" button
-   ```
-
-2. **Clone your fork**
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/phpdice.git
+   git clone https://github.com/codryn/phpdice.git
    cd phpdice
    ```
 
-3. **Install dependencies**
+2. **Install dependencies**
    ```bash
    composer install
    ```
 
-4. **Verify installation**
+3. **Verify installation**
    ```bash
    composer test        # Run all tests
    composer phpstan     # Run static analysis
    composer cs-check    # Check code style
    ```
 
-5. **Create a feature branch**
+4. **Create a feature branch**
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -95,6 +90,49 @@ composer test
 composer phpstan
 composer cs-check
 ```
+
+
+### Setup
+
+```bash
+git clone https://github.com/codryn/phpdice.git
+cd phpdice
+composer install
+```
+
+Note: Its is recommended to use the proviced vs code devcontainer for consistent environment. Please refere to https://code.visualstudio.com/docs/devcontainers/containers for more information.
+
+### Running Tests
+
+```bash
+# Run all tests
+composer test
+
+# Run with coverage
+./vendor/bin/phpunit
+
+# Run specific test suite
+./vendor/bin/phpunit tests/Unit
+./vendor/bin/phpunit tests/Integration
+```
+
+### Code Quality
+
+```bash
+# PSR-12 compliance check and fix
+./vendor/bin/php-cs-fixer fix
+
+# Static analysis (PHPStan level 9)
+./vendor/bin/phpstan analyse
+
+# Run all quality checks
+composer test
+./vendor/bin/phpstan analyse
+./vendor/bin/php-cs-fixer fix --dry-run
+```
+
+
+
 
 ### 2. Feature Development Process
 
@@ -379,40 +417,25 @@ Closes #42
 
 ```
 phpdice/
+├── docs/                        # Documentation
+├── examples/                    # Example code
+├── scripts/                     # Scripts and utilities
+├── specs/                       # Specification files, organized by iteration (github spec kit)
 ├── src/
-│   ├── Model/              # Data models (immutable)
-│   │   ├── DiceExpression.php
-│   │   ├── RollResult.php
-│   │   └── StatisticalData.php
-│   ├── Parser/             # Expression parsing
-│   │   ├── DiceExpressionParser.php
-│   │   ├── Lexer.php
-│   │   └── Token.php
-│   ├── Roller/             # Dice rolling logic
-│   │   └── DiceRoller.php
-│   ├── Exception/          # Custom exceptions
-│   │   ├── ParseException.php
-│   │   └── ValidationException.php
-│   └── PHPDice.php         # Main facade
+│   ├── PHPDice.php              # Main facade
+│   ├── Model/                   # Domain models
+│   ├── Parser/                  # Expression parsing
+│   ├── Roller/                  # Dice rolling
+│   └── Exception/               # Custom exceptions
 ├── tests/
-│   ├── Unit/               # Unit tests
-│   └── Integration/        # Integration tests
-├── docs/
-│   └── api.md              # API reference
-├── examples/               # Game system examples
-│   ├── dnd5e.php
-│   ├── shadowrun.php
-│   └── ...
-├── specs/                  # Specifications
-│   └── 001-dice-parser-roller/
-│       ├── spec.md
-│       ├── plan.md
-│       └── tasks.md
-├── .php-cs-fixer.php       # Code style config
-├── phpstan.neon            # Static analysis config
-├── phpunit.xml.dist        # Test configuration
-├── composer.json           # Dependencies
-└── README.md               # Main documentation
+│   ├── Contract/                # Contract tests (planned)
+│   ├── Integration/             # Integration tests
+│   └── Unit/                    # Unit tests
+├── .php-cs-fixer.php            # Code style config
+├── phpstan.neon                 # Static analysis config
+├── phpunit.xml                  # Test configuration
+├── composer.json                # Dependencies
+└── README.md                    # Main documentation
 ```
 
 ## Development Commands

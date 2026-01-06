@@ -113,7 +113,7 @@ class DiceExpressionParserTest extends TestCase
 
     public function testParseWithSuccessCounting(): void
     {
-        $expression = $this->parser->parse('5d6 >= 4');
+        $expression = $this->parser->parse('5d6 count >= 4');
 
         $this->assertSame(4, $expression->modifiers->successThreshold);
         $this->assertSame('>=', $expression->modifiers->successOperator);
@@ -129,7 +129,7 @@ class DiceExpressionParserTest extends TestCase
 
     public function testParseWithPlaceholder(): void
     {
-        $expression = $this->parser->parse('2d6 + %bonus%', ['bonus' => 3]);
+        $expression = $this->parser->parse('2d6 + $bonus$', ['bonus' => 3]);
 
         $this->assertArrayHasKey('bonus', $expression->modifiers->resolvedVariables);
         $this->assertSame(3, $expression->modifiers->resolvedVariables['bonus']);
@@ -139,12 +139,12 @@ class DiceExpressionParserTest extends TestCase
     {
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('Unbound placeholder');
-        $this->parser->parse('2d6 + %bonus%');
+        $this->parser->parse('2d6 + $bonus$');
     }
 
     public function testParseWithComparisonOperator(): void
     {
-        $expression = $this->parser->parse('1d20 >= 15');
+        $expression = $this->parser->parse('1d20 dc >= 15');
 
         $this->assertSame('>=', $expression->comparisonOperator);
         $this->assertSame(15, $expression->comparisonThreshold);

@@ -41,13 +41,13 @@ echo "   Total: {$result->total}\n\n";
 
 // 4. Skill Check vs DC
 echo "4. Skill Check (Athletics +5 vs DC 15):\n";
-$result = $phpdice->roll('1d20+5 >= 15');
+$result = $phpdice->roll('1d20+5 dc >= 15');
 echo "   Roll: {$result->total}\n";
 echo "   Result: " . ($result->isSuccess ? 'SUCCESS!' : 'FAILURE') . "\n\n";
 
 // 5. Critical Hit Detection
 echo "5. Attack Roll with Critical Detection:\n";
-$result = $phpdice->roll('1d20 crit 15 glitch 1 +7 >= 15');
+$result = $phpdice->roll('1d20 crit 15 glitch 1 +7 dc >= 15');
 echo "   Result: {$result->total} (Rolled: " . implode(', ', $result->diceValues) . ")\n";
 if ($result->isCriticalSuccess) {
     echo "   *** CRITICAL HIT CHANGE! ***\n";
@@ -61,7 +61,7 @@ echo "\n";
 // 6. Normal Weapon Damage
 echo "6. Longsword Damage (1d8 + 3 STR):\n";
 $variables = ['STR' => 3];
-$result = $phpdice->roll('1d8+%STR%', $variables);
+$result = $phpdice->roll('1d8+$STR$', $variables);
 echo "   Damage: {$result->total} (Rolled: " . implode(', ', $result->diceValues) . ")\n\n";
 
 // 7. Fireball Spell (8d6)
@@ -105,7 +105,7 @@ $character = [
 ];
 
 echo "   Athletics Check (STR + Prof):\n";
-$result = $phpdice->roll('1d20+%str%+%proficiency%', $character);
+$result = $phpdice->roll('1d20+$str$+$proficiency$', $character);
 echo "   1d20 + {$character['str']} (STR) + {$character['proficiency']} (Prof) = {$result->total}\n\n";
 
 // 12. Probability Analysis

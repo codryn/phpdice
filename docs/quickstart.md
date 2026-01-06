@@ -7,13 +7,13 @@
 ### Via Composer (Recommended)
 
 ```bash
-composer require marcowuelser/phpdice
+composer require codryn/phpdice
 ```
 
 ### Manual Installation
 
 ```bash
-git clone https://github.com/marcowuelser/phpdice.git
+git clone https://github.com/codryn/phpdice.git
 cd phpdice
 composer install
 ```
@@ -113,7 +113,7 @@ echo "Modified by: +5 (str +3, dex +2)\n";
 
 ```php
 // Shadowrun-style: roll 5d6, count 4+ as successes
-$result = $dice->roll("5d6 >=4");
+$result = $dice->roll("5d6 count >=4");
 
 echo "Successes: {$result->successCount}\n";
 echo "Dice rolled: " . implode(", ", $result->diceValues) . "\n";
@@ -185,11 +185,31 @@ if ($result->isCriticalSuccess) {
 }
 ```
 
+See ../examples/dnd5e.php for more D&D 5e examples.
+
+### D&D Character Stat Rolling
+
+```php
+// Roll 4d6, drop lowest (standard stat generation)
+$result = $dice->roll("4d6 keep 3 highest");
+
+echo "Stat: {$result->total}\n";
+echo "Dice: " . implode(", ", $result->diceValues) . "\n";
+echo "Dropped: {$result->diceValues[$result->discardedDice[0]]}\n";
+
+// Example output:
+// Stat: 15
+// Dice: 5, 6, 4, 2
+// Dropped: 2
+```
+
+See ../examples/dnd5e.php for more D&D 5e examples.
+
 ### Pathfinder Ability Check
 
 ```php
 // Skill check with +7 modifier against DC 15
-$result = $dice->roll("1d20+7 >=15");
+$result = $dice->roll("1d20+7 dc >=15");
 
 echo "Roll: {$result->total}\n";
 echo $result->isSuccess ? "✓ Success!" : "✗ Failure";
@@ -200,7 +220,7 @@ echo "\n";
 
 ```php
 // Roll 8 dice, count 5+ as successes
-$result = $dice->roll("8d6 >=5");
+$result = $dice->roll("8d6 count >=5");
 
 echo "Hits: {$result->successCount}\n";
 
@@ -212,6 +232,8 @@ if ($result->successCount >= 4) {
     echo "Failure\n";
 }
 ```
+
+See ../examples/shadowrun.php for more Shadowrun examples.
 
 ### Savage Worlds (Exploding Dice)
 
@@ -235,6 +257,8 @@ $result = $dice->roll("1d6 explode 10 >=6");
 echo "Wild die: {$result->total}\n";
 ```
 
+See ../examples/savage-worlds.php for more Savage Worlds examples.
+
 ### FATE / Fudge Dice
 
 ```php
@@ -254,21 +278,7 @@ $ladder = [
 echo "Level: " . ($ladder[$result->total] ?? "Legendary") . "\n";
 ```
 
-### D&D Character Stat Rolling
-
-```php
-// Roll 4d6, drop lowest (standard stat generation)
-$result = $dice->roll("4d6 keep 3 highest");
-
-echo "Stat: {$result->total}\n";
-echo "Dice: " . implode(", ", $result->diceValues) . "\n";
-echo "Dropped: {$result->diceValues[$result->discardedDice[0]]}\n";
-
-// Example output:
-// Stat: 15
-// Dice: 5, 6, 4, 2
-// Dropped: 2
-```
+See ../examples/fate.php for more Fate examples.
 
 ## Error Handling
 
@@ -396,10 +406,10 @@ echo "Critical: " . ($result->isCriticalSuccess ? "Yes" : "No") . "\n";
 
 ## Next Steps
 
-- **Full Documentation**: See [API.md](API.md) for complete API reference
-- **Examples**: Browse [EXAMPLES.md](EXAMPLES.md) for more game system examples
+- **Full Documentation**: See [api.md](API.md) for complete API reference
+- **Examples**: Browse [../examples](examples) for more game system examples
 - **Testing**: Learn how to test dice expressions in your application
-- **Contributing**: Check [CONTRIBUTING.md](CONTRIBUTING.md) to contribute
+- **Contributing**: Check [../CONTRIBUTING.md](CONTRIBUTING.md) to contribute
 
 ## Performance Tips
 
@@ -463,6 +473,6 @@ echo "Critical: " . ($result->isCriticalSuccess ? "Yes" : "No") . "\n";
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/marcowuelser/phpdice/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/marcowuelser/phpdice/discussions)
-- **Documentation**: [Full API Reference](API.md)
+- **Issues**: [GitHub Issues](https://github.com/codryn/phpdice/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/codryn/phpdice/discussions)
+- **Documentation**: [Full API Reference](api.md)

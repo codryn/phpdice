@@ -37,7 +37,7 @@ class PHPDice
     }
 
     /**
-     * Roll dice based on an expression.
+     * Roll dice based on an expression string.
      *
      * @param string $expression Dice expression (e.g., "3d6", "1d20+5")
      * @param array<string, int> $variables Optional placeholder variables
@@ -46,7 +46,17 @@ class PHPDice
     public function roll(string $expression, array $variables = []): RollResult
     {
         $parsed = $this->parse($expression, $variables);
-        $ast = $this->parser->getAstRoot();
-        return $this->roller->roll($parsed, $ast);
+        return $this->roller->roll($parsed, $parsed->astRoot);
+    }
+
+    /**
+     * Roll dice based on a parsed DiceExpression.
+     *
+     * @param DiceExpression $expression Parsed dice expression
+     * @return RollResult Roll result with total and individual values
+     */
+    public function rollExpression(DiceExpression $expression): RollResult
+    {
+        return $this->roller->roll($expression, $expression->astRoot);
     }
 }

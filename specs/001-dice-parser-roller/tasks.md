@@ -238,13 +238,13 @@ Single library project structure: `src/`, `tests/` at repository root per plan.m
 
 ## Phase 10: User Story 7 - Placeholders and Variables (Priority: P7)
 
-**Goal**: Support %name% placeholder syntax with variable binding at parse time
+**Goal**: Support $name$ placeholder syntax with variable binding at parse time
 
-**Independent Test**: Parse "1d20+%str%+%proficiency%" with variables provided and verify resolution
+**Independent Test**: Parse "1d20+$str$+$proficiency$" with variables provided and verify resolution
 
 ### Implementation for User Story 7
 
-- [X] T102 [P] [US7] Extend Lexer to recognize placeholder pattern %name% in src/Parser/Lexer.php
+- [X] T102 [P] [US7] Extend Lexer to recognize placeholder pattern $name$ in src/Parser/Lexer.php
 - [X] T103 [US7] Add placeholder parsing and variable substitution in src/Parser/DiceExpressionParser.php
 - [X] T104 [US7] Add validation to reject unbound placeholders (FR-009a) in src/Parser/Validator.php
 - [X] T105 [US7] Store resolved variables in RollModifiers.resolvedVariables in src/Parser/DiceExpressionParser.php

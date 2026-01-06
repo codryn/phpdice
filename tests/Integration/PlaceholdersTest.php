@@ -19,13 +19,13 @@ final class PlaceholdersTest extends BaseTestCase
     /**
      * AC1: Parse with variables, verify placeholder resolution.
      *
-     * Given an expression "1d20+%str%+%luck%" with variable values provided (str=3, luck=2)
+     * Given an expression "1d20+$str$+$luck$" with variable values provided (str=3, luck=2)
      * When parsed
-     * Then the structure resolves "%str%" and "%luck%" placeholders to their numeric values
+     * Then the structure resolves "$str$" and "$luck$" placeholders to their numeric values
      */
     public function testParsePlaceholdersResolvesVariables(): void
     {
-        $expression = '1d20+%str%+%luck%';
+        $expression = '1d20+$str$+$luck$';
         $variables = ['str' => 3, 'luck' => 2];
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -41,7 +41,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testPlaceholdersInComplexExpression(): void
     {
-        $expression = '2d6+%strength%+%proficiency%-1';
+        $expression = '2d6+$strength$+$proficiency$-1';
         $variables = ['strength' => 4, 'proficiency' => 2];
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -57,7 +57,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testSinglePlaceholder(): void
     {
-        $expression = '1d20+%bonus%';
+        $expression = '1d20+$bonus$';
         $variables = ['bonus' => 5];
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -77,7 +77,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testRollWithPlaceholders(): void
     {
-        $expression = '1d20+%str%+%proficiency%';
+        $expression = '1d20+$str$+$proficiency$';
         $variables = ['str' => 3, 'proficiency' => 2];
 
         $result = $this->phpdice->roll($expression, $variables);
@@ -98,7 +98,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testMultipleRollsWithPlaceholdersVaryDiceResults(): void
     {
-        $expression = '1d20+%bonus%';
+        $expression = '1d20+$bonus$';
         $variables = ['bonus' => 5];
 
         $results = [];
@@ -127,10 +127,10 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testUnboundPlaceholderThrowsError(): void
     {
-        $expression = '1d20+%str%';
+        $expression = '1d20+$str$';
 
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage("Unbound placeholder variable '%str%'");
+        $this->expectExceptionMessage("Unbound placeholder variable '\$str\$'");
 
         $this->phpdice->parse($expression, []);
     }
@@ -140,11 +140,11 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testPartiallyBoundPlaceholdersThrowsError(): void
     {
-        $expression = '1d20+%str%+%proficiency%';
+        $expression = '1d20+$str$+$proficiency$';
         $variables = ['str' => 3]; // proficiency is missing
 
         $this->expectException(ParseException::class);
-        $this->expectExceptionMessage("Unbound placeholder variable '%proficiency%'");
+        $this->expectExceptionMessage("Unbound placeholder variable '\$proficiency\$'");
 
         $this->phpdice->parse($expression, $variables);
     }
@@ -154,7 +154,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testUnboundPlaceholderErrorIsHelpful(): void
     {
-        $expression = '1d20+%dexterity%';
+        $expression = '1d20+$dexterity$';
 
         try {
             $this->phpdice->parse($expression, []);
@@ -178,7 +178,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testResolvedVariablesAreInspectable(): void
     {
-        $expression = '1d20+%str%+%proficiency%';
+        $expression = '1d20+$str$+$proficiency$';
         $variables = ['str' => 3, 'proficiency' => 2];
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -195,7 +195,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testOnlyUsedPlaceholdersAreTracked(): void
     {
-        $expression = '1d20+%str%';
+        $expression = '1d20+$str$';
         $variables = ['str' => 3, 'luck' => 2, 'wisdom' => 1]; // extra variables
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -225,7 +225,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testPlaceholderWithModifiers(): void
     {
-        $expression = '2d20 keep 1 highest +%bonus%';
+        $expression = '2d20 keep 1 highest +$bonus$';
         $variables = ['bonus' => 3];
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -245,7 +245,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testPlaceholderWithAdvantage(): void
     {
-        $expression = '1d20 advantage +%dex%';
+        $expression = '1d20 advantage +$dex$';
         $variables = ['dex' => 4];
 
         $result = $this->phpdice->roll($expression, $variables);
@@ -261,7 +261,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testPlaceholderWithZeroValue(): void
     {
-        $expression = '1d20+%bonus%';
+        $expression = '1d20+$bonus$';
         $variables = ['bonus' => 0];
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -279,7 +279,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testPlaceholderWithNegativeValue(): void
     {
-        $expression = '1d20+%penalty%';
+        $expression = '1d20+$penalty$';
         $variables = ['penalty' => -2];
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -297,7 +297,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testPlaceholderWithUnderscore(): void
     {
-        $expression = '1d20+%spell_attack_bonus%';
+        $expression = '1d20+$spell_attack_bonus$';
         $variables = ['spell_attack_bonus' => 7];
 
         $expr = $this->phpdice->parse($expression, $variables);
@@ -311,7 +311,7 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testMultipleUsesOfSamePlaceholder(): void
     {
-        $expression = '1d20+%bonus%+%bonus%';
+        $expression = '1d20+$bonus$+$bonus$';
         $variables = ['bonus' => 2];
 
         $expr = $this->phpdice->parse($expression, $variables);
