@@ -193,7 +193,7 @@ All 10 user stories fully implemented and tested:
 - ✅ **US3**: Statistical Analysis (min/max/expected)
 - ✅ **US4**: Advantage/Disadvantage (D&D 5e mechanics)
 - ✅ **US4a**: Keep/Drop Mechanics (4d6 keep 3 highest)
-- ✅ **US5**: Placeholder Variables (%str%, %dex%)
+- ✅ **US5**: Placeholder Variables ($str$, $dex$)
 - ✅ **US5a**: Success Counting (Shadowrun dice pools)
 - ✅ **US6**: Reroll Mechanics (Great Weapon Fighting)
 - ✅ **US6a**: Exploding Dice (Savage Worlds Aces)

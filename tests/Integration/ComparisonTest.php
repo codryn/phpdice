@@ -273,7 +273,7 @@ final class ComparisonTest extends BaseTestCaseMock
             ->method('generate')
             ->willReturn(12);
 
-        $expression = '1d20+%bonus% >= %dc%';
+        $expression = '1d20+$bonus$ >= $dc$';
         $variables = ['bonus' => 5, 'dc' => 15];
 
         $result = $this->phpdice->roll($expression, $variables);

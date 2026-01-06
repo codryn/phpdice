@@ -46,7 +46,7 @@ $expr = $parser->parse("floor(1d20/2)");
 // Returns: DiceExpression(floor(1d20/2), min=0, max=10, expected=5.0)
 
 // With variables
-$expr = $parser->parse("1d20+%str%+%dex%", ["str" => 3, "dex" => 2]);
+$expr = $parser->parse("1d20+$str$+$dex$", ["str" => 3, "dex" => 2]);
 // Returns: DiceExpression(1d20+5, min=6, max=25, expected=15.5)
 
 // Advantage
@@ -70,8 +70,8 @@ $parser->parse("d6");
 // Throws: ParseException("Invalid dice notation")
 
 // Missing variable
-$parser->parse("1d20+%str%");
-// Throws: ValidationException("Missing variable: %str%")
+$parser->parse("1d20+$str$");
+// Throws: ValidationException("Missing variable: $str$")
 
 // Invalid keep count
 $parser->parse("3d6 keep 5 highest");
@@ -116,7 +116,7 @@ XdY+Z*N                # Standard precedence (* before +)
 
 (2d6+3)*2              # (2d6+3) then multiply by 2
 1d20+5*2               # 1d20 + (5*2) = 1d20+10
-((1d8+%str%)*2)+5      # Damage with strength multiplier
+((1d8+$str$)*2)+5      # Damage with strength multiplier
 ```
 
 ### Mathematical Functions
@@ -128,7 +128,7 @@ round(expression)      # Round to nearest integer
 floor(1d20/2)          # Half of 1d20, rounded down
 ceil(3d6/2)         # Half of 3d6, rounded up
 round(1d20*1.5)        # 1d20 times 1.5, rounded
-floor((2d6+%str%)/2)   # Complex expression with function
+floor((2d6+$str$)/2)   # Complex expression with function
 ```
 
 ### Advantage / Disadvantage
@@ -175,15 +175,15 @@ d%           # Roll percentile
 
 ### Placeholders
 ```
-XdY+%var%                  # Variable substitution using %name% syntax
-XdY+%var1%+%var2%          # Multiple variables
+XdY+$var$                  # Variable substitution using $name$ syntax
+XdY+$var1$+$var2$          # Multiple variables
 
-1d20+%str%                 # Requires: ["str" => value]
-1d20+%str%+%dex%           # Requires: ["str" => X, "dex" => Y]
-1d20+%damage_bonus%        # Variable names can include underscores
+1d20+$str$                 # Requires: ["str" => value]
+1d20+$str$+$dex$           # Requires: ["str" => X, "dex" => Y]
+1d20+$damage_bonus$        # Variable names can include underscores
 ```
 
-**Note**: The `%name%` syntax prevents collisions with reserved keywords like `advantage`, `disadvantage`, `keep`, etc.
+**Note**: The `$name$` syntax prevents collisions with reserved keywords like `advantage`, `disadvantage`, `keep`, etc.
 
 ### Success Rolls (Comparison)
 ```

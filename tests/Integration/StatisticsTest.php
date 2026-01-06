@@ -197,7 +197,7 @@ class StatisticsTest extends BaseTestCase
      */
     public function testPlaceholderStatistics(): void
     {
-        $expression = $this->phpdice->parse('1d20+%str%+%proficiency%', ['str' => 3, 'proficiency' => 2]);
+        $expression = $this->phpdice->parse('1d20+$str$+$proficiency$', ['str' => 3, 'proficiency' => 2]);
         $stats = $expression->getStatistics();
 
         $this->assertSame(6, $stats->minimum); // 1+3+2

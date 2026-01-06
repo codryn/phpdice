@@ -105,7 +105,7 @@ class DiceExpressionParser
 
                 if (!array_key_exists($variableName, $this->variables)) {
                     throw new ParseException(
-                        "Unbound placeholder variable '%{$variableName}%'. Please provide a value for this variable.",
+                        "Unbound placeholder variable '\${$variableName}\$'. Please provide a value for this variable.",
                         $this->previous()->position
                     );
                 }
@@ -269,14 +269,14 @@ class DiceExpressionParser
             }
         }
 
-        // Placeholder (%name%)
+        // Placeholder ($name$)
         if ($this->match(Token::TYPE_PLACEHOLDER)) {
             $variableName = (string)$this->previous()->value;
 
             // Check if variable is provided
             if (!array_key_exists($variableName, $this->variables)) {
                 throw new ParseException(
-                    "Unbound placeholder variable '%{$variableName}%'. Please provide a value for this variable.",
+                    "Unbound placeholder variable '\${$variableName}\$'. Please provide a value for this variable.",
                     $this->previous()->position
                 );
             }

@@ -94,7 +94,7 @@ echo "Kept die index: " . $result->keptDice[0] . "\n";
 
 ```php
 // Character has Strength 3, Dexterity 2
-$result = $dice->roll("1d20+%str%+%dex%", [
+$result = $dice->roll("1d20+$str$+$dex$", [
     "str" => 3,
     "dex" => 2
 ]);
@@ -287,10 +287,10 @@ try {
 
 ```php
 try {
-    $expression = $dice->parse("1d20+%str%"); // Missing variable
+    $expression = $dice->parse("1d20+$str$"); // Missing variable
 } catch (\PHPDice\Exception\ValidationException $e) {
     echo "Validation error: {$e->getMessage()}\n";
-    // Output: Validation error: Missing variable: %str%
+    // Output: Validation error: Missing variable: $str$
 }
 ```
 
@@ -425,14 +425,14 @@ echo "Critical: " . ($result->isCriticalSuccess ? "Yes" : "No") . "\n";
 3. **Validate early**: Parser catches errors immediately
    ```php
    // This validates immediately at parse/roll time
-   $result = $dice->roll("1d20+%str%", ["str" => 3]);
+   $result = $dice->roll("1d20+$str$", ["str" => 3]);
    ```
 
 ## Troubleshooting
 
 **Q: "Missing variable" error**
 - Ensure all placeholders have values in the `variables` array
-- Use `%name%` syntax for all placeholders (e.g., `1d20+%str%` not `1d20+str`)
+- Use `$name$` syntax for all placeholders (e.g., `1d20+$str$` not `1d20+str`)
 - Variable names are case-sensitive
 
 **Q: Expression parses but rolls incorrectly**

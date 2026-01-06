@@ -55,7 +55,7 @@ Parses a dice expression string into a structured DiceExpression object.
 
 **Example:**
 ```php
-$expression = $phpdice->parse('1d20+%str%', ['str' => 3]);
+$expression = $phpdice->parse('1d20+$str$', ['str' => 3]);
 ```
 
 #### `roll(string $expression, array $variables = []): RollResult`
@@ -417,7 +417,7 @@ echo $result->total; // 1-100
 ```php
 // Character sheet integration
 $expression = $phpdice->parse(
-    '1d20+%str%+%proficiency%',
+    '1d20+$str$+$proficiency$',
     ['str' => 3, 'proficiency' => 2]
 );
 $result = $phpdice->rollExpression($expression);

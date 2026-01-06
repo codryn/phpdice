@@ -9,13 +9,13 @@
 
 ### Session 2025-12-02
 
-- Q: When a placeholder variable is referenced in a roll expression but not provided at roll time (e.g., "1d20+%str%" rolled without binding "str"), what should happen? → A: Reject with clear error message listing missing variables
+- Q: When a placeholder variable is referenced in a roll expression but not provided at roll time (e.g., "1d20+$str$" rolled without binding "str"), what should happen? → A: Reject with clear error message listing missing variables
 - Q: How should reroll mechanics handle potentially infinite reroll scenarios (e.g., "4d6 reroll <= 6" on a d6 where every result would trigger another reroll)? → A: Validate and define hard limit for maximal rerolls.
 - Q: What is the minimum PHP version the library must support? → A: PHP 8.0
 - Q: What should happen when advantage/disadvantage is requested with invalid parameters (e.g., "roll 3d6 keep 5 highest" where you're trying to keep more dice than you rolled)? → A: Reject at parse time with validation error
 - Q: When should critical success/failure thresholds be specified - at parse time (part of the expression syntax) or at roll time (as parameters to the roll function)? → A: Parse time (expression syntax)
 - Q: When should placeholder variables be bound - at parse time or roll time? → A: Parse time (required for statistical calculations to work)
-- Q: What syntax should be used for placeholder variables to avoid collisions with reserved keywords? → A: Use %name% prefix/suffix syntax (e.g., "1d20+%str%+%dex%")
+- Q: What syntax should be used for placeholder variables to avoid collisions with reserved keywords? → A: Use $name$ prefix/suffix syntax (e.g., "1d20+$str$+$dex$")
 - Q: Should the parser support full arithmetic expressions beyond simple addition/subtraction? → A: Yes, support parentheses for grouping and mathematical functions: floor(), ceil(), round()
 - Q: How should exploding dice work when a die rolls its maximum value? → A: Reroll and add to total/successes; dice can explode multiple times up to a hard limit of 100 explosions per die
 - Q: Should the explosion limit be configurable in the expression? → A: Yes, use syntax like "3d6 explode 3" to limit to 3 explosions per die; omitting the number defaults to 100
@@ -156,15 +156,15 @@ As a game developer, I need support for fudge dice and percentile dice so that I
 
 ### User Story 7 - Placeholders and Variables (Priority: P7)
 
-As a game developer, I need placeholder support in expressions so that I can create reusable roll templates with character-specific values (e.g., "1d20+%str%+%luck%").
+As a game developer, I need placeholder support in expressions so that I can create reusable roll templates with character-specific values (e.g., "1d20+$str$+$luck$").
 
 **Why this priority**: Enables dynamic roll evaluation where modifiers come from character attributes. Critical for character sheet integration.
 
-**Independent Test**: Can be tested by parsing "1d20+%str%+%proficiency%", providing variable values, and rolling to get correct results.
+**Independent Test**: Can be tested by parsing "1d20+$str$+$proficiency$", providing variable values, and rolling to get correct results.
 
 **Acceptance Scenarios**:
 
-1. **Given** an expression "1d20+%str%+%luck%" with variable values provided (str=3, luck=2), **When** parsed, **Then** the structure resolves "%str%" and "%luck%" placeholders to their numeric values
+1. **Given** an expression "1d20+$str$+$luck$" with variable values provided (str=3, luck=2), **When** parsed, **Then** the structure resolves "$str$" and "$luck$" placeholders to their numeric values
 2. **Given** a parsed expression with resolved placeholders, **When** rolled, **Then** the roll evaluates correctly using the bound values
 3. **Given** an expression with unbound placeholders, **When** parsed without providing values, **Then** the parser MUST reject the expression with a clear error message listing the missing variable names
 4. **Given** a parsed expression with resolved placeholders, **When** inspected, **Then** I can see which placeholders were used and their bound values
@@ -279,7 +279,7 @@ The parser MUST fail with clear, actionable error messages for all invalid input
 
 #### Placeholder Variable Validation
 
-- **Unbound placeholder variables** (e.g., "1d20+%str%" parsed without providing "str" value): Parser MUST reject with error message listing all missing variable names (already covered in FR-009a)
+- **Unbound placeholder variables** (e.g., "1d20+$str$" parsed without providing "str" value): Parser MUST reject with error message listing all missing variable names (already covered in FR-009a)
 
 #### Edge Case Interactions
 
@@ -313,7 +313,7 @@ The parser MUST fail with clear, actionable error messages for all invalid input
 - **FR-006**: Parser MUST support success counting mode where dice above a threshold are counted instead of summed
 - **FR-007**: Parser MUST support fudge dice notation (e.g., "4dF") that generate values of -1, 0, or +1
 - **FR-008**: Parser MUST support percentile dice notation (e.g., "1d100" or "d%") that generate values 1-100
-- **FR-009**: Parser MUST support placeholder variables using %name% syntax (e.g., "1d20+%str%+%proficiency%") with values provided at parse time to avoid collisions with reserved keywords
+- **FR-009**: Parser MUST support placeholder variables using $name$ syntax (e.g., "1d20+$str$+$proficiency$") with values provided at parse time to avoid collisions with reserved keywords
 - **FR-009a**: Parser MUST reject expressions with unbound placeholder variables by throwing an error that lists all missing variable names
 - **FR-010**: Parser MUST support comparison operators for success/failure evaluation (e.g., "1d20+3 >= 15")
 - **FR-011**: Parser MUST support configurable critical success thresholds as part of expression syntax (e.g., natural 20) captured at parse time

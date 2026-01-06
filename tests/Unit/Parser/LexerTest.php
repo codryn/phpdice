@@ -133,7 +133,7 @@ class LexerTest extends BaseTestCase
      */
     public function testTokenizePlaceholder(): void
     {
-        $lexer = new Lexer('%a% + 3');
+        $lexer = new Lexer('$a$ + 3');
         $tokens = $lexer->tokenize();
 
         $this->assertSame(Token::TYPE_PLACEHOLDER, $tokens[0]->type);
@@ -162,7 +162,7 @@ class LexerTest extends BaseTestCase
      */
     public function testTokenizeFormula(): void
     {
-        $lexer = new Lexer('2 * %strength% + 5');
+        $lexer = new Lexer('2 * $strength$ + 5');
         $tokens = $lexer->tokenize();
 
         $this->assertSame(Token::TYPE_NUMBER, $tokens[0]->type);

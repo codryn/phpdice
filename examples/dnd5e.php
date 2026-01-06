@@ -61,7 +61,7 @@ echo "\n";
 // 6. Normal Weapon Damage
 echo "6. Longsword Damage (1d8 + 3 STR):\n";
 $variables = ['STR' => 3];
-$result = $phpdice->roll('1d8+%STR%', $variables);
+$result = $phpdice->roll('1d8+$STR$', $variables);
 echo "   Damage: {$result->total} (Rolled: " . implode(', ', $result->diceValues) . ")\n\n";
 
 // 7. Fireball Spell (8d6)
@@ -105,7 +105,7 @@ $character = [
 ];
 
 echo "   Athletics Check (STR + Prof):\n";
-$result = $phpdice->roll('1d20+%str%+%proficiency%', $character);
+$result = $phpdice->roll('1d20+$str$+$proficiency$', $character);
 echo "   1d20 + {$character['str']} (STR) + {$character['proficiency']} (Prof) = {$result->total}\n\n";
 
 // 12. Probability Analysis

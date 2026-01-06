@@ -7,7 +7,7 @@ A comprehensive PHP library for parsing and rolling dice expressions for tableto
 - **Universal Dice Notation**: Support for all major RPG systems (D&D 5e, Pathfinder, Shadowrun, World of Darkness, FATE, Savage Worlds, etc.)
 - **Advanced Mechanics**: Advantage/disadvantage, success counting, rerolls, exploding dice, critical detection
 - **Statistical Analysis**: Pre-calculated min/max/expected values for any expression
-- **Placeholder Variables**: Character sheet integration with `%variable%` syntax
+- **Placeholder Variables**: Character sheet integration with `$variable$` syntax
 - **Complex Arithmetic**: Full expression evaluation with operator precedence and parentheses
 - **Error Handling**: Clear, specific error messages with location information
 - **High Performance**: Parse <100ms, Roll <50ms for complex expressions
@@ -119,7 +119,7 @@ $phpdice->roll('1d100');  // Same as d%
 ### Placeholders/Variables
 
 ```php
-$expression = $phpdice->parse('1d20+%str%+%proficiency%', [
+$expression = $phpdice->parse('1d20+$str$+$proficiency$', [
     'str' => 3,
     'proficiency' => 2
 ]);

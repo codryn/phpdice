@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Advanced Mechanics
 - **Advantage/Disadvantage** (US4): Roll multiple d20s, automatically keep highest/lowest
 - **Keep/Drop Mechanics** (US4a): Keep N highest/lowest dice from any pool (e.g., `4d6 keep 3 highest`)
-- **Placeholder Variables** (US5): Dynamic values with `%variable%` syntax
+- **Placeholder Variables** (US5): Dynamic values with `$variable$` syntax
 - **Success Counting** (US5a): Count dice meeting thresholds (e.g., `5d6 >=4` for Shadowrun)
 - **Reroll Mechanics** (US6): Reroll dice meeting conditions (e.g., `2d6 reroll <=2` for D&D Great Weapon Fighting)
   - Configurable reroll limits (default: 100, prevents infinite loops)
