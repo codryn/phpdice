@@ -300,7 +300,9 @@ class DiceExpressionParser
 
         // Plain number
         if ($this->match(Token::TYPE_NUMBER)) {
-            return new NumberNode((int)$this->previous()->value);
+            $value = $this->previous()->value;
+            // Keep the original type (int or float) from the token
+            return new NumberNode($value);
         }
 
         throw new ParseException('Expected number, dice, or expression', $this->getCurrentPosition());
