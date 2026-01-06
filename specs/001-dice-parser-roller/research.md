@@ -75,7 +75,7 @@ Lexer (tokenization) → Parser (AST construction) → Validator (semantic check
 Basic:          3d6, 1d20, 2d10
 Simple Math:    1d20+5, 2d6-2, 3d8+%str%
 Arithmetic:     (2d6+3)*2, 1d20*2+5, 3d6/2
-Functions:      floor(1d20/2), ceiling(3d6/2), round(1d20*1.5)
+Functions:      floor(1d20/2), ceil(3d6/2), round(1d20*1.5)
 Grouping:       (1d8+%str%)*(1+%crit_multiplier%)
 Advantage:      1d20 advantage, 4d6 keep 3 highest
 Reroll:         4d6 reroll <=2, 6d6 reroll 1
@@ -87,7 +87,7 @@ Comparison:     1d20+5 >= 15
 Placeholders:   1d20+%str%+%dex%, 2d6+%damage_bonus%
 ```
 
-**Reserved Keywords**: `d, dF, d%, advantage, disadvantage, keep, highest, lowest, reroll, threshold, crit, glitch, floor, ceiling, round`
+**Reserved Keywords**: `d, dF, d%, advantage, disadvantage, keep, highest, lowest, reroll, threshold, crit, glitch, floor, ceil, round`
 
 **Placeholder Syntax**: `%name%` to avoid collisions with reserved keywords and operators
 
@@ -95,7 +95,7 @@ Placeholders:   1d20+%str%+%dex%, 2d6+%damage_bonus%
 
 **Grouping**: Parentheses `()` for explicit precedence control
 
-**Mathematical Functions**: `floor()`, `ceiling()`, `round()` for rounding operations
+**Mathematical Functions**: `floor()`, `ceil()`, `round()` for rounding operations
 
 ## Error Handling Philosophy
 

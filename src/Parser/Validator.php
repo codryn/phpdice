@@ -169,15 +169,31 @@ class Validator
         $minValue = 1;
         $maxValue = $spec->sides;
 
+        if ($threshold < 0) {
+            throw new ValidationException(
+                "Explosion treshold '{$threshold}' is negative",
+                'explode'
+            );
+        }
+
         // Check if explosion condition covers all possible values
         $coversAll = false;
-
         switch ($operator) {
+            case '>':
+                $coversAll = $threshold < $minValue;
+                break;
             case '>=':
                 $coversAll = $threshold <= $minValue;
                 break;
             case '<=':
                 $coversAll = $threshold >= $maxValue;
+                break;
+            case '<':
+                $coversAll = $threshold > $maxValue;
+                break;
+            case '==':
+                // can never be true, dice has at least 2 distinct values
+                $coversAll = false;
                 break;
         }
 
@@ -190,7 +206,7 @@ class Validator
     }
 
     /**
-     * Validate critical threshold is within die range (FR-035, FR-036).
+     * Validate critical threshold is allowed and within die range (FR-035, FR-036).
      *
      * @param DiceSpecification $spec Dice specification
      * @param int $threshold Critical threshold value

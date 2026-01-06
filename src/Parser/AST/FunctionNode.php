@@ -7,7 +7,7 @@ namespace PHPDice\Parser\AST;
 use PHPDice\Exception\ValidationException;
 
 /**
- * Represents a function call (e.g., floor, ceiling, round).
+ * Represents a function call (e.g., floor, ceil, round).
  */
 class FunctionNode extends Node
 {
@@ -23,8 +23,9 @@ class FunctionNode extends Node
 
         return match (strtolower($this->name)) {
             'floor' => floor($value),
-            'ceil', 'ceiling' => ceil($value),
+            'ceil' => ceil($value),
             'round' => round($value),
+            'abs' => (int)abs($value),
             default => throw new ValidationException("Unknown function: {$this->name}", 'function'),
         };
     }

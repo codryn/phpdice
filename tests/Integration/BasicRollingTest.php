@@ -11,22 +11,14 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * Integration tests for basic dice rolling (User Story 1).
  */
 #[CoversClass(PHPDice::class)]
-class BasicRollingTest extends BaseTestCase
+class BasicRollingTest extends BaseTestCaseMock
 {
-    private PHPDice $dice;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->dice = new PHPDice();
-    }
-
     /**
      * Test parsing basic dice notation.
      */
     public function testParseBasicDiceNotation(): void
     {
-        $expression = $this->dice->parse('3d6');
+        $expression = $this->phpdice->parse('3d6');
 
         $this->assertSame(3, $expression->specification->count);
         $this->assertSame(6, $expression->specification->sides);
@@ -38,17 +30,15 @@ class BasicRollingTest extends BaseTestCase
      */
     public function testRollBasicDice(): void
     {
-        $result = $this->dice->roll('3d6');
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(3, 4, 5);
+
+        $result = $this->phpdice->roll('3d6');
 
         $this->assertCount(3, $result->diceValues);
-        $this->assertGreaterThanOrEqual(3, $result->total);
-        $this->assertLessThanOrEqual(18, $result->total);
-
-        // Each die should be between 1 and 6
-        foreach ($result->diceValues as $value) {
-            $this->assertGreaterThanOrEqual(1, $value);
-            $this->assertLessThanOrEqual(6, $value);
-        }
+        $this->assertEquals([3, 4, 5], $result->diceValues);
+        $this->assertEquals(12, $result->total);
     }
 
     /**
@@ -56,11 +46,15 @@ class BasicRollingTest extends BaseTestCase
      */
     public function testRoll1d20(): void
     {
-        $result = $this->dice->roll('1d20');
+        $this->mockRng->expects($this->once())
+            ->method('generate')
+            ->willReturn(15);
+
+        $result = $this->phpdice->roll('1d20');
 
         $this->assertCount(1, $result->diceValues);
-        $this->assertGreaterThanOrEqual(1, $result->total);
-        $this->assertLessThanOrEqual(20, $result->total);
+        $this->assertEquals([15], $result->diceValues);
+        $this->assertEquals(15, $result->total);
     }
 
     /**
@@ -68,11 +62,31 @@ class BasicRollingTest extends BaseTestCase
      */
     public function testRoll2d10(): void
     {
-        $result = $this->dice->roll('2d10');
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(8, 7);
+
+        $result = $this->phpdice->roll('2d10');
 
         $this->assertCount(2, $result->diceValues);
-        $this->assertGreaterThanOrEqual(2, $result->total);
-        $this->assertLessThanOrEqual(20, $result->total);
+        $this->assertEquals([8, 7], $result->diceValues);
+        $this->assertEquals(15, $result->total);
+    }
+
+    /**
+     * Test rolling multiple dice.
+     */
+    public function testRollMultipleDice(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(2, 6, 3);
+
+        $result = $this->phpdice->roll('1d10 + 2d8');
+
+        $this->assertCount(3, $result->diceValues);
+        $this->assertEquals([2, 6, 3], $result->diceValues);
+        $this->assertEquals(11, $result->total);
     }
 
     /**
@@ -80,7 +94,7 @@ class BasicRollingTest extends BaseTestCase
      */
     public function testStatistics(): void
     {
-        $expression = $this->dice->parse('3d6');
+        $expression = $this->phpdice->parse('3d6');
         $stats = $expression->statistics;
 
         $this->assertSame(3, $stats->minimum);
@@ -94,7 +108,7 @@ class BasicRollingTest extends BaseTestCase
     public function testInvalidExpressionMissingCount(): void
     {
         $this->expectException(\PHPDice\Exception\ParseException::class);
-        $this->dice->parse('d6');
+        $this->phpdice->parse('d6');
     }
 
     /**
@@ -103,7 +117,7 @@ class BasicRollingTest extends BaseTestCase
     public function testInvalidExpressionMissingSides(): void
     {
         $this->expectException(\PHPDice\Exception\ParseException::class);
-        $this->dice->parse('3d');
+        $this->phpdice->parse('3d');
     }
 
     /**
@@ -112,7 +126,7 @@ class BasicRollingTest extends BaseTestCase
     public function testInvalidExpressionNonNumeric(): void
     {
         $this->expectException(\PHPDice\Exception\ParseException::class);
-        $this->dice->parse('abc');
+        $this->phpdice->parse('abc');
     }
 
     /**
@@ -122,7 +136,7 @@ class BasicRollingTest extends BaseTestCase
     {
         $this->expectException(\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Dice count must be at least 1');
-        $this->dice->parse('0d6');
+        $this->phpdice->parse('0d6');
     }
 
     /**
@@ -132,7 +146,7 @@ class BasicRollingTest extends BaseTestCase
     {
         $this->expectException(\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Dice must have at least 2 sides');
-        $this->dice->parse('3d1');
+        $this->phpdice->parse('3d1');
     }
 
     /**
@@ -142,7 +156,7 @@ class BasicRollingTest extends BaseTestCase
     {
         $this->expectException(\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Cannot roll more than 100 dice');
-        $this->dice->parse('101d6');
+        $this->phpdice->parse('101d6');
     }
 
     /**
@@ -152,6 +166,6 @@ class BasicRollingTest extends BaseTestCase
     {
         $this->expectException(\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Dice cannot have more than 100 sides');
-        $this->dice->parse('3d101');
+        $this->phpdice->parse('3d101');
     }
 }

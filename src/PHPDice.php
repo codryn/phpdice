@@ -8,6 +8,7 @@ use PHPDice\Model\DiceExpression;
 use PHPDice\Model\RollResult;
 use PHPDice\Parser\DiceExpressionParser;
 use PHPDice\Roller\DiceRoller;
+use PHPDice\Roller\RandomNumberGenerator;
 
 /**
  * Main facade for PHPDice library.
@@ -17,10 +18,10 @@ class PHPDice
     private readonly DiceExpressionParser $parser;
     private readonly DiceRoller $roller;
 
-    public function __construct()
+    public function __construct(RandomNumberGenerator $rng = new RandomNumberGenerator())
     {
         $this->parser = new DiceExpressionParser();
-        $this->roller = new DiceRoller();
+        $this->roller = new DiceRoller($rng);
     }
 
     /**

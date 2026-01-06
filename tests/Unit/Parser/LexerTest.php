@@ -7,12 +7,13 @@ namespace PHPDice\Tests\Unit\Parser;
 use PHPDice\Parser\Lexer;
 use PHPDice\Parser\Token;
 use PHPDice\Tests\Unit\BaseTestCase;
-use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for Lexer.
+ *
+ * @covers \PHPDice\Parser\Lexer
+ * @covers \PHPDice\Parser\Token
  */
-#[CoversClass(Lexer::class)]
 class LexerTest extends BaseTestCase
 {
     /**
@@ -125,6 +126,50 @@ class LexerTest extends BaseTestCase
         $this->assertSame(Token::TYPE_DICE, $tokens[2]->type);
         $this->assertSame(Token::TYPE_NUMBER, $tokens[3]->type);
         $this->assertSame(Token::TYPE_RPAREN, $tokens[4]->type);
+    }
+
+    /**
+     * Test tokenizing with placeholder.
+     */
+    public function testTokenizePlaceholder(): void
+    {
+        $lexer = new Lexer('%a% + 3');
+        $tokens = $lexer->tokenize();
+
+        $this->assertSame(Token::TYPE_PLACEHOLDER, $tokens[0]->type);
+        $this->assertSame(Token::TYPE_OPERATOR, $tokens[1]->type);
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[2]->type);
+    }
+
+    /**
+     * Test tokenizing with math function.
+     */
+    public function testTokenizeMathFunction(): void
+    {
+        $lexer = new Lexer('max(1,3)');
+        $tokens = $lexer->tokenize();
+
+        $this->assertSame(Token::TYPE_KEYWORD, $tokens[0]->type);
+        $this->assertSame(Token::TYPE_LPAREN, $tokens[1]->type);
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[2]->type);
+        $this->assertSame(Token::TYPE_COMMA, $tokens[3]->type);
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[4]->type);
+        $this->assertSame(Token::TYPE_RPAREN, $tokens[5]->type);
+    }
+
+    /**
+     * Test tokenizing with formula.
+     */
+    public function testTokenizeFormula(): void
+    {
+        $lexer = new Lexer('2 * %strength% + 5');
+        $tokens = $lexer->tokenize();
+
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[0]->type);
+        $this->assertSame(Token::TYPE_OPERATOR, $tokens[1]->type);
+        $this->assertSame(Token::TYPE_PLACEHOLDER, $tokens[2]->type);
+        $this->assertSame(Token::TYPE_OPERATOR, $tokens[3]->type);
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[4]->type);
     }
 
     /**

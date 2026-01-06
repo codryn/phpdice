@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace PHPDice\Tests\Integration;
 
 use PHPDice\Exception\ValidationException;
-use PHPDice\PHPDice;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Integration tests for critical success and critical failure detection (US9).
@@ -17,15 +15,8 @@ use PHPUnit\Framework\TestCase;
  * @covers \PHPDice\Parser\Validator
  * @covers \PHPDice\Roller\DiceRoller
  */
-final class CriticalTest extends TestCase
+final class CriticalTest extends BaseTestCaseMock
 {
-    private PHPDice $phpdice;
-
-    protected function setUp(): void
-    {
-        $this->phpdice = new PHPDice();
-    }
-
     /**
      * AC1: Natural 20 is flagged as critical success.
      *
@@ -35,24 +26,19 @@ final class CriticalTest extends TestCase
      */
     public function testNatural20IsCriticalSuccess(): void
     {
-        $foundCrit = false;
-        $foundNonCrit = false;
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(20, 15);
 
-        // Roll many times to hit a 20
-        for ($i = 0; $i < 100; $i++) {
-            $result = $this->phpdice->roll('1d20 crit 20');
+        // Test critical success
+        $result = $this->phpdice->roll('1d20 crit 20');
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success flag when rolling 20');
 
-            if ($result->diceValues[0] === 20) {
-                $this->assertTrue($result->isCriticalSuccess, 'Expected critical success flag when rolling 20');
-                $foundCrit = true;
-            } else {
-                $this->assertFalse($result->isCriticalSuccess, 'Expected no critical success flag when not rolling 20');
-                $foundNonCrit = true;
-            }
-        }
-
-        $this->assertTrue($foundCrit, 'Expected to roll at least one 20 in 100 rolls');
-        $this->assertTrue($foundNonCrit, 'Expected to roll at least one non-20 in 100 rolls');
+        // Test non-critical
+        $result2 = $this->phpdice->roll('1d20 crit 20');
+        $this->assertEquals(15, $result2->diceValues[0]);
+        $this->assertFalse($result2->isCriticalSuccess, 'Expected no critical success flag when not rolling 20');
     }
 
     /**
@@ -64,24 +50,19 @@ final class CriticalTest extends TestCase
      */
     public function testNatural1IsCriticalFailure(): void
     {
-        $foundGlitch = false;
-        $foundNonGlitch = false;
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 10);
 
-        // Roll many times to hit a 1
-        for ($i = 0; $i < 100; $i++) {
-            $result = $this->phpdice->roll('1d20 glitch 1');
+        // Test critical failure
+        $result = $this->phpdice->roll('1d20 glitch 1');
+        $this->assertEquals(1, $result->diceValues[0]);
+        $this->assertTrue($result->isCriticalFailure, 'Expected critical failure flag when rolling 1');
 
-            if ($result->diceValues[0] === 1) {
-                $this->assertTrue($result->isCriticalFailure, 'Expected critical failure flag when rolling 1');
-                $foundGlitch = true;
-            } else {
-                $this->assertFalse($result->isCriticalFailure, 'Expected no critical failure flag when not rolling 1');
-                $foundNonGlitch = true;
-            }
-        }
-
-        $this->assertTrue($foundGlitch, 'Expected to roll at least one 1 in 100 rolls');
-        $this->assertTrue($foundNonGlitch, 'Expected to roll at least one non-1 in 100 rolls');
+        // Test non-critical failure
+        $result2 = $this->phpdice->roll('1d20 glitch 1');
+        $this->assertEquals(10, $result2->diceValues[0]);
+        $this->assertFalse($result2->isCriticalFailure, 'Expected no critical failure flag when not rolling 1');
     }
 
     /**
@@ -98,6 +79,74 @@ final class CriticalTest extends TestCase
 
         $this->assertSame(19, $expr->modifiers->criticalSuccess);
         $this->assertSame(2, $expr->modifiers->criticalFailure);
+
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(19, 2);
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(2, $result->diceValues[0]);
+        $this->assertTrue($result->isCriticalFailure, 'Expected critical failure');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success');
+    }
+
+    /**
+     * Parser captures critical hits with thresholds.
+     */
+    public function testParserCapturesCriticalHitWithThrehsholdAbove(): void
+    {
+        $expression = '1d20 crit 19 glitch 1 >= 21';
+
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(19, 20);
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Not expected hit');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertTrue($result->isSuccess, 'Expected hit (nat 20)');
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+    }
+
+    /**
+     * Parser captures critical hits with thresholds.
+     */
+    public function testParserCapturesCriticalHitWithThrehshold(): void
+    {
+        $expression = '1d20 crit 18 glitch 1 >= 19';
+
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(17, 18, 19);
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(17, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Not expected hit');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(18, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Not expected hit');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertTrue($result->isSuccess, 'Expected hit');
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
     }
 
     /**
@@ -131,6 +180,10 @@ final class CriticalTest extends TestCase
      */
     public function testCanInspectCriticalDetails(): void
     {
+        $this->mockRng->expects($this->exactly(1))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(6);
+
         $expression = '1d6 crit 6 glitch 1';
 
         // Parse to get thresholds
@@ -138,20 +191,8 @@ final class CriticalTest extends TestCase
         $this->assertSame(6, $expr->modifiers->criticalSuccess);
         $this->assertSame(1, $expr->modifiers->criticalFailure);
 
-        // Roll until we get a critical
-        $foundCrit = false;
-        for ($i = 0; $i < 50; $i++) {
-            $result = $this->phpdice->roll($expression);
-
-            if ($result->isCriticalSuccess) {
-                // Can see the die value that triggered it
-                $this->assertContains(6, $result->diceValues);
-                $foundCrit = true;
-                break;
-            }
-        }
-
-        $this->assertTrue($foundCrit, 'Expected to roll at least one critical in 50 rolls');
+        $result = $this->phpdice->roll($expression);
+        $this->assertContains(6, $result->diceValues);
     }
 
     /**
@@ -163,24 +204,12 @@ final class CriticalTest extends TestCase
      */
     public function testMultipleDiceCriticalDetection(): void
     {
-        $foundCrit = false;
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 6, 2);
 
-        // Roll 3d6 many times - should eventually get at least one 6
-        for ($i = 0; $i < 50; $i++) {
-            $result = $this->phpdice->roll('3d6 crit 6');
-
-            // Check if any die rolled a 6
-            $hasSix = in_array(6, $result->diceValues, true);
-
-            if ($hasSix) {
-                $this->assertTrue($result->isCriticalSuccess, 'Expected critical flag when any die is 6');
-                $foundCrit = true;
-            } else {
-                $this->assertFalse($result->isCriticalSuccess, 'Expected no critical flag when no die is 6');
-            }
-        }
-
-        $this->assertTrue($foundCrit, 'Expected at least one critical in 50 rolls of 3d6');
+        $result = $this->phpdice->roll('3d6 crit 6');
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical flag when any die is 6');
     }
 
     /**
@@ -188,34 +217,26 @@ final class CriticalTest extends TestCase
      */
     public function testBothCriticalThresholds(): void
     {
-        $expr = $this->phpdice->parse('1d20 crit 20 glitch 1');
+        $expression = '1d20 crit 20 glitch 1';
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(20, 1, 19);
 
+        $expr = $this->phpdice->parse($expression);
         $this->assertSame(20, $expr->modifiers->criticalSuccess);
         $this->assertSame(1, $expr->modifiers->criticalFailure);
 
-        // Verify they work independently
-        $foundCrit = false;
-        $foundGlitch = false;
+        $result = $this->phpdice->roll($expression);
+        $this->assertTrue($result->isCriticalSuccess);
+        $this->assertFalse($result->isCriticalFailure);
 
-        for ($i = 0; $i < 100; $i++) {
-            $result = $this->phpdice->roll('1d20 crit 20 glitch 1');
+        $result = $this->phpdice->roll($expression);
+        $this->assertFalse($result->isCriticalSuccess);
+        $this->assertTrue($result->isCriticalFailure);
 
-            if ($result->diceValues[0] === 20) {
-                $this->assertTrue($result->isCriticalSuccess);
-                $this->assertFalse($result->isCriticalFailure);
-                $foundCrit = true;
-            } elseif ($result->diceValues[0] === 1) {
-                $this->assertFalse($result->isCriticalSuccess);
-                $this->assertTrue($result->isCriticalFailure);
-                $foundGlitch = true;
-            } else {
-                $this->assertFalse($result->isCriticalSuccess);
-                $this->assertFalse($result->isCriticalFailure);
-            }
-        }
-
-        $this->assertTrue($foundCrit, 'Expected at least one crit');
-        $this->assertTrue($foundGlitch, 'Expected at least one glitch');
+        $result = $this->phpdice->roll($expression);
+        $this->assertFalse($result->isCriticalSuccess);
+        $this->assertFalse($result->isCriticalFailure);
     }
 
     /**
@@ -267,25 +288,15 @@ final class CriticalTest extends TestCase
      */
     public function testCriticalWithAdvantage(): void
     {
-        $foundCrit = false;
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(20, 1);
 
-        // With advantage, should eventually roll a 20
-        for ($i = 0; $i < 50; $i++) {
-            $result = $this->phpdice->roll('1d20 advantage crit 20');
+        $result = $this->phpdice->roll('1d20 advantage crit 20');
 
-            // Should roll 2 dice
-            $this->assertCount(2, $result->diceValues);
-
-            // Check if either die is a 20
-            $hasTwenty = in_array(20, $result->diceValues, true);
-
-            if ($hasTwenty) {
-                $this->assertTrue($result->isCriticalSuccess);
-                $foundCrit = true;
-            }
-        }
-
-        $this->assertTrue($foundCrit, 'Expected at least one crit with advantage in 50 rolls');
+        // Should roll 2 dice
+        $this->assertCount(2, $result->diceValues);
+        $this->assertTrue($result->isCriticalSuccess);
     }
 
     /**
@@ -293,25 +304,13 @@ final class CriticalTest extends TestCase
      */
     public function testCriticalWithKeepHighest(): void
     {
-        // Roll 4d6 keep 3 highest - critical should trigger on ANY die, not just kept
-        $foundCrit = false;
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 6, 1, 1);
 
-        for ($i = 0; $i < 50; $i++) {
-            $result = $this->phpdice->roll('4d6 keep 3 highest crit 6');
-
-            $this->assertCount(4, $result->diceValues);
-
-            $hasSix = in_array(6, $result->diceValues, true);
-
-            if ($hasSix) {
-                $this->assertTrue($result->isCriticalSuccess);
-                $foundCrit = true;
-            } else {
-                $this->assertFalse($result->isCriticalSuccess);
-            }
-        }
-
-        $this->assertTrue($foundCrit, 'Expected at least one 6 in 50 rolls of 4d6');
+        $result = $this->phpdice->roll('4d6 keep 3 highest crit 6');
+        $this->assertCount(4, $result->diceValues);
+        $this->assertTrue($result->isCriticalSuccess);
     }
 
     /**
@@ -319,14 +318,15 @@ final class CriticalTest extends TestCase
      */
     public function testCustomCriticalThresholds(): void
     {
-        // d6 with crit on 5 only
-        $result = $this->phpdice->roll('1d6 crit 5');
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(5, 4);
 
-        if ($result->diceValues[0] === 5) {
-            $this->assertTrue($result->isCriticalSuccess);
-        } else {
-            $this->assertFalse($result->isCriticalSuccess);
-        }
+        $result = $this->phpdice->roll('1d6 crit 5');
+        $this->assertTrue($result->isCriticalSuccess);
+
+        $result = $this->phpdice->roll('1d6 crit 5');
+        $this->assertFalse($result->isCriticalSuccess);
     }
 
     /**
@@ -334,25 +334,22 @@ final class CriticalTest extends TestCase
      */
     public function testCriticalWithSuccessCounting(): void
     {
-        // Can combine critical detection with success counting
-        $expr = $this->phpdice->parse('5d6 success threshold 4 crit 6 glitch 1');
+        $this->mockRng->expects($this->exactly(5))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(4, 1, 1, 1, 1);
 
+        $expression = '5d6 success threshold 4 crit 6 glitch 1';
+
+        // Can combine critical detection with success counting
+        // TODO Makes not a lot of sense, remove ?
+        $expr = $this->phpdice->parse($expression);
         $this->assertSame(4, $expr->modifiers->successThreshold);
         $this->assertSame(6, $expr->modifiers->criticalSuccess);
         $this->assertSame(1, $expr->modifiers->criticalFailure);
 
-        $result = $this->phpdice->roll('5d6 success threshold 4 crit 6 glitch 1');
-
-        // Should have success count
+        $result = $this->phpdice->roll($expression);
         $this->assertIsInt($result->successCount);
-
-        // Should check for criticals
-        if (in_array(6, $result->diceValues, true)) {
-            $this->assertTrue($result->isCriticalSuccess);
-        }
-        if (in_array(1, $result->diceValues, true)) {
-            $this->assertTrue($result->isCriticalFailure);
-        }
+        $this->assertFalse($result->isCriticalSuccess);
     }
 
     /**
@@ -362,18 +359,15 @@ final class CriticalTest extends TestCase
     {
         // Reroll 1s, but a rerolled 1 should still count as critical failure
         $expr = $this->phpdice->parse('1d20 reroll <= 1 glitch 1');
-
         $this->assertSame(1, $expr->modifiers->rerollThreshold);
         $this->assertSame(1, $expr->modifiers->criticalFailure);
 
-        // Note: After reroll, the final value shouldn't be 1 (unless limit reached)
-        // But the diceValues array contains final values after rerolls
-        $result = $this->phpdice->roll('1d20 reroll 1 <= 1 glitch 1');
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 1);
 
-        // If final value is 1, it means reroll limit was hit - should be critical
-        if ($result->diceValues[0] === 1) {
-            $this->assertTrue($result->isCriticalFailure);
-        }
+        $result = $this->phpdice->roll('1d20 reroll 1 <= 1 glitch 1');
+        $this->assertTrue($result->isCriticalFailure);
     }
 
     /**
@@ -388,14 +382,12 @@ final class CriticalTest extends TestCase
         $this->assertSame(6, $expr->modifiers->criticalSuccess);
         $this->assertSame(6, $expr->modifiers->explosionThreshold);
 
-        // Just verify the expression parses correctly with both modifiers
-        // Actual behavior: explosion changes dice values, so we'll just test
-        // that critical detection works in general, not specifically with explosions
-        $result = $this->phpdice->roll('1d6 crit 6');
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(6, 6);
 
-        if ($result->diceValues[0] === 6) {
-            $this->assertTrue($result->isCriticalSuccess);
-        }
+        $result = $this->phpdice->roll('1d6 explode 1 crit 6');
+        $this->assertFalse($result->isCriticalSuccess);
     }
 
     /**
@@ -403,6 +395,10 @@ final class CriticalTest extends TestCase
      */
     public function testCriticalFlagsDefaultToFalse(): void
     {
+        $this->mockRng->expects($this->exactly(1))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(20);
+
         // No critical thresholds configured
         $result = $this->phpdice->roll('1d20');
 
@@ -437,15 +433,24 @@ final class CriticalTest extends TestCase
      */
     public function testCriticalWithComparison(): void
     {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(20, 15, 14);
+
         $result = $this->phpdice->roll('1d20 crit 20 >= 15');
-
-        // Should have both critical detection and success roll evaluation
         $this->assertIsBool($result->isSuccess);
+        $this->assertTrue($result->isCriticalSuccess);
+        $this->assertTrue($result->isSuccess);
 
-        if ($result->diceValues[0] === 20) {
-            $this->assertTrue($result->isCriticalSuccess);
-            $this->assertTrue($result->isSuccess); // 20 >= 15
-        }
+        $result = $this->phpdice->roll('1d20 crit 20 >= 15');
+        $this->assertIsBool($result->isSuccess);
+        $this->assertFalse($result->isCriticalSuccess);
+        $this->assertTrue($result->isSuccess);
+
+        $result = $this->phpdice->roll('1d20 crit 20 >= 15');
+        $this->assertIsBool($result->isSuccess);
+        $this->assertFalse($result->isCriticalSuccess);
+        $this->assertFalse($result->isSuccess);
     }
 
     /**

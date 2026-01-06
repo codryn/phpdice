@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace PHPDice\Tests\Integration;
 
-use PHPDice\PHPDice;
-use PHPUnit\Framework\TestCase;
-
 /**
  * Integration tests for success rolls and comparisons (US8).
  *
@@ -15,15 +12,8 @@ use PHPUnit\Framework\TestCase;
  * @covers \PHPDice\Parser\Lexer
  * @covers \PHPDice\Roller\DiceRoller
  */
-final class ComparisonTest extends TestCase
+final class ComparisonTest extends BaseTestCaseMock
 {
-    private PHPDice $phpdice;
-
-    protected function setUp(): void
-    {
-        $this->phpdice = new PHPDice();
-    }
-
     /**
      * AC1: Expression includes both die value and success/failure flag.
      *
@@ -33,19 +23,23 @@ final class ComparisonTest extends TestCase
      */
     public function testComparisonIncludesValueAndFlag(): void
     {
+        $this->mockRng->expects($this->once())
+            ->method('generate')
+            ->willReturn(15);
+
         $result = $this->phpdice->roll('1d20 >= 15');
 
         // Should have a die value
         $this->assertNotNull($result->diceValues);
         $this->assertCount(1, $result->diceValues);
-        $this->assertGreaterThanOrEqual(1, $result->diceValues[0]);
-        $this->assertLessThanOrEqual(20, $result->diceValues[0]);
+        $this->assertEquals([15], $result->diceValues);
 
         // Should have isSuccess flag (boolean, not null)
         $this->assertIsBool($result->isSuccess);
+        $this->assertTrue($result->isSuccess);
 
         // Total should equal the die value
-        $this->assertSame($result->diceValues[0], $result->total);
+        $this->assertEquals(15, $result->total);
     }
 
     /**
@@ -57,11 +51,15 @@ final class ComparisonTest extends TestCase
      */
     public function testSuccessFlagTrueWhenMeetsThreshold(): void
     {
+        $this->mockRng->expects($this->once())
+            ->method('generate')
+            ->willReturn(10);
+
         // Use a guaranteed success: 1d20+20 >= 1 (minimum 21, threshold 1)
         $result = $this->phpdice->roll('1d20+20 >= 1');
 
         $this->assertTrue($result->isSuccess, 'Expected success for 1d20+20 >= 1 (always succeeds)');
-        $this->assertGreaterThanOrEqual(1, $result->total);
+        $this->assertEquals(30, $result->total);
     }
 
     /**
@@ -69,25 +67,19 @@ final class ComparisonTest extends TestCase
      */
     public function testGreaterThanOrEqualOperator(): void
     {
-        // Roll many times and verify success flag matches actual comparison
-        $successes = 0;
-        $failures = 0;
+        // Test success case
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(10, 5);
 
-        for ($i = 0; $i < 100; $i++) {
-            $result = $this->phpdice->roll('1d20 >= 10');
+        $result = $this->phpdice->roll('1d20 >= 10');
+        $this->assertTrue($result->isSuccess, 'Expected success when total (10) >= 10');
+        $this->assertEquals(10, $result->total);
 
-            if ($result->total >= 10) {
-                $this->assertTrue($result->isSuccess, "Expected success when total ({$result->total}) >= 10");
-                $successes++;
-            } else {
-                $this->assertFalse($result->isSuccess, "Expected failure when total ({$result->total}) < 10");
-                $failures++;
-            }
-        }
-
-        // Should have both successes and failures (very unlikely to get all one or the other)
-        $this->assertGreaterThan(0, $successes, 'Expected at least one success in 100 rolls');
-        $this->assertGreaterThan(0, $failures, 'Expected at least one failure in 100 rolls');
+        // Test failure case
+        $result2 = $this->phpdice->roll('1d20 >= 10');
+        $this->assertFalse($result2->isSuccess, 'Expected failure when total (5) < 10');
+        $this->assertEquals(5, $result2->total);
     }
 
     /**
@@ -99,11 +91,15 @@ final class ComparisonTest extends TestCase
      */
     public function testSuccessFlagFalseWhenFailsThreshold(): void
     {
+        $this->mockRng->expects($this->once())
+            ->method('generate')
+            ->willReturn(20);
+
         // Use a guaranteed failure: 1d20 >= 25 (maximum 20, threshold 25)
         $result = $this->phpdice->roll('1d20 >= 25');
 
         $this->assertFalse($result->isSuccess, 'Expected failure for 1d20 >= 25 (always fails)');
-        $this->assertLessThan(25, $result->total);
+        $this->assertEquals(20, $result->total);
     }
 
     /**
@@ -115,13 +111,15 @@ final class ComparisonTest extends TestCase
      */
     public function testCanInspectComparisonDetails(): void
     {
+        $this->mockRng->expects($this->once())
+            ->method('generate')
+            ->willReturn(12);
+
         $expression = '1d20+5 >= 15';
         $result = $this->phpdice->roll($expression);
 
         // Can see the actual roll value (total)
-        $this->assertIsNumeric($result->total);
-        $this->assertGreaterThanOrEqual(6, $result->total); // 1 + 5
-        $this->assertLessThanOrEqual(25, $result->total); // 20 + 5
+        $this->assertEquals(17, $result->total); // 12 + 5
 
         // Can see the threshold from the expression
         $expr = $this->phpdice->parse($expression);
@@ -130,13 +128,7 @@ final class ComparisonTest extends TestCase
 
         // Can see the success status
         $this->assertIsBool($result->isSuccess);
-
-        // Verify success status matches the comparison
-        if ($result->total >= 15) {
-            $this->assertTrue($result->isSuccess);
-        } else {
-            $this->assertFalse($result->isSuccess);
-        }
+        $this->assertTrue($result->isSuccess); // 17 >= 15
     }
 
     /**
@@ -144,16 +136,18 @@ final class ComparisonTest extends TestCase
      */
     public function testComparisonWithArithmetic(): void
     {
+        $this->mockRng->expects($this->once())
+            ->method('generate')
+            ->willReturn(15);
+
         $expression = '1d20+3 >= 15';
         $result = $this->phpdice->roll($expression);
 
         // Total should include the +3 modifier
-        $this->assertGreaterThanOrEqual(4, $result->total); // 1 + 3
-        $this->assertLessThanOrEqual(23, $result->total); // 20 + 3
+        $this->assertEquals(18, $result->total); // 15 + 3
 
         // Success should be based on total (including +3)
-        $expectedSuccess = $result->total >= 15;
-        $this->assertSame($expectedSuccess, $result->isSuccess);
+        $this->assertTrue($result->isSuccess); // 18 >= 15
     }
 
     /**
@@ -161,13 +155,19 @@ final class ComparisonTest extends TestCase
      */
     public function testGreaterThanOperator(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(15, 20);
+
         // Guaranteed success: 1d20+20 > 1 (minimum 21, threshold 1)
         $result = $this->phpdice->roll('1d20+20 > 1');
         $this->assertTrue($result->isSuccess);
+        $this->assertEquals(35, $result->total); // 15 + 20
 
         // Guaranteed failure: 1d20 > 20 (maximum 20, threshold 20, needs > not >=)
         $result2 = $this->phpdice->roll('1d20 > 20');
         $this->assertFalse($result2->isSuccess);
+        $this->assertEquals(20, $result2->total);
     }
 
     /**
@@ -175,13 +175,19 @@ final class ComparisonTest extends TestCase
      */
     public function testLessThanOrEqualOperator(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(15, 1);
+
         // Guaranteed success: 1d20 <= 25 (maximum 20, threshold 25)
         $result = $this->phpdice->roll('1d20 <= 25');
         $this->assertTrue($result->isSuccess);
+        $this->assertEquals(15, $result->total);
 
         // Guaranteed failure: 1d20 <= 0 (minimum 1, threshold 0)
         $result2 = $this->phpdice->roll('1d20 <= 0');
         $this->assertFalse($result2->isSuccess);
+        $this->assertEquals(1, $result2->total);
     }
 
     /**
@@ -189,13 +195,19 @@ final class ComparisonTest extends TestCase
      */
     public function testLessThanOperator(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(15, 1);
+
         // Guaranteed success: 1d20 < 25 (maximum 20, threshold 25)
         $result = $this->phpdice->roll('1d20 < 25');
         $this->assertTrue($result->isSuccess);
+        $this->assertEquals(15, $result->total);
 
         // Guaranteed failure: 1d20 < 1 (minimum 1, threshold 1, needs < not <=)
         $result2 = $this->phpdice->roll('1d20 < 1');
         $this->assertFalse($result2->isSuccess);
+        $this->assertEquals(1, $result2->total);
     }
 
     /**
@@ -203,24 +215,19 @@ final class ComparisonTest extends TestCase
      */
     public function testEqualityOperator(): void
     {
-        // Roll many times to eventually hit the target
-        $foundMatch = false;
-        $foundNonMatch = false;
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(3, 4);
 
-        for ($i = 0; $i < 100; $i++) {
-            $result = $this->phpdice->roll('1d6 == 3');
+        // Test match
+        $result = $this->phpdice->roll('1d6 == 3');
+        $this->assertTrue($result->isSuccess);
+        $this->assertEquals(3, $result->total);
 
-            if ($result->total == 3) {
-                $this->assertTrue($result->isSuccess);
-                $foundMatch = true;
-            } else {
-                $this->assertFalse($result->isSuccess);
-                $foundNonMatch = true;
-            }
-        }
-
-        $this->assertTrue($foundMatch, 'Expected to roll a 3 at least once in 100 rolls');
-        $this->assertTrue($foundNonMatch, 'Expected to roll non-3 at least once in 100 rolls');
+        // Test non-match
+        $result2 = $this->phpdice->roll('1d6 == 3');
+        $this->assertFalse($result2->isSuccess);
+        $this->assertEquals(4, $result2->total);
     }
 
     /**
@@ -228,9 +235,14 @@ final class ComparisonTest extends TestCase
      */
     public function testNoComparisonNoSuccessFlag(): void
     {
+        $this->mockRng->expects($this->once())
+            ->method('generate')
+            ->willReturn(10);
+
         $result = $this->phpdice->roll('1d20+5');
 
         $this->assertNull($result->isSuccess, 'Expected null isSuccess for expression without comparison');
+        $this->assertEquals(15, $result->total); // 10 + 5
     }
 
     /**
@@ -238,16 +250,18 @@ final class ComparisonTest extends TestCase
      */
     public function testComparisonWithComplexExpression(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(4, 5);
+
         $expression = '2d6+3 >= 10';
         $result = $this->phpdice->roll($expression);
 
         // Total should be 2d6 + 3
-        $this->assertGreaterThanOrEqual(5, $result->total); // 2 + 3
-        $this->assertLessThanOrEqual(15, $result->total); // 12 + 3
+        $this->assertEquals(12, $result->total); // 4 + 5 + 3
 
         // Success should match comparison
-        $expectedSuccess = $result->total >= 10;
-        $this->assertSame($expectedSuccess, $result->isSuccess);
+        $this->assertTrue($result->isSuccess); // 12 >= 10
     }
 
     /**
@@ -255,18 +269,20 @@ final class ComparisonTest extends TestCase
      */
     public function testComparisonWithPlaceholders(): void
     {
+        $this->mockRng->expects($this->once())
+            ->method('generate')
+            ->willReturn(12);
+
         $expression = '1d20+%bonus% >= %dc%';
         $variables = ['bonus' => 5, 'dc' => 15];
 
         $result = $this->phpdice->roll($expression, $variables);
 
         // Total should be 1d20 + 5
-        $this->assertGreaterThanOrEqual(6, $result->total);
-        $this->assertLessThanOrEqual(25, $result->total);
+        $this->assertEquals(17, $result->total); // 12 + 5
 
         // Success should be based on >= 15
-        $expectedSuccess = $result->total >= 15;
-        $this->assertSame($expectedSuccess, $result->isSuccess);
+        $this->assertTrue($result->isSuccess); // 17 >= 15
     }
 
     /**
@@ -304,18 +320,22 @@ final class ComparisonTest extends TestCase
      */
     public function testComparisonWithAdvantage(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(12, 17);
+
         $expression = '1d20 advantage >= 15';
         $result = $this->phpdice->roll($expression);
 
         // Should roll 2 dice (advantage)
         $this->assertCount(2, $result->diceValues);
+        $this->assertEquals([12, 17], $result->diceValues);
 
         // Total should be the higher of the two
-        $this->assertSame(max($result->diceValues), $result->total);
+        $this->assertEquals(17, $result->total);
 
         // Success should match comparison
-        $expectedSuccess = $result->total >= 15;
-        $this->assertSame($expectedSuccess, $result->isSuccess);
+        $this->assertTrue($result->isSuccess); // 17 >= 15
     }
 
     /**
@@ -323,18 +343,25 @@ final class ComparisonTest extends TestCase
      */
     public function testComparisonWithKeepHighest(): void
     {
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(2, 4, 5, 3);
+
         $expression = '4d6 keep 3 highest +0 >= 12';
         $result = $this->phpdice->roll($expression);
 
         // Should roll 4 dice
         $this->assertCount(4, $result->diceValues);
+        $this->assertEquals([2, 4, 5, 3], $result->diceValues);
 
         // Should keep 3
         $this->assertCount(3, $result->keptDice ?? []);
 
+        // Total should be sum of 3 highest: 3+4+5 = 12
+        $this->assertEquals(12, $result->total);
+
         // Success should be based on total of kept dice
-        $expectedSuccess = $result->total >= 12;
-        $this->assertSame($expectedSuccess, $result->isSuccess);
+        $this->assertTrue($result->isSuccess); // 12 >= 12
     }
 
     /**
@@ -342,19 +369,22 @@ final class ComparisonTest extends TestCase
      */
     public function testSuccessCountingStillWorksIndependently(): void
     {
+        $this->mockRng->expects($this->exactly(5))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(6, 8, 9, 5, 10);
+
         $expression = '5d10 success threshold 7';
         $result = $this->phpdice->roll($expression);
 
-        // Should have success count
+        // Should have success count: 8, 9, 10 are >= 7 = 3 successes
         $this->assertIsInt($result->successCount);
-        $this->assertGreaterThanOrEqual(0, $result->successCount);
-        $this->assertLessThanOrEqual(5, $result->successCount);
+        $this->assertEquals(3, $result->successCount);
 
         // Should NOT have isSuccess (no comparison)
         $this->assertNull($result->isSuccess);
 
         // Total should equal success count in success counting mode
-        $this->assertSame($result->successCount, $result->total);
+        $this->assertEquals(3, $result->total);
     }
 
     /**

@@ -30,6 +30,11 @@ class DiceRoller
      */
     public function roll(DiceExpression $expression, ?Node $ast = null): RollResult
     {
+        // If we have an AST with multiple dice groups, handle them separately
+        if ($ast !== null && $this->hasMultipleDiceGroups($ast)) {
+            return $this->rollMultipleDiceGroups($ast, $expression);
+        }
+
         $spec = $expression->specification;
         $modifiers = $expression->modifiers;
         $diceValues = [];
@@ -43,6 +48,7 @@ class DiceRoller
         // Roll each die
         $rerollHistory = null;
         $explosionHistory = null;
+        $originalDiceValues = []; // Track original values before explosions for critical detection
 
         for ($i = 0; $i < $totalDiceToRoll; $i++) {
             // Generate raw roll based on dice type
@@ -81,6 +87,9 @@ class DiceRoller
                     ];
                 }
             }
+
+            // Store the original value before explosions (for critical detection)
+            $originalDiceValues[$i] = $diceValues[$i];
 
             // Handle explosions if configured (FR-039: reroll and add when threshold met)
             if ($modifiers->explosionThreshold !== null && $modifiers->explosionOperator !== null) {
@@ -157,24 +166,53 @@ class DiceRoller
         }
 
         // Check for critical success/failure (US9)
-        // Criticals are based on raw die values (not rerolled or exploded values)
+        // Criticals are based on ORIGINAL die values (before explosions, after rerolls)
+        // However, dice that exploded should NOT count as criticals (they're being rerolled)
         $isCriticalSuccess = false;
         $isCriticalFailure = false;
 
         if ($modifiers->criticalSuccess !== null) {
-            // Check if ANY die rolled the critical success value
-            foreach ($diceValues as $value) {
-                if ($value === $modifiers->criticalSuccess) {
-                    $isCriticalSuccess = true;
+            // Check if ANY die rolled the critical success value (using original values)
+            foreach ($originalDiceValues as $i => $value) {
+                // Skip dice that exploded - they don't count as criticals
+                if ($explosionHistory !== null && isset($explosionHistory[$i])) {
+                    continue;
+                }
+
+                if ($value >= $modifiers->criticalSuccess) {
+                    // If there's a comparison threshold, critical only counts if the roll would hit
+                    // Exception: natural max (e.g., 20 on d20) always hits regardless of threshold
+                    if ($expression->comparisonOperator !== null && $expression->comparisonThreshold !== null) {
+                        $isNaturalMax = ($value === $spec->sides);
+                        if ($isNaturalMax) {
+                            // Natural max always hits and is always critical
+                            $isCriticalSuccess = true;
+                            // Override isSuccess for natural max
+                            $isSuccess = true;
+                        } elseif ($isSuccess === true) {
+                            // Roll would hit the threshold, so it's a critical
+                            $isCriticalSuccess = true;
+                        }
+                        // Otherwise, roll is in crit range but doesn't hit - not a critical
+                    } else {
+                        // No threshold, any value in crit range is critical
+                        $isCriticalSuccess = true;
+                    }
                     break;
                 }
             }
         }
 
         if ($modifiers->criticalFailure !== null) {
-            // Check if ANY die rolled the critical failure value
-            foreach ($diceValues as $value) {
-                if ($value === $modifiers->criticalFailure) {
+            // Check if ANY die rolled the critical failure value (using original values)
+            // Skip dice that exploded - they don't count as criticals
+            foreach ($originalDiceValues as $i => $value) {
+                // Skip dice that exploded
+                if ($explosionHistory !== null && isset($explosionHistory[$i])) {
+                    continue;
+                }
+
+                if ($value <= $modifiers->criticalFailure) {
                     $isCriticalFailure = true;
                     break;
                 }
@@ -366,4 +404,92 @@ class DiceRoller
             $this->setDiceResults($node->getArgument(), $result);
         }
     }
+
+    /**
+     * Check if the AST contains multiple dice groups.
+     *
+     * @param Node $node Node to check
+     * @return bool True if multiple dice groups exist
+     */
+    private function hasMultipleDiceGroups(Node $node): bool
+    {
+        $diceCount = 0;
+        $this->countDiceNodes($node, $diceCount);
+        return $diceCount > 1;
+    }
+
+    /**
+     * Count dice nodes in the AST.
+     *
+     * @param Node $node Node to traverse
+     * @param int $count Counter reference
+     */
+    private function countDiceNodes(Node $node, int &$count): void
+    {
+        if ($node instanceof DiceNode) {
+            $count++;
+        } elseif ($node instanceof BinaryOpNode) {
+            $this->countDiceNodes($node->getLeft(), $count);
+            $this->countDiceNodes($node->getRight(), $count);
+        } elseif ($node instanceof FunctionNode) {
+            $this->countDiceNodes($node->getArgument(), $count);
+        }
+    }
+
+    /**
+     * Roll multiple dice groups and combine results.
+     *
+     * @param Node $ast AST with multiple dice groups
+     * @param DiceExpression $expression Original expression
+     * @return RollResult Combined roll result
+     */
+    private function rollMultipleDiceGroups(Node $ast, DiceExpression $expression): RollResult
+    {
+        $allDiceValues = [];
+
+        // Roll each dice group and collect all values
+        $this->rollDiceNode($ast, $allDiceValues);
+
+        // Evaluate the AST to get the total
+        $total = (int) $ast->evaluate();
+
+        return new RollResult(
+            expression: $expression,
+            total: $total,
+            diceValues: $allDiceValues
+        );
+    }
+
+    /**
+     * Roll dice for a node and its children, collecting all dice values.
+     *
+     * @param Node $node Node to roll
+     * @param array<int> $allDiceValues Collector for all dice values
+     */
+    private function rollDiceNode(Node $node, array &$allDiceValues): void
+    {
+        if ($node instanceof DiceNode) {
+            // Roll this dice group
+            $diceValues = [];
+            for ($i = 0; $i < $node->getCount(); $i++) {
+                $value = $this->rng->generate(1, $node->getSides());
+                $diceValues[] = $this->convertDiceValue($value, $node->getType());
+            }
+
+            // Store the sum in the node for evaluation
+            $node->setRollResult(array_sum($diceValues));
+
+            // Add individual values to the collection
+            foreach ($diceValues as $value) {
+                $allDiceValues[] = $value;
+            }
+        } elseif ($node instanceof BinaryOpNode) {
+            // Process left and right children
+            $this->rollDiceNode($node->getLeft(), $allDiceValues);
+            $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof FunctionNode) {
+            $this->rollDiceNode($node->getArgument(), $allDiceValues);
+        }
+    }
+
 }

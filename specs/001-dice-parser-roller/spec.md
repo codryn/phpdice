@@ -16,7 +16,7 @@
 - Q: When should critical success/failure thresholds be specified - at parse time (part of the expression syntax) or at roll time (as parameters to the roll function)? → A: Parse time (expression syntax)
 - Q: When should placeholder variables be bound - at parse time or roll time? → A: Parse time (required for statistical calculations to work)
 - Q: What syntax should be used for placeholder variables to avoid collisions with reserved keywords? → A: Use %name% prefix/suffix syntax (e.g., "1d20+%str%+%dex%")
-- Q: Should the parser support full arithmetic expressions beyond simple addition/subtraction? → A: Yes, support parentheses for grouping and mathematical functions: floor(), ceiling(), round()
+- Q: Should the parser support full arithmetic expressions beyond simple addition/subtraction? → A: Yes, support parentheses for grouping and mathematical functions: floor(), ceil(), round()
 - Q: How should exploding dice work when a die rolls its maximum value? → A: Reroll and add to total/successes; dice can explode multiple times up to a hard limit of 100 explosions per die
 - Q: Should the explosion limit be configurable in the expression? → A: Yes, use syntax like "3d6 explode 3" to limit to 3 explosions per die; omitting the number defaults to 100
 - Q: Can explosion be triggered by a range of values instead of just the maximum? → A: Yes, use threshold syntax like "3d6 explode 3 >=5" to explode on values >= 5, limited to 3 explosions per die
@@ -245,7 +245,7 @@ The parser MUST fail with clear, actionable error messages for all invalid input
 #### Arithmetic Expression Validation
 
 - **Division by zero** (e.g., "1d20/0", "2d6/(3-3)"): Parser MUST reject with error identifying division by zero
-- **Mathematical function with missing argument** (e.g., "floor()", "ceiling()", "round()"): Parser MUST reject with error indicating required argument missing
+- **Mathematical function with missing argument** (e.g., "floor()", "ceil()", "round()"): Parser MUST reject with error indicating required argument missing
 - **Mathematical function with invalid argument count** (e.g., "floor(1d20, 5)" with too many args): Parser MUST reject with error about argument count
 - **Parenthesis mismatch** (e.g., "(1d20+5", "2d6+3)", "((1d20)"): Parser MUST reject with error identifying unmatched parenthesis and its position
 
@@ -302,7 +302,7 @@ The parser MUST fail with clear, actionable error messages for all invalid input
 ### Functional Requirements
 
 - **FR-001**: Parser MUST accept basic dice notation strings (e.g., "3d6", "1d20", "2d10") and return a structured representation
-- **FR-002**: Parser MUST support arithmetic expressions including addition, subtraction, multiplication, division, parentheses for grouping, and mathematical functions floor(), ceiling(), round() (e.g., "1d20+5", "(2d6+3)*2", "floor(1d20/2)"). Round always rounds to nearest integer and accepts only one argument.
+- **FR-002**: Parser MUST support arithmetic expressions including addition, subtraction, multiplication, division, parentheses for grouping, and mathematical functions floor(), ceil(), round() (e.g., "1d20+5", "(2d6+3)*2", "floor(1d20/2)"). Round always rounds to nearest integer and accepts only one argument.
 - **FR-003**: Parser MUST support advantage mechanics (roll N times, keep M highest) for any dice type
 - **FR-003a**: Parser MUST validate that keep-count does not exceed roll-count for advantage mechanics and reject invalid expressions at parse time
 - **FR-004**: Parser MUST support disadvantage mechanics (roll N times, keep M lowest) for any dice type

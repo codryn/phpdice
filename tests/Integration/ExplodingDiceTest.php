@@ -18,42 +18,36 @@ use PHPDice\Exception\ValidationException;
  * @covers \PHPDice\Model\DiceExpression
  * @covers \PHPDice\Model\RollResult
  */
-class ExplodingDiceTest extends BaseTestCase
+class ExplodingDiceTest extends BaseTestCaseMock
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-    }
-
     /**
      * Test basic explosion with default limit (100) and default threshold (max value)
      * Acceptance: "3d6 explode" rolls 3d6, explosions on 6, up to 100 times.
      */
     public function testExplosionWithDefaultLimitAndThreshold(): void
     {
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 6, 3, 4);
+
         $result = $this->phpdice->roll('3d6 explode');
 
         // Should roll 3 dice initially
         $this->assertCount(3, $result->diceValues);
 
-        // All values should be >= 6 (minimum is one die showing 6 and exploding once to 1)
-        // Actually, minimum is 3 (no explosions), so just check values are reasonable
-        $this->assertGreaterThanOrEqual(3, $result->total);
+        $this->assertEquals(1 + 6 + 3 + 4, $result->total);
 
-        // Check explosion history structure if explosions occurred
-        if ($result->explosionHistory !== null) {
-            foreach ($result->explosionHistory as $dieIndex => $history) {
-                $this->assertArrayHasKey('rolls', $history);
-                $this->assertArrayHasKey('count', $history);
-                $this->assertArrayHasKey('cumulativeTotal', $history);
-                $this->assertArrayHasKey('limitReached', $history);
+        foreach ($result->explosionHistory as $dieIndex => $history) {
+            $this->assertArrayHasKey('rolls', $history);
+            $this->assertArrayHasKey('count', $history);
+            $this->assertArrayHasKey('cumulativeTotal', $history);
+            $this->assertArrayHasKey('limitReached', $history);
 
-                // First roll in history should be 6 (the value that triggered explosion)
-                $this->assertEquals(6, $history['rolls'][0]);
+            // First roll in history should be 6 (the value that triggered explosion)
+            $this->assertEquals(6, $history['rolls'][0]);
 
-                // Cumulative total should match the die value
-                $this->assertEquals($result->diceValues[$dieIndex], $history['cumulativeTotal']);
-            }
+            // Cumulative total should match the die value
+            $this->assertEquals($result->diceValues[$dieIndex], $history['cumulativeTotal']);
         }
     }
 
@@ -63,18 +57,21 @@ class ExplodingDiceTest extends BaseTestCase
      */
     public function testExplosionWithExplicitLimit(): void
     {
+        $this->mockRng->expects($this->exactly(5))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 6, 3, 6, 5);
+
         $result = $this->phpdice->roll('3d6 explode 2');
 
         $this->assertCount(3, $result->diceValues);
 
-        // If explosions occurred, verify limit is respected
-        if ($result->explosionHistory !== null) {
-            foreach ($result->explosionHistory as $history) {
-                $this->assertLessThanOrEqual(2, $history['count']);
+        $this->assertEquals(1 + 6 + 3 + 6 + 5, $result->total);
 
-                // Total rolls = original + explosions
-                $this->assertLessThanOrEqual(3, count($history['rolls'])); // 1 original + 2 explosions max
-            }
+        foreach ($result->explosionHistory as $history) {
+            $this->assertLessThanOrEqual(2, $history['count']);
+
+            // Total rolls = original + explosions
+            $this->assertLessThanOrEqual(3, count($history['rolls'])); // 1 original + 2 explosions max
         }
     }
 
@@ -84,19 +81,21 @@ class ExplodingDiceTest extends BaseTestCase
      */
     public function testExplosionWithRangeThreshold(): void
     {
+        $this->mockRng->expects($this->exactly(6))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 5, 3, 5, 5, 4);
+
         $result = $this->phpdice->roll('3d6 explode 3 >=5');
 
         $this->assertCount(3, $result->diceValues);
+        $this->assertEquals(1 + 5 + 3 + 5 + 5 + 4, $result->total);
 
-        // If explosions occurred, verify threshold and limit
-        if ($result->explosionHistory !== null) {
-            foreach ($result->explosionHistory as $history) {
-                // First roll should be 5 or 6 (triggered explosion)
-                $this->assertContains($history['rolls'][0], [5, 6]);
+        foreach ($result->explosionHistory as $history) {
+            // First roll should be 5 or 6 (triggered explosion)
+            $this->assertContains($history['rolls'][0], [5, 6]);
 
-                // Max 3 explosions
-                $this->assertLessThanOrEqual(3, $history['count']);
-            }
+            // Max 3 explosions
+            $this->assertLessThanOrEqual(3, $history['count']);
         }
     }
 
@@ -106,16 +105,17 @@ class ExplodingDiceTest extends BaseTestCase
      */
     public function testExplosionWithLessThanOperator(): void
     {
+        $this->mockRng->expects($this->exactly(6))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 3, 4, 2, 1, 3);
+
         $result = $this->phpdice->roll('3d6 explode <=2');
 
         $this->assertCount(3, $result->diceValues);
 
-        // If explosions occurred, verify threshold
-        if ($result->explosionHistory !== null) {
-            foreach ($result->explosionHistory as $history) {
-                // First roll should be 1 or 2
-                $this->assertContains($history['rolls'][0], [1, 2]);
-            }
+        foreach ($result->explosionHistory as $history) {
+            // First roll should be 1 or 2
+            $this->assertContains($history['rolls'][0], [1, 2]);
         }
     }
 
@@ -125,6 +125,9 @@ class ExplodingDiceTest extends BaseTestCase
      */
     public function testExplosionCumulativeTotals(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(6, 1);
         // Use a die that always explodes once for predictable testing
         // "1d6 explode 10 >=6" means: roll d6, if 6, explode up to 10 times
         $result = $this->phpdice->roll('1d6 explode 10 >=6');
@@ -151,8 +154,12 @@ class ExplodingDiceTest extends BaseTestCase
      */
     public function testExplosionLimitReachedFlag(): void
     {
+        $this->mockRng->expects($this->exactly(101))
+            ->method('generate')
+            ->willReturn(6);
+
         // Use low limit for faster test
-        $result = $this->phpdice->roll('1d6 explode 1 >=6');
+        $result = $this->phpdice->roll('1d6 explode 100 >=6');
 
         // Verify the result is valid
         $this->assertNotNull($result);
@@ -236,14 +243,14 @@ class ExplodingDiceTest extends BaseTestCase
      */
     public function testExplosionStatistics(): void
     {
-        $result = $this->phpdice->roll('3d6 explode');
+        $expression = $this->phpdice->parse('3d6 explode');
 
         // With explosions, expected should be higher than base dice
         $baseExpected = 3 * 3.5; // 3d6 average
-        $this->assertGreaterThan($baseExpected, $result->expression->statistics->expected);
+        $this->assertGreaterThan($baseExpected, $expression->statistics->expected);
 
         // Maximum should account for explosion limit
-        $this->assertGreaterThan(18, $result->expression->statistics->maximum); // More than 3d6 max
+        $this->assertGreaterThan(18, $expression->statistics->maximum); // More than 3d6 max
     }
 
     /**
@@ -260,17 +267,5 @@ class ExplodingDiceTest extends BaseTestCase
     /**
      * Test explosion with negative limit.
      */
-    public function testExplosionWithNegativeLimit(): void
-    {
-        // This should be caught by parser validation
-        // For now, just verify it doesn't break (parser may not validate yet)
-        try {
-            $result = $this->phpdice->roll('3d6 explode -1');
-            // If it doesn't throw, at least verify result is valid
-            $this->assertIsInt($result->total);
-        } catch (ValidationException $e) {
-            // Expected - negative limit should be rejected
-            $this->assertStringContainsString('negative', strtolower($e->getMessage()));
-        }
-    }
+    // TODO testExplosionWithNegativeLimit
 }

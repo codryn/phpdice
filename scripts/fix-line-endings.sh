@@ -1,4 +1,4 @@
-s#!/bin/bash
+#!/bin/bash
 
 # Script to fix line endings in code files
 # Converts Windows (CRLF) to Unix (LF) line endings

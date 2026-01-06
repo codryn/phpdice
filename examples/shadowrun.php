@@ -77,21 +77,23 @@ echo "\n";
 echo "5. Extended Test (Need 15 total successes):\n";
 $totalSuccesses = 0;
 $interval = 1;
-$targetSuccesses = 15;
+$targetSuccesses = 20;
+$pool = 10;
 
-while ($totalSuccesses < $targetSuccesses && $interval <= 10) {
-    $result = $phpdice->roll('10d6 >=5');
+while ($totalSuccesses < $targetSuccesses && $interval <= 10 && $pool > 0) {
+    $result = $phpdice->roll("{$pool}d6 >=5");
     $totalSuccesses += $result->successCount;
 
-    echo "   Interval {$interval}: {$result->successCount} successes " .
+    echo "   Interval {$interval}, pool {$pool}: {$result->successCount} successes " .
          "(total: {$totalSuccesses})\n";
     $interval++;
+    $pool--;
 }
 
 if ($totalSuccesses >= $targetSuccesses) {
     echo "   SUCCESS! Completed in " . ($interval - 1) . " intervals.\n";
 } else {
-    echo "   FAILED after 10 intervals.\n";
+    echo "   FAILED after " . ($interval - 1) . " intervals.\n";
 }
 echo "\n";
 
@@ -141,9 +143,27 @@ echo "   Expected successes: {$stats->expected}\n";
 echo "   (Each die has 33.33% chance to succeed)\n\n";
 
 // 10. Scatter (for grenades - simplified)
-echo "10. Grenade Scatter Distance (2d6):\n";
-$result = $phpdice->roll('2d6');
-echo "   Scatter distance: {$result->total} meters\n";
-echo "   (Roll additional d6 for direction: 1=N, 2=NE, 3=SE, etc.)\n\n";
+echo "10. Grenade Scatter Distance (2d6 - Successes):\n";
+$result = $phpdice->roll('2d6 - 3');
+if ($result->total <= 0) {
+    echo "   No scatter! Hits target directly.\n\n";
+} else {
+    echo "   Scatter distance: " . max(0, $result->total) . " meters\n";
+    $dir = $phpdice->roll('2d6');
+    $dirs = [
+        2 => 'Backward',
+        3 => 'Backward-Left',
+        4 => 'Left',
+        5 => 'Forward-Left',
+        6 => 'Forward-Left',
+        7 => 'Forward',
+        8 => 'Forward-Right',
+        9 => 'Forward-Right',
+        10 => 'Right',
+        11 => 'Backward-Right',
+        12 => 'Backward'
+    ];
+    echo "   Direction: {$dirs[$dir->total]} (Roll {$dir->total})\n\n";
+}
 
 echo "=== Examples Complete ===\n";

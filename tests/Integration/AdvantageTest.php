@@ -17,7 +17,7 @@ use PHPDice\Exception\ValidationException;
  * @covers \PHPDice\Model\DiceExpression
  * @covers \PHPDice\Model\RollResult
  */
-class AdvantageTest extends BaseTestCase
+class AdvantageTest extends BaseTestCaseMock
 {
     /**
      * @test
@@ -25,14 +25,21 @@ class AdvantageTest extends BaseTestCase
      */
     public function testAdvantageRollsTwoDiceKeepsHighest(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(17, 18);
+
         $result = $this->phpdice->roll('1d20 advantage');
 
         // Should roll 2 dice
         $this->assertCount(2, $result->diceValues);
+        $this->assertEquals(18, $result->total);
 
         // Should keep 1 die (the highest)
         $this->assertCount(1, $result->keptDice ?? []);
+        $this->assertEquals(1, $result->keptDice[0]);
         $this->assertCount(1, $result->discardedDice ?? []);
+        $this->assertEquals(0, $result->discardedDice[0]);
 
         // Total should be the highest rolled value
         $highest = max($result->diceValues);
@@ -49,14 +56,21 @@ class AdvantageTest extends BaseTestCase
      */
     public function testDisadvantageRollsTwoDiceKeepsLowest(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(17, 18);
+
         $result = $this->phpdice->roll('1d20 disadvantage');
 
         // Should roll 2 dice
         $this->assertCount(2, $result->diceValues);
+        $this->assertEquals(17, $result->total);
 
         // Should keep 1 die (the lowest)
         $this->assertCount(1, $result->keptDice ?? []);
+        $this->assertEquals(0, $result->keptDice[0]);
         $this->assertCount(1, $result->discardedDice ?? []);
+        $this->assertEquals(1, $result->discardedDice[0]);
 
         // Total should be the lowest rolled value
         $lowest = min($result->diceValues);
@@ -73,6 +87,10 @@ class AdvantageTest extends BaseTestCase
      */
     public function testKeepHighestForAbilityScores(): void
     {
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 2, 3, 4);
+
         $result = $this->phpdice->roll('4d6 keep 3 highest');
 
         // Should roll 4 dice
@@ -103,6 +121,10 @@ class AdvantageTest extends BaseTestCase
      */
     public function testKeepLowest(): void
     {
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 2, 3, 4);
+
         $result = $this->phpdice->roll('4d6 keep 1 lowest');
 
         // Should roll 4 dice
@@ -187,6 +209,10 @@ class AdvantageTest extends BaseTestCase
      */
     public function testAdvantageWithArithmetic(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(7, 8);
+
         $result = $this->phpdice->roll('1d20 advantage + 5');
 
         // Should roll 2 dice, keep highest, add 5
@@ -201,6 +227,10 @@ class AdvantageTest extends BaseTestCase
      */
     public function testDisadvantageWithArithmetic(): void
     {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(7, 8);
+
         $result = $this->phpdice->roll('1d20 disadvantage - 2');
 
         // Should roll 2 dice, keep lowest, subtract 2
@@ -215,6 +245,10 @@ class AdvantageTest extends BaseTestCase
      */
     public function testMultipleDiceWithAdvantage(): void
     {
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 2, 3, 4);
+
         $result = $this->phpdice->roll('2d6 advantage');
 
         // Should roll 4 dice (2 base + 2 advantage)
@@ -231,6 +265,10 @@ class AdvantageTest extends BaseTestCase
      */
     public function testKeepAllDice(): void
     {
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 2, 3, 4);
+
         $result = $this->phpdice->roll('4d6 keep 4 highest');
 
         // Should roll 4 dice

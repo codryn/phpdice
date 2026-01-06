@@ -110,7 +110,7 @@ Single library project structure: `src/`, `tests/` at repository root per plan.m
 - [X] T043 [US2] Add operator precedence handling (*, / before +, -) in parser
 - [X] T044 [US2] Add parenthesis matching validation (FR-033) in src/Parser/Validator.php
 - [X] T045 [US2] Add division by zero detection (FR-031) in src/Parser/Validator.php
-- [X] T046 [US2] Implement mathematical functions: floor(), ceiling(), round() in src/Parser/Functions.php
+- [X] T046 [US2] Implement mathematical functions: floor(), ceil(), round() in src/Parser/Functions.php
 - [X] T047 [US2] Add function argument validation (FR-032) - must have exactly 1 argument in src/Parser/Validator.php
 - [X] T048 [US2] Update StatisticalCalculator to handle arithmetic expressions in src/Model/StatisticalCalculator.php
 - [X] T049 [US2] Update DiceRoller to evaluate arithmetic expressions in src/Roller/DiceRoller.php

@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace PHPDice\Tests\Integration;
 
 use PHPDice\Exception\ParseException;
-use PHPDice\PHPDice;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Integration tests for placeholder variable support (US7).
@@ -16,15 +14,8 @@ use PHPUnit\Framework\TestCase;
  * @covers \PHPDice\Parser\Lexer
  * @covers \PHPDice\Roller\DiceRoller
  */
-final class PlaceholdersTest extends TestCase
+final class PlaceholdersTest extends BaseTestCase
 {
-    private PHPDice $phpdice;
-
-    protected function setUp(): void
-    {
-        $this->phpdice = new PHPDice();
-    }
-
     /**
      * AC1: Parse with variables, verify placeholder resolution.
      *

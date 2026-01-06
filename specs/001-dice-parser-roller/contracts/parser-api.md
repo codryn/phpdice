@@ -122,11 +122,11 @@ XdY+Z*N                # Standard precedence (* before +)
 ### Mathematical Functions
 ```
 floor(expression)      # Round down to integer
-ceiling(expression)    # Round up to integer  
+ceil(expression)    # Round up to integer  
 round(expression)      # Round to nearest integer
 
 floor(1d20/2)          # Half of 1d20, rounded down
-ceiling(3d6/2)         # Half of 3d6, rounded up
+ceil(3d6/2)         # Half of 3d6, rounded up
 round(1d20*1.5)        # 1d20 times 1.5, rounded
 floor((2d6+%str%)/2)   # Complex expression with function
 ```
@@ -229,7 +229,7 @@ reroll, threshold, crit, glitch
 ### Operator Precedence
 ```
 1. Parentheses ()
-2. Function calls (floor, ceiling, round)
+2. Function calls (floor, ceil, round)
 3. Dice notation (XdY)
 4. Reroll modifiers
 5. Keep/drop modifiers

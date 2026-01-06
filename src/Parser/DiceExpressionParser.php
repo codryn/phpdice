@@ -206,7 +206,7 @@ class DiceExpressionParser
     {
         $node = $this->parseFactor();
 
-        while ($this->match(Token::TYPE_OPERATOR, ['*', '/'])) {
+        while ($this->match(Token::TYPE_OPERATOR, ['*', '/', '~', '^'])) {
             $operator = $this->previous()->value;
             $right = $this->parseFactor();
             $node = new BinaryOpNode($node, (string)$operator, $right);
