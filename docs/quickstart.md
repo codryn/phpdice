@@ -94,7 +94,7 @@ echo "Kept die index: " . $result->keptDice[0] . "\n";
 
 ```php
 // Character has Strength 3, Dexterity 2
-$result = $dice->roll("1d20+$str$+$dex$", [
+$result = $dice->roll("1d20+\$str\$+\$dex\$", [
     "str" => 3,
     "dex" => 2
 ]);
@@ -134,7 +134,7 @@ echo "\n";
 
 ```php
 // D&D attack with critical on natural 20
-$result = $dice->roll("1d20+5 crit 20");
+$result = $dice->roll("1d20 crit 20 + 5");
 
 echo "Attack: {$result->total}\n";
 
@@ -175,7 +175,7 @@ echo "Expected: {$stats->expected}\n";
 
 ```php
 // Attack with weapon (+5 bonus), advantage, critical on 20
-$result = $dice->roll("1d20+5 advantage crit 20");
+$result = $dice->roll("1d20 advantage crit 20 + 5");
 
 echo "Attack: {$result->total}\n";
 echo "Dice: " . implode(", ", $result->diceValues) . "\n";
@@ -297,9 +297,9 @@ try {
 
 ```php
 try {
-    $expression = $dice->parse("1d20+$str$"); // Missing variable
-} catch (\PHPDice\Exception\ValidationException $e) {
-    echo "Validation error: {$e->getMessage()}\n";
+    $expression = $dice->parse("1d20+\$str\$"); // Missing variable
+} catch (\PHPDice\Exception\ParseException $e) {
+    echo "Parse error: {$e->getMessage()}\n";
     // Output: Validation error: Missing variable: $str$
 }
 ```
@@ -328,10 +328,10 @@ $result = $dice->roll("2d6 reroll <=2");
 echo "Damage: {$result->total}\n";
 echo "Final dice: " . implode(", ", $result->diceValues) . "\n";
 
-if ($result->rerolledDice) {
+if ($result->rerollHistory) {
     echo "Rerolled:\n";
-    foreach ($result->rerolledDice as $index => $original) {
-        echo "  Position $index: $original → {$result->diceValues[$index]}\n";
+    foreach ($result->rerollHistory as $index => $reroll) {
+        echo "  Position $index: " . implode(" → ", $reroll["rolls"]) . "\n";
     }
 }
 
@@ -360,7 +360,7 @@ echo "Final values: " . implode(", ", $result->diceValues) . "\n";
 if ($result->explosionHistory) {
     echo "Explosion chains:\n";
     foreach ($result->explosionHistory as $index => $chain) {
-        echo "  Die $index: " . implode(" + ", $chain) . " = {$result->diceValues[$index]}\n";
+        echo "  Die $index: " . implode(" + ", $chain["rolls"]) . " = {$result->diceValues[$index]}\n";
     }
 }
 
@@ -397,9 +397,9 @@ echo ($result->isSuccess ? "✓ Saved!" : "✗ Failed") . "\n";
 
 ```php
 // Complex roll: advantage, modifier, critical, DC check
-$result = $dice->roll("1d20+5 advantage crit 20 dc >=15");
+$result = $dice->roll("1d20 advantage crit 20 + 5 dc >=15");
 
-echo "Roll: {$result->total}\n";
+echo "Roll: {$result->total} ({$result->diceValues[0]} + 5) DC 15\n";
 echo "Success: " . ($result->isSuccess ? "Yes" : "No") . "\n";
 echo "Critical: " . ($result->isCriticalSuccess ? "Yes" : "No") . "\n";
 ```
@@ -421,7 +421,7 @@ echo "Critical: " . ($result->isCriticalSuccess ? "Yes" : "No") . "\n";
    
    // For repeated rolls with same expression
    for ($i = 0; $i < 100; $i++) {
-       $result = $dice->roll("3d6+5");  // Optimized internally
+       $result = $dice->rollExpression($expr);  // Optimized internally
    }
    ```
 
@@ -435,7 +435,7 @@ echo "Critical: " . ($result->isCriticalSuccess ? "Yes" : "No") . "\n";
 3. **Validate early**: Parser catches errors immediately
    ```php
    // This validates immediately at parse/roll time
-   $result = $dice->roll("1d20+$str$", ["str" => 3]);
+   $result = $dice->roll("1d20+ \$str\$", ["str" => 3]);
    ```
 
 ## Troubleshooting

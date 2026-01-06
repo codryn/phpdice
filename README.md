@@ -46,11 +46,11 @@ echo "Dice: " . implode(", ", $result->diceValues) . "\n";
 // Dice: 5, 6, 3
 ```
 
-See [doc/quickstart.md](doc/quickstart.md) for a 10-minute tutorial.
+See [docs/quickstart.md](docs/quickstart.md) for a 10-minute tutorial.
 
 ## Dice Expressions
 
-See [doc/expressions.md](doc/expressions.md) for all supported dice expressions.
+See [docs/expressions.md](docs/expressions.md) for all supported dice expressions.
 
 ## Game System Support
 
@@ -66,7 +66,7 @@ See [doc/expressions.md](doc/expressions.md) for all supported dice expressions.
 
 ## API Overview
 
-See [doc/api.md](doc/api.md) for complete reference.
+See [docs/api.md](docs/api.md) for complete reference.
 
 ## Documentation
 
