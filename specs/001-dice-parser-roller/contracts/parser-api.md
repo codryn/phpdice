@@ -54,7 +54,7 @@ $expr = $parser->parse("1d20 advantage");
 // Returns: DiceExpression(2d20 keep highest, min=1, max=20, expected≈13.825)
 
 // Success counting
-$expr = $parser->parse("5d6 >=4");
+$expr = $parser->parse("5d6 count >=4");
 // Returns: DiceExpression(5d6 count >=4, min=0, max=5, expected≈2.083)
 
 // Critical thresholds
@@ -155,13 +155,16 @@ XdY reroll N               # Reroll once if == N
 
 ### Success Counting
 ```
-XdY >=N                    # Count dice >= N
-XdY >N                     # Count dice > N
-XdY threshold N            # Count dice >= N (alias)
+XdY count >=N              # Count dice >= N
+XdY count >N               # Count dice > N
+XdY success threshold N    # Count dice >= N (legacy)
+XdY threshold N            # Count dice >= N (legacy)
 
-5d6 >=4                    # Count sixes, fives, fours
-10d10 threshold 7          # Count 7+ results
+5d6 count >=4              # Count sixes, fives, fours
+10d10 count >= 7           # Count 7+ results
 ```
+
+**Note**: The `count` keyword is **required** for success counting to distinguish it from DC checks (e.g., `1d20+5 dc >= 15`).
 
 ### Special Dice
 ```
@@ -197,7 +200,7 @@ XdY+Z dc ==N             # Roll == target
 2d6 dc >7                # Beat 7
 ```
 
-**Note**: The `dc` keyword is **required** for DC checks to distinguish them from success counting (e.g., `5d6 >= 4` for success counting).
+**Note**: The `dc` keyword is **required** for DC checks to distinguish them from success counting (e.g., `5d6 count >= 4` for success counting).
 
 ### Critical Thresholds
 ```

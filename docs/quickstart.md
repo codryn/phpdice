@@ -113,7 +113,7 @@ echo "Modified by: +5 (str +3, dex +2)\n";
 
 ```php
 // Shadowrun-style: roll 5d6, count 4+ as successes
-$result = $dice->roll("5d6 >=4");
+$result = $dice->roll("5d6 count >=4");
 
 echo "Successes: {$result->successCount}\n";
 echo "Dice rolled: " . implode(", ", $result->diceValues) . "\n";
@@ -220,7 +220,7 @@ echo "\n";
 
 ```php
 // Roll 8 dice, count 5+ as successes
-$result = $dice->roll("8d6 >=5");
+$result = $dice->roll("8d6 count >=5");
 
 echo "Hits: {$result->successCount}\n";
 

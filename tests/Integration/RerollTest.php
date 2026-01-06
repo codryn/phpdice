@@ -164,7 +164,7 @@ class RerollTest extends BaseTestCase
      */
     public function testRerollWithSuccessCounting(): void
     {
-        $result = $this->phpdice->roll('5d6 reroll <= 2 >= 4');
+        $result = $this->phpdice->roll('5d6 reroll <= 2 count >= 4');
 
         // All dice should be > 2 (rerolled)
         foreach ($result->diceValues as $value) {

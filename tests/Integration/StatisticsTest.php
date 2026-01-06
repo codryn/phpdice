@@ -135,7 +135,7 @@ class StatisticsTest extends BaseTestCase
      */
     public function testSuccessCountingStatistics(): void
     {
-        $expression = $this->phpdice->parse('5d6 >=4');
+        $expression = $this->phpdice->parse('5d6 count >=4');
         $stats = $expression->getStatistics();
 
         $this->assertSame(0, $stats->minimum); // All dice fail
@@ -151,7 +151,7 @@ class StatisticsTest extends BaseTestCase
      */
     public function testSuccessCountingWithGreaterThanStatistics(): void
     {
-        $expression = $this->phpdice->parse('10d10 >7');
+        $expression = $this->phpdice->parse('10d10 count >7');
         $stats = $expression->getStatistics();
 
         $this->assertSame(0, $stats->minimum);
@@ -331,7 +331,7 @@ class StatisticsTest extends BaseTestCase
      */
     public function testFudgeDiceSuccessCountingStatistics(): void
     {
-        $expression = $this->phpdice->parse('6dF >=1');
+        $expression = $this->phpdice->parse('6dF count >=1');
         $stats = $expression->getStatistics();
 
         $this->assertSame(0, $stats->minimum); // All dice fail

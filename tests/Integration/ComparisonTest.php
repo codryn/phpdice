@@ -300,7 +300,7 @@ final class ComparisonTest extends BaseTestCaseMock
      */
     public function testMultiDieComparisonIsSuccessCounting(): void
     {
-        $expression = '5d10 >= 7';
+        $expression = '5d10 count >= 7';
         $expr = $this->phpdice->parse($expression);
 
         // Should be success counting, not expression-level comparison

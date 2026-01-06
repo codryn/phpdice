@@ -55,7 +55,7 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testComparisonOperatorSyntax(): void
     {
-        $result = $this->phpdice->roll('10d10 >= 7');
+        $result = $this->phpdice->roll('10d10 count >= 7');
 
         // Should roll 10 dice
         $this->assertCount(10, $result->diceValues);
@@ -78,7 +78,7 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testStrictGreaterThanOperator(): void
     {
-        $result = $this->phpdice->roll('5d6 > 3');
+        $result = $this->phpdice->roll('5d6 count > 3');
 
         // Count dice > 3 (i.e., 4, 5, 6)
         $expected = 0;
@@ -116,7 +116,7 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testSuccessCountStatistics(): void
     {
-        $expression = $this->phpdice->parse('6d6 >= 4');
+        $expression = $this->phpdice->parse('6d6 count >= 4');
         $stats = $expression->statistics;
 
         // Min: 0 (all dice fail)
@@ -136,7 +136,7 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testD10SuccessStatistics(): void
     {
-        $expression = $this->phpdice->parse('10d10 >= 7');
+        $expression = $this->phpdice->parse('10d10 count >= 7');
         $stats = $expression->statistics;
 
         // Min: 0
@@ -156,7 +156,7 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testStrictGreaterThanStatistics(): void
     {
-        $expression = $this->phpdice->parse('5d6 > 4');
+        $expression = $this->phpdice->parse('5d6 count > 4');
         $stats = $expression->statistics;
 
         // Min: 0
@@ -179,7 +179,7 @@ class SuccessCountingTest extends BaseTestCase
         $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('Invalid success operator');
 
-        $this->phpdice->parse('5d6 < 3');
+        $this->phpdice->parse('5d6 count < 3');
     }
 
     /**
@@ -189,7 +189,7 @@ class SuccessCountingTest extends BaseTestCase
     public function testAllDiceSucceed(): void
     {
         // Use a low threshold where all values succeed
-        $result = $this->phpdice->roll('4d6 >= 1');
+        $result = $this->phpdice->roll('4d6 count >= 1');
 
         // All 4 dice should succeed (every d6 value is >= 1)
         $this->assertEquals(4, $result->successCount);
@@ -203,7 +203,7 @@ class SuccessCountingTest extends BaseTestCase
     public function testNoDiceSucceed(): void
     {
         // Use an impossible threshold
-        $result = $this->phpdice->roll('4d6 > 6');
+        $result = $this->phpdice->roll('4d6 count > 6');
 
         // No dice should succeed (d6 max is 6, > 6 is impossible)
         $this->assertEquals(0, $result->successCount);
@@ -216,7 +216,7 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testIndividualDiceValuesAvailable(): void
     {
-        $result = $this->phpdice->roll('8d10 >= 6');
+        $result = $this->phpdice->roll('8d10 count >= 6');
 
         // Should have all 8 dice values
         $this->assertCount(8, $result->diceValues);
@@ -234,7 +234,7 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testSuccessCountingWithKeepHighest(): void
     {
-        $result = $this->phpdice->roll('6d6 keep 4 highest >= 5');
+        $result = $this->phpdice->roll('6d6 keep 4 highest count >= 5');
 
         // Should roll 6 dice
         $this->assertCount(6, $result->diceValues);

@@ -357,10 +357,10 @@ PHPDice supports dice notation for major RPG systems:
 
 | System | Example | Features Used |
 |--------|---------|---------------|
-| D&D 5e | `1d20+5 >= 15` | Basic dice, modifiers, comparisons, advantage, criticals |
+| D&D 5e | `1d20+5 dc >= 15` | Basic dice, modifiers, comparisons, advantage, criticals |
 | Pathfinder | `3d6+2` | Basic dice, modifiers |
-| Shadowrun 5e | `12d6 >=5` | Success counting, rerolls |
-| World of Darkness | `10d10 >=8` | Success counting |
+| Shadowrun 5e | `12d6 count >=5` | Success counting, exploding dice (edge) |
+| World of Darkness | `10d10 count >=8` | Success counting |
 | FATE | `4dF+2` | Fudge dice, modifiers |
 | Savage Worlds | `1d6 explode + 1d8 explode` | Exploding dice |
 | Call of Cthulhu | `d%` | Percentile dice |

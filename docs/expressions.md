@@ -60,11 +60,14 @@ Examples:
 
 ## Success Counting
 
-Use comparison operators to count successes:
-```XdY >= N```, ```XdY > N```, ```XdY <= N```, ```XdY < N```, ```XdY == N```
+Use the 'count' keyword with comparison operators to count successes:
+```XdY count >= N```, ```XdY count > N```
+
 Examples:
-```5d6 >= 4``` - Roll five d6s, count how many are 4 or higher
-```10d10 > 7``` - Roll ten d10s, count how many are greater than 7
+```5d6 count >= 4``` - Roll five d6s, count how many are 4 or higher
+```10d10 count > 7``` - Roll ten d10s, count how many are greater than 7
+
+**Note**: The `count` keyword is **required** to distinguish success counting from DC checks (e.g., `1d20+5 dc >= 15`).
 
 ## Rerolls
 

@@ -441,22 +441,17 @@ class DiceExpressionParser
             $this->validator->validateRerollRange($spec, $rerollThreshold, $rerollOperator);
         }
 
-        // Check for success counting: "success threshold N" or ">=N" or ">N"
-        // Parsed after reroll to allow "reroll <= 2 >= 4" syntax
-        if ($this->match(Token::TYPE_KEYWORD, ['success'])) {
-            // Expect "threshold N"
-            if (!$this->match(Token::TYPE_KEYWORD, ['threshold'])) {
-                throw new ParseException('Expected "threshold" after "success"', $this->getCurrentPosition());
+        // Check for success counting: "count >=N" or "count >N" or "success threshold N" (legacy)
+        // Parsed after reroll to allow "reroll <= 2 count >= 4" syntax
+        if ($this->match(Token::TYPE_KEYWORD, ['count'])) {
+            // After 'count', comparison operator is required
+            if (!$this->check(Token::TYPE_COMPARISON)) {
+                throw new ParseException(
+                    "Expected comparison operator after 'count' keyword",
+                    $this->peek()->position
+                );
             }
-            $successThreshold = $this->consumeNumber();
-            $successOperator = '>='; // Default to >= for "success threshold N" syntax
-        } elseif ($this->match(Token::TYPE_KEYWORD, ['threshold'])) {
-            // Just "threshold N" (shorthand for "success threshold N")
-            $successThreshold = $this->consumeNumber();
-            $successOperator = '>=';
-        } elseif ($this->check(Token::TYPE_COMPARISON) && $spec->count > 1) {
-            // Direct comparison: ">=N" or ">N" - only for multiple dice (dice pools)
-            // Single die comparisons (e.g., "1d20 >= 15") are treated as expression-level success rolls
+            
             $comparison = $this->advance();
             $operator = (string)$comparison->value;
 
@@ -470,6 +465,18 @@ class DiceExpressionParser
 
             $successOperator = $operator;
             $successThreshold = $this->consumeNumber();
+        } elseif ($this->match(Token::TYPE_KEYWORD, ['success'])) {
+            // Legacy syntax: "success threshold N"
+            // Expect "threshold N"
+            if (!$this->match(Token::TYPE_KEYWORD, ['threshold'])) {
+                throw new ParseException('Expected "threshold" after "success"', $this->getCurrentPosition());
+            }
+            $successThreshold = $this->consumeNumber();
+            $successOperator = '>='; // Default to >= for "success threshold N" syntax
+        } elseif ($this->match(Token::TYPE_KEYWORD, ['threshold'])) {
+            // Legacy syntax: just "threshold N" (shorthand for "success threshold N")
+            $successThreshold = $this->consumeNumber();
+            $successOperator = '>=';
         }
 
         // Check for explode: "explode [limit] [operator threshold]"

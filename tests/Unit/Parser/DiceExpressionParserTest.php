@@ -113,7 +113,7 @@ class DiceExpressionParserTest extends TestCase
 
     public function testParseWithSuccessCounting(): void
     {
-        $expression = $this->parser->parse('5d6 >= 4');
+        $expression = $this->parser->parse('5d6 count >= 4');
 
         $this->assertSame(4, $expression->modifiers->successThreshold);
         $this->assertSame('>=', $expression->modifiers->successOperator);
