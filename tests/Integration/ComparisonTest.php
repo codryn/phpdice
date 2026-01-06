@@ -70,7 +70,7 @@ final class ComparisonTest extends BaseTestCaseMock
         // Test success case
         $this->mockRng->expects($this->exactly(2))
             ->method('generate')
-            ->willReturnOnConsecutiveCalls(10, 5);
+            ->willReturnOnConsecutiveCalls(10, 9);
 
         $result = $this->phpdice->roll('1d20 >= 10');
         $this->assertTrue($result->isSuccess, 'Expected success when total (10) >= 10');
@@ -78,8 +78,8 @@ final class ComparisonTest extends BaseTestCaseMock
 
         // Test failure case
         $result2 = $this->phpdice->roll('1d20 >= 10');
-        $this->assertFalse($result2->isSuccess, 'Expected failure when total (5) < 10');
-        $this->assertEquals(5, $result2->total);
+        $this->assertFalse($result2->isSuccess, 'Expected failure when total (9) < 10');
+        $this->assertEquals(9, $result2->total);
     }
 
     /**
@@ -138,16 +138,16 @@ final class ComparisonTest extends BaseTestCaseMock
     {
         $this->mockRng->expects($this->once())
             ->method('generate')
-            ->willReturn(15);
+            ->willReturn(14);
 
         $expression = '1d20+3 >= 15';
         $result = $this->phpdice->roll($expression);
 
         // Total should include the +3 modifier
-        $this->assertEquals(18, $result->total); // 15 + 3
+        $this->assertEquals(17, $result->total); // 14 + 3
 
         // Success should be based on total (including +3)
-        $this->assertTrue($result->isSuccess); // 18 >= 15
+        $this->assertTrue($result->isSuccess); // 17 >= 15
     }
 
     /**
@@ -157,17 +157,15 @@ final class ComparisonTest extends BaseTestCaseMock
     {
         $this->mockRng->expects($this->exactly(2))
             ->method('generate')
-            ->willReturnOnConsecutiveCalls(15, 20);
+            ->willReturnOnConsecutiveCalls(15, 19);
 
-        // Guaranteed success: 1d20+20 > 1 (minimum 21, threshold 1)
-        $result = $this->phpdice->roll('1d20+20 > 1');
+        $result = $this->phpdice->roll('1d20+20 > 34');
         $this->assertTrue($result->isSuccess);
         $this->assertEquals(35, $result->total); // 15 + 20
 
-        // Guaranteed failure: 1d20 > 20 (maximum 20, threshold 20, needs > not >=)
-        $result2 = $this->phpdice->roll('1d20 > 20');
+        $result2 = $this->phpdice->roll('1d20 > 19');
         $this->assertFalse($result2->isSuccess);
-        $this->assertEquals(20, $result2->total);
+        $this->assertEquals(19, $result2->total);
     }
 
     /**
@@ -177,17 +175,15 @@ final class ComparisonTest extends BaseTestCaseMock
     {
         $this->mockRng->expects($this->exactly(2))
             ->method('generate')
-            ->willReturnOnConsecutiveCalls(15, 1);
+            ->willReturnOnConsecutiveCalls(15, 16);
 
-        // Guaranteed success: 1d20 <= 25 (maximum 20, threshold 25)
-        $result = $this->phpdice->roll('1d20 <= 25');
+        $result = $this->phpdice->roll('1d20 <= 15');
         $this->assertTrue($result->isSuccess);
         $this->assertEquals(15, $result->total);
 
-        // Guaranteed failure: 1d20 <= 0 (minimum 1, threshold 0)
-        $result2 = $this->phpdice->roll('1d20 <= 0');
+        $result2 = $this->phpdice->roll('1d20 <= 15');
         $this->assertFalse($result2->isSuccess);
-        $this->assertEquals(1, $result2->total);
+        $this->assertEquals(16, $result2->total);
     }
 
     /**
@@ -197,17 +193,15 @@ final class ComparisonTest extends BaseTestCaseMock
     {
         $this->mockRng->expects($this->exactly(2))
             ->method('generate')
-            ->willReturnOnConsecutiveCalls(15, 1);
+            ->willReturnOnConsecutiveCalls(14, 15);
 
-        // Guaranteed success: 1d20 < 25 (maximum 20, threshold 25)
-        $result = $this->phpdice->roll('1d20 < 25');
+        $result = $this->phpdice->roll('1d20 < 15');
         $this->assertTrue($result->isSuccess);
-        $this->assertEquals(15, $result->total);
+        $this->assertEquals(14, $result->total);
 
-        // Guaranteed failure: 1d20 < 1 (minimum 1, threshold 1, needs < not <=)
-        $result2 = $this->phpdice->roll('1d20 < 1');
+        $result2 = $this->phpdice->roll('1d20 < 15');
         $this->assertFalse($result2->isSuccess);
-        $this->assertEquals(1, $result2->total);
+        $this->assertEquals(15, $result2->total);
     }
 
     /**
@@ -273,10 +267,11 @@ final class ComparisonTest extends BaseTestCaseMock
             ->method('generate')
             ->willReturn(12);
 
-        $expression = '1d20+$bonus$ >= $dc$';
+        $str = '1d20+$bonus$ >= $dc$';
         $variables = ['bonus' => 5, 'dc' => 15];
 
-        $result = $this->phpdice->roll($expression, $variables);
+        $expression = $this->phpdice->parse($str, $variables);
+        $result = $this->phpdice->rollExpression($expression, $variables);
 
         // Total should be 1d20 + 5
         $this->assertEquals(17, $result->total); // 12 + 5

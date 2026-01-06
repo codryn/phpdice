@@ -314,6 +314,28 @@ final class CriticalTest extends BaseTestCaseMock
     }
 
     /**
+     * Test critical detection with advantage.
+     */
+    public function testCriticalWithModifier(): void
+    {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(19, 20);
+
+        $result = $this->phpdice->roll('1d20 crit 20 + 1');
+
+        $this->assertCount(1, $result->diceValues);
+        $this->assertSame(20, $result->total);
+        $this->assertFalse($result->isCriticalSuccess);
+
+        $result = $this->phpdice->roll('1d20 crit 20 + 1');
+
+        $this->assertCount(1, $result->diceValues);
+        $this->assertSame(21, $result->total);
+        $this->assertTrue($result->isCriticalSuccess);
+    }    
+
+    /**
      * Test critical thresholds can be anywhere in valid range.
      */
     public function testCustomCriticalThresholds(): void
@@ -384,10 +406,10 @@ final class CriticalTest extends BaseTestCaseMock
 
         $this->mockRng->expects($this->exactly(2))
             ->method('generate')
-            ->willReturnOnConsecutiveCalls(6, 6);
+            ->willReturnOnConsecutiveCalls(6, 5);
 
-        $result = $this->phpdice->roll('1d6 explode 1 crit 6');
-        $this->assertFalse($result->isCriticalSuccess);
+        $result = $this->phpdice->roll('1d6 explode crit 6');
+        $this->assertTrue($result->isCriticalSuccess);
     }
 
     /**
