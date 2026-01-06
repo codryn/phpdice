@@ -1,5 +1,5 @@
 {
-    "name": "phpdice/phpdice",
+    "name": "codryn/phpdice",
     "description": "A comprehensive PHP library for parsing and rolling dice expressions for tabletop RPG systems",
     "type": "library",
     "license": "MIT",
@@ -7,7 +7,7 @@
     "authors": [
         {
             "name": "PHPDice Contributors",
-            "email": "contributors@phpdice.dev"
+            "email": "info@codryn.com"
         }
     ],
     "require": {
