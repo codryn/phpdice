@@ -20,7 +20,7 @@ $phpdice = new PHPDice();
 
 // Parse and roll a basic expression
 $expression = $phpdice->parse('3d6+5');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 
 echo $result->total; // e.g., 18
 print_r($result->diceValues); // e.g., [4, 6, 3]
@@ -58,12 +58,29 @@ Parses a dice expression string into a structured DiceExpression object.
 $expression = $phpdice->parse('1d20+%str%', ['str' => 3]);
 ```
 
-#### `roll(DiceExpression $expression): RollResult`
+#### `roll(string $expression, array $variables = []): RollResult`
 
-Executes a dice roll and returns the complete result.
+Parses and executes a dice roll and returns the complete result.
+
+**Parameters:**
+- `$expression` (string): The dice expression string to roll
+- `$variables` (array): Optional placeholder values (e.g., ['str' => 3, 'proficiency' => 2])
+
+**Returns:** `RollResult` - Complete roll result with total, individual dice, and metadata
+
+**Example:**
+```php
+$result = $phpdice->roll("1d20+5");
+echo $result->total; // Final result
+```
+
+#### `rollExpression(DiceExpression $expression, array $variables = []): RollResult`
+
+Executes a previously parsed dice roll and returns the complete result.
 
 **Parameters:**
 - `$expression` (DiceExpression): The parsed expression to roll
+- `$variables` (array): Optional placeholder values (e.g., ['str' => 3, 'proficiency' => 2])
 
 **Returns:** `RollResult` - Complete roll result with total, individual dice, and metadata
 
@@ -289,7 +306,7 @@ Generates a random integer using `random_int()`.
 
 ```php
 $expression = $phpdice->parse('3d6');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo $result->total; // Sum of three d6
 ```
 
@@ -297,12 +314,12 @@ echo $result->total; // Sum of three d6
 
 ```php
 $expression = $phpdice->parse('1d20+5');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo $result->total; // d20 + 5
 
 // Complex arithmetic
 $expression = $phpdice->parse('(2d6+3)*2');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 ```
 
 ### Advantage/Disadvantage
@@ -310,14 +327,14 @@ $result = $phpdice->roll($expression);
 ```php
 // D&D 5e advantage
 $expression = $phpdice->parse('1d20 advantage');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo "Rolled 2d20, kept: {$result->total}\n";
 print_r($result->keptDice);    // [index of higher roll]
 print_r($result->discardedDice); // [index of lower roll]
 
 // Disadvantage
 $expression = $phpdice->parse('1d20 disadvantage');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 ```
 
 ### Keep Highest/Lowest
@@ -325,7 +342,7 @@ $result = $phpdice->roll($expression);
 ```php
 // Character stats (4d6, drop lowest)
 $expression = $phpdice->parse('4d6 keep 3 highest');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo $result->total; // Sum of 3 highest dice
 ```
 
@@ -334,7 +351,7 @@ echo $result->total; // Sum of 3 highest dice
 ```php
 // Shadowrun: count dice >= 5
 $expression = $phpdice->parse('10d6 >=5');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo "Successes: {$result->successCount}\n";
 ```
 
@@ -343,11 +360,11 @@ echo "Successes: {$result->successCount}\n";
 ```php
 // Reroll 1s and 2s (once per die)
 $expression = $phpdice->parse('4d6 reroll <=2');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 
 // Limit rerolls
 $expression = $phpdice->parse('4d6 reroll 1 <=2');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 
 // Check reroll history
 if ($result->rerollHistory !== null) {
@@ -362,15 +379,15 @@ if ($result->rerollHistory !== null) {
 ```php
 // Savage Worlds: explode on 6
 $expression = $phpdice->parse('3d6 explode');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 
 // Custom explosion threshold
 $expression = $phpdice->parse('3d6 explode >=5');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 
 // Limit explosions
 $expression = $phpdice->parse('3d6 explode 3 >=6');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 
 // Check explosion history
 if ($result->explosionHistory !== null) {
@@ -386,12 +403,12 @@ if ($result->explosionHistory !== null) {
 ```php
 // FATE dice (4dF)
 $expression = $phpdice->parse('4dF');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo $result->total; // Sum of values (-1, 0, or +1)
 
 // Percentile dice
 $expression = $phpdice->parse('d%');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo $result->total; // 1-100
 ```
 
@@ -403,7 +420,7 @@ $expression = $phpdice->parse(
     '1d20+%str%+%proficiency%',
     ['str' => 3, 'proficiency' => 2]
 );
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo $result->total; // d20 + 3 + 2
 ```
 
@@ -412,7 +429,7 @@ echo $result->total; // d20 + 3 + 2
 ```php
 // D&D 5e skill check
 $expression = $phpdice->parse('1d20+5 >= 15');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo "Rolled: {$result->total}\n";
 echo $result->isSuccess ? "Success!" : "Failure!";
 ```
@@ -422,7 +439,7 @@ echo $result->isSuccess ? "Success!" : "Failure!";
 ```php
 // D&D 5e natural 20/1
 $expression = $phpdice->parse('1d20 crit 20 glitch 1');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 
 if ($result->isCriticalSuccess) {
     echo "Natural 20! Critical Success!\n";
@@ -432,7 +449,7 @@ if ($result->isCriticalSuccess) {
 
 // Custom thresholds
 $expression = $phpdice->parse('1d20 crit 19 glitch 2');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 ```
 
 ### Statistics (No Rolling)
@@ -467,7 +484,7 @@ if ($result->isCriticalSuccess) {
 
 // Shadowrun with rerolls
 $expression = $phpdice->parse('12d6 reroll <=1 >=5');
-$result = $phpdice->roll($expression);
+$result = $phpdice->rollExpression($expression);
 echo "Successes: {$result->successCount}\n";
 ```
 
@@ -483,7 +500,7 @@ use PHPDice\Exception\ValidationException;
 
 try {
     $expression = $phpdice->parse('invalid');
-    $result = $phpdice->roll($expression);
+    $result = $phpdice->rollExpression($expression);
 } catch (ParseException $e) {
     echo "Syntax error: {$e->getMessage()}\n";
 } catch (ValidationException $e) {

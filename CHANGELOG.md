@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional game system presets
 - Web-based dice roller demo
 
-## [1.0.0] - 2024-01-XX
+## [1.0.0] - 2025-01-XX
 
 ### Added
 
@@ -49,13 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PHPDice Facade**: Simple, intuitive API - `$dice->roll("3d6+5")`
 - **Immutable Data Models**: Thread-safe, predictable behavior
 - **Rich Result Objects**: Complete roll information with history tracking
-- **Type Safety**: Full PHP 8.3+ type declarations with strict mode
+- **Type Safety**: Full PHP 8.0+ type declarations with strict mode
 - **Comprehensive Error Handling**: Clear, actionable error messages
 - **Zero Dependencies**: No external packages required (except dev dependencies)
 
 #### Code Quality
-- **235 Passing Tests**: 100% test coverage for critical paths (66.94% overall)
-- **1,917 Test Assertions**: Comprehensive validation of all features
+- **360 Passing Tests**: 100% test coverage for critical paths (82% overall)
+- **1510 Test Assertions**: Comprehensive validation of all features
 - **PHPStan Level 9**: Maximum static analysis strictness
 - **PSR-12 Compliant**: Industry-standard code formatting
 - **Strict Types**: All 38 source files use `declare(strict_types=1)`
@@ -81,7 +81,7 @@ This release officially supports mechanics from:
 
 ### Technical Details
 
-- **Minimum PHP Version**: 8.3.0
+- **Minimum PHP Version**: 8.0.0
 - **Architecture**: Clean separation of parsing, rolling, and statistics
 - **Performance**: Optimized for repeated rolls with cached parsing
 - **Security**: Cryptographically secure RNG, input validation, infinite loop protection

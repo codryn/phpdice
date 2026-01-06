@@ -28,7 +28,7 @@ This project follows a simple code of conduct:
 
 ### Prerequisites
 
-- **PHP 8.3+** (strict requirement)
+- **PHP 8.0+** (strict requirement)
 - **Composer** for dependency management
 - **Git** for version control
 - Recommended: PHPStorm or VS Code with PHP extensions
@@ -410,7 +410,7 @@ phpdice/
 │       └── tasks.md
 ├── .php-cs-fixer.php       # Code style config
 ├── phpstan.neon            # Static analysis config
-├── phpunit.xml.dist        # Test configuration
+├── phpunit.xml           # Test configuration
 ├── composer.json           # Dependencies
 └── README.md               # Main documentation
 ```
