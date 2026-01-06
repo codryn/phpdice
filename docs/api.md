@@ -401,7 +401,7 @@ The `StatisticalCalculator` computes exact probability distributions:
 
 ## Version
 
-Current version: 1.0.0
+Current version: 0.2.0
 
 For changelog and migration guides, see [CHANGELOG.md](../CHANGELOG.md).
 
