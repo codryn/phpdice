@@ -124,7 +124,7 @@ N/A - Initial release
 - [GitHub Repository](https://github.com/codryn/phpdice)
 - [Issue Tracker](https://github.com/codryn/phpdice/issues)
 - [API Documentation](docs/api.md)
-- [Quick Start Guide](doc/quickstart.md)
+- [Quick Start Guide](docs/quickstart.md)
 
 ---
 
