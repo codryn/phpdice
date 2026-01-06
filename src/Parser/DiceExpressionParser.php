@@ -164,6 +164,7 @@ class DiceExpressionParser
             modifiers: $modifiers,
             statistics: $statistics,
             originalExpression: $expression,
+            astRoot: $this->astRoot,
             comparisonOperator: $comparisonOperator,
             comparisonThreshold: $comparisonThreshold
         );

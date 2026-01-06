@@ -26,6 +26,8 @@ composer require phpdice/phpdice
 
 ## Quick Start
 
+See doc/quickstart.md for a 10-minute tutorial.
+
 ```php
 <?php
 
@@ -59,7 +61,9 @@ echo "Min: {$stats->minimum}, Max: {$stats->maximum}, Expected: {$stats->expecte
 // Min: 8, Max: 23, Expected: 15.5
 ```
 
-## Supported Dice Notation
+## Usage
+
+See doc/quickstart.md for a 10-minute tutorial.
 
 ### Basic Dice
 
@@ -174,6 +178,8 @@ $phpdice->roll('1d6 explode + 1d8 explode + 2');
 
 ## API Overview
 
+See doc/api.md for complete reference.
+
 ### PHPDice
 
 Main facade class:
@@ -232,7 +238,7 @@ $stats->maximum;   // Maximum possible result
 $stats->expected;  // Expected value (mean), 3 decimal precision
 ```
 
-## Error Handling
+### Error Handling
 
 ```php
 use PHPDice\Exception\ParseException;
@@ -265,6 +271,8 @@ Common errors:
 - **[Examples](examples/)** - Game system specific examples
 
 ## Development
+
+See CONTRIBUTING.md for development guidelines.
 
 ### Setup
 
