@@ -7,7 +7,6 @@ namespace PHPDice\Tests\Unit\Parser;
 use PHPDice\Parser\Lexer;
 use PHPDice\Parser\Token;
 use PHPDice\Tests\Unit\BaseTestCase;
-use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for Lexer.

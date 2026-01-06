@@ -47,15 +47,12 @@ echo "   Result: " . ($result->isSuccess ? 'SUCCESS!' : 'FAILURE') . "\n\n";
 
 // 5. Critical Hit Detection
 echo "5. Attack Roll with Critical Detection:\n";
-$result = $phpdice->roll('1d20 crit 20 glitch 1 +7 >= 15');
-echo "   Roll: {$result->total}\n";
+$result = $phpdice->roll('1d20 crit 15 glitch 1 +7 >= 15');
+echo "   Result: {$result->total} (Rolled: " . implode(', ', $result->diceValues) . ")\n";
 if ($result->isCriticalSuccess) {
-    echo "   *** CRITICAL HIT! Natural 20! ***\n";
-    echo "   Rolling damage with double dice...\n";
-    $damageResult = $phpdice->roll('2d8+2d6+4'); // Doubled weapon + sneak attack
-    echo "   Critical Damage: {$damageResult->total}\n";
+    echo "   *** CRITICAL HIT CHANGE! ***\n";
 } elseif ($result->isCriticalFailure) {
-    echo "   *** CRITICAL MISS! Natural 1! ***\n";
+    echo "   *** CRITICAL MISS! ***\n";
 } else {
     echo "   " . ($result->isSuccess ? 'Hit!' : 'Miss!') . "\n";
 }
@@ -63,8 +60,9 @@ echo "\n";
 
 // 6. Normal Weapon Damage
 echo "6. Longsword Damage (1d8 + 3 STR):\n";
-$result = $phpdice->roll('1d8+3');
-echo "   Damage: {$result->total}\n\n";
+$variables = ['STR' => 3];
+$result = $phpdice->roll('1d8+%STR%', $variables);
+echo "   Damage: {$result->total} (Rolled: " . implode(', ', $result->diceValues) . ")\n\n";
 
 // 7. Fireball Spell (8d6)
 echo "7. Fireball Spell Damage (8d6):\n";

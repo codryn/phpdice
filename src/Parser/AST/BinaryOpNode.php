@@ -43,14 +43,14 @@ class BinaryOpNode extends Node
         return $left / $right;
     }
 
-    private function modulo(int|float $left, int|float $right): int|float
+    private function modulo(int|float $left, int|float $right): int
     {
         if ($right == 0) {
             throw new ValidationException('Modulo by zero', 'arithmetic');
         }
 
         return $left % $right;
-    }    
+    }
 
     public function getLeft(): Node
     {

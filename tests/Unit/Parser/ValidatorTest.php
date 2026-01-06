@@ -9,7 +9,6 @@ use PHPDice\Model\DiceSpecification;
 use PHPDice\Model\DiceType;
 use PHPDice\Parser\Validator;
 use PHPDice\Tests\Unit\BaseTestCase;
-use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for Validator.

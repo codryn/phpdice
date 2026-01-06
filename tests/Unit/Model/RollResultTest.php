@@ -120,7 +120,7 @@ class RollResultTest extends TestCase
     public function testRollResultWithRerollHistory(): void
     {
         $rerollHistory = [
-            0 => ['rolls' => [1, 4], 'count' => 1, 'limitReached' => false]
+            0 => ['rolls' => [1, 4], 'count' => 1, 'limitReached' => false],
         ];
 
         $result = new RollResult(
@@ -140,8 +140,8 @@ class RollResultTest extends TestCase
                 'rolls' => [6, 6, 3],
                 'count' => 2,
                 'cumulativeTotal' => 15,
-                'limitReached' => false
-            ]
+                'limitReached' => false,
+            ],
         ];
 
         $result = new RollResult(

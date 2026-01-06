@@ -58,10 +58,10 @@ class DiceNodeTest extends TestCase
     public function testMultipleSetRollResults(): void
     {
         $node = new DiceNode(1, 20);
-        
+
         $node->setRollResult(10);
         $this->assertSame(10, $node->evaluate());
-        
+
         $node->setRollResult(15);
         $this->assertSame(15, $node->evaluate());
     }

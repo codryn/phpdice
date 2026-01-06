@@ -79,6 +79,74 @@ final class CriticalTest extends BaseTestCaseMock
 
         $this->assertSame(19, $expr->modifiers->criticalSuccess);
         $this->assertSame(2, $expr->modifiers->criticalFailure);
+
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(19, 2);
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(2, $result->diceValues[0]);
+        $this->assertTrue($result->isCriticalFailure, 'Expected critical failure');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success');
+    }
+
+    /**
+     * Parser captures critical hits with thresholds.
+     */
+    public function testParserCapturesCriticalHitWithThrehsholdAbove(): void
+    {
+        $expression = '1d20 crit 19 glitch 1 >= 21';
+
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(19, 20);
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Not expected hit');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertTrue($result->isSuccess, 'Expected hit (nat 20)');
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+    }
+
+    /**
+     * Parser captures critical hits with thresholds.
+     */
+    public function testParserCapturesCriticalHitWithThrehshold(): void
+    {
+        $expression = '1d20 crit 18 glitch 1 >= 19';
+
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(17, 18, 19);
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(17, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Not expected hit');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(18, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Not expected hit');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
+
+        $result = $this->phpdice->roll($expression);
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertTrue($result->isSuccess, 'Expected hit');
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
     }
 
     /**

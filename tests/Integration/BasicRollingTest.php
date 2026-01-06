@@ -87,7 +87,7 @@ class BasicRollingTest extends BaseTestCaseMock
         $this->assertCount(3, $result->diceValues);
         $this->assertEquals([2, 6, 3], $result->diceValues);
         $this->assertEquals(11, $result->total);
-    }    
+    }
 
     /**
      * Test statistical calculations.

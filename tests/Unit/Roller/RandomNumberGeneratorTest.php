@@ -41,7 +41,7 @@ class RandomNumberGeneratorTest extends TestCase
                 break;
             }
         }
-        
+
         $this->assertTrue($foundMin, 'Should be able to generate minimum value');
     }
 
@@ -55,7 +55,7 @@ class RandomNumberGeneratorTest extends TestCase
                 break;
             }
         }
-        
+
         $this->assertTrue($foundMax, 'Should be able to generate maximum value');
     }
 

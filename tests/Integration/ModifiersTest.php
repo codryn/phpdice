@@ -101,7 +101,7 @@ class ModifiersTest extends BaseTestCaseMock
 
         $this->assertCount(1, $result->diceValues);
         $this->assertEquals(121, $result->total);
-    } 
+    }
 
     /**
      * Test parentheses for order of operations.
@@ -114,7 +114,7 @@ class ModifiersTest extends BaseTestCaseMock
 
         $result = $this->phpdice->roll('(2d6+3)*2');
 
-       // $this->assertEquals(2.0, $result->diceValues);
+        // $this->assertEquals(2.0, $result->diceValues);
         $this->assertEquals(16, $result->total);
     }
 
@@ -176,7 +176,7 @@ class ModifiersTest extends BaseTestCaseMock
 
         $this->assertCount(1, $result->diceValues);
         $this->assertEquals(5, $result->total);
-    }    
+    }
 
     /**
      * Test complex expression.
@@ -221,7 +221,7 @@ class ModifiersTest extends BaseTestCaseMock
         $this->assertEquals(13, $stats->maximum);
         //$this->assertEquals(22, $stats->variance);
         //$this->assertEquals(22, $stats->standardDeviation);
-    }    
+    }
 
     /**
      * Test statistics for multiplication.
@@ -251,7 +251,7 @@ class ModifiersTest extends BaseTestCaseMock
         $this->assertEquals(6, $stats->maximum);
         //$this->assertEquals(5.5, $stats->variance);
         //$this->assertEquals(2.3452078799117, $stats->standardDeviation);
-    } 
+    }
 
     /**
      * Test statistics for modulo.
@@ -281,7 +281,7 @@ class ModifiersTest extends BaseTestCaseMock
         $this->assertEquals(144, $stats->maximum);
         //$this->assertEquals(5.5, $stats->variance);
         //$this->assertEquals(2.3452078799117, $stats->standardDeviation);
-    }     
+    }
 
     /**
      * Test division by zero validation.
@@ -307,5 +307,5 @@ class ModifiersTest extends BaseTestCaseMock
         // This will fail when we try to roll and evaluate
         //$expression = $this->phpdice->parse('1d20+0');
         $result = $this->phpdice->roll('1d20~0');
-    }    
+    }
 }
