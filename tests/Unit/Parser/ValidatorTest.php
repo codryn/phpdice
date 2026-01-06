@@ -13,8 +13,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for Validator.
+ *
+ * @covers \PHPDice\Parser\Validator
  */
-#[CoversClass(Validator::class)]
 class ValidatorTest extends BaseTestCase
 {
     private Validator $validator;

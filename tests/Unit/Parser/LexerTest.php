@@ -11,8 +11,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for Lexer.
+ *
+ * @covers \PHPDice\Parser\Lexer
+ * @covers \PHPDice\Parser\Token
  */
-#[CoversClass(Lexer::class)]
 class LexerTest extends BaseTestCase
 {
     /**
