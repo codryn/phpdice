@@ -1,0 +1,51 @@
+{
+    "name": "phpdice/phpdice",
+    "description": "A comprehensive PHP library for parsing and rolling dice expressions for tabletop RPG systems",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["dice", "rpg", "parser", "roller", "tabletop", "gaming", "d20", "dice notation"],
+    "authors": [
+        {
+            "name": "PHPDice Contributors",
+            "email": "contributors@phpdice.dev"
+        }
+    ],
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "PHPDice\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PHPDice\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-clover=coverage.xml",
+        "test-coverage-html": "phpunit --coverage-html coverage/html",
+        "phpstan": "phpstan analyse",
+        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix",
+        "ci": [
+            "@test-coverage",
+            "@phpstan",
+            "@cs-check"
+        ],
+        "fix-line-endings": "./scripts/fix-line-endings.sh"
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,44 @@
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation (if building production image)
+specs/
+.github/
+.specify/
+scripts/
+
+# Dependencies (will be installed in container)
+vendor/
+node_modules/
+
+# Test artifacts
+.phpunit.cache/
+.phpunit.result.cache
+coverage/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

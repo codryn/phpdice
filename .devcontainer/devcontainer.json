@@ -1,0 +1,81 @@
+{
+	"name": "PHPDice Development Environment",
+	"image": "mcr.microsoft.com/devcontainers/php:1-8.3-bullseye",
+
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"bmewburn.vscode-intelephense-client",
+				"xdebug.php-debug",
+				"recca0120.vscode-phpunit",
+				"junstyle.php-cs-fixer",
+				"swordev.phpstan",
+				"editorconfig.editorconfig"
+			],
+			"settings": {
+				"php.validate.executablePath": "/usr/local/bin/php",
+				"php.suggest.basic": false,
+				"intelephense.stubs": [
+					"apache",
+					"bcmath",
+					"Core",
+					"ctype",
+					"date",
+					"dom",
+					"fileinfo",
+					"filter",
+					"hash",
+					"iconv",
+					"json",
+					"libxml",
+					"mbstring",
+					"openssl",
+					"pcre",
+					"PDO",
+					"Phar",
+					"random",
+					"Reflection",
+					"session",
+					"SimpleXML",
+					"SPL",
+					"standard",
+					"tokenizer",
+					"xml",
+					"xmlreader",
+					"xmlwriter",
+					"zip",
+					"zlib"
+				],
+				"intelephense.diagnostics.undefinedTypes": true,
+				"intelephense.diagnostics.undefinedMethods": true,
+				"intelephense.diagnostics.undefinedProperties": true,
+				"intelephense.diagnostics.undefinedConstants": true,
+				"php-cs-fixer.executablePath": "${workspaceFolder}/vendor/bin/php-cs-fixer",
+				"php-cs-fixer.onsave": true,
+				"phpstan.level": "max",
+				"phpstan.enableStatusBar": true,
+				"files.associations": {
+					"*.php": "php"
+				},
+				"editor.formatOnSave": false
+			}
+		}
+	},
+
+	"postCreateCommand": "bash -c 'php -v && composer --version && git --version'",
+
+	"remoteUser": "vscode",
+
+	"mounts": [
+		"source=${localWorkspaceFolder}/.devcontainer/php.ini,target=/usr/local/etc/php/conf.d/99-custom.ini,type=bind"
+	],
+
+	"containerEnv": {
+		"XDEBUG_MODE": "coverage,debug",
+		"XDEBUG_CONFIG": "client_host=host.docker.internal"
+	}
+}
