@@ -169,17 +169,17 @@ PHPDice strictly adheres to:
 1. **Type Declarations**
    ```php
    <?php
-   
+
    declare(strict_types=1);  // REQUIRED
-   
+
    namespace PHPDice\Model;
-   
+
    // GOOD: Full type declarations
    public function roll(string $expression, array $variables = []): RollResult
    {
        // ...
    }
-   
+
    // BAD: Missing types
    public function roll($expression, $variables = [])
    {
@@ -205,7 +205,7 @@ PHPDice strictly adheres to:
    // GOOD: Readonly properties
    public readonly int $total;
    public readonly array $diceValues;
-   
+
    // BAD: Mutable public properties
    public int $total;
    ```
@@ -335,7 +335,7 @@ vendor/bin/phpstan analyse src/Parser/DiceExpressionParser.php --level 9
    ```php
    // BAD
    $value = $array['key'];
-   
+
    // GOOD
    $value = $array['key'] ?? null;
    if ($value !== null) {
