@@ -675,22 +675,22 @@ class StatisticalCalculator
             $lowerName = strtolower($node->getName());
             if (in_array($lowerName, ['min', 'max'], true)) {
                 // Handle multiple arguments
-                $argStats = array_map(fn($arg) => $this->calculateFromAstInternal($arg), $node->getArguments());
-                
+                $argStats = array_map(fn ($arg) => $this->calculateFromAstInternal($arg), $node->getArguments());
+
                 return match ($lowerName) {
                     'min' => new StatisticalData(
-                        min(array_map(fn($s) => $s->minimum, $argStats)),
-                        min(array_map(fn($s) => $s->maximum, $argStats)),
-                        round(min(array_map(fn($s) => $s->expected, $argStats)), 3)
+                        min(array_map(fn ($s) => $s->minimum, $argStats)),
+                        min(array_map(fn ($s) => $s->maximum, $argStats)),
+                        round(min(array_map(fn ($s) => $s->expected, $argStats)), 3)
                     ),
                     'max' => new StatisticalData(
-                        max(array_map(fn($s) => $s->minimum, $argStats)),
-                        max(array_map(fn($s) => $s->maximum, $argStats)),
-                        round(max(array_map(fn($s) => $s->expected, $argStats)), 3)
+                        max(array_map(fn ($s) => $s->minimum, $argStats)),
+                        max(array_map(fn ($s) => $s->maximum, $argStats)),
+                        round(max(array_map(fn ($s) => $s->expected, $argStats)), 3)
                     ),
                 };
             }
-            
+
             // Single argument functions
             $arg = $this->calculateFromAstInternal($node->getArgument());
 

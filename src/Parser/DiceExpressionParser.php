@@ -59,12 +59,12 @@ class DiceExpressionParser
 
         // Extract dice specification from AST
         $diceNode = $this->findDiceNode($this->astRoot);
-        
+
         // Handle math-only expressions (no dice notation)
         if ($diceNode === null) {
             // Validate expression is not empty
             $this->validator->validateExpression($expression);
-            
+
             // For math-only expressions, we don't need dice specification or modifiers
             return $this->createMathOnlyExpression($expression);
         }
@@ -208,7 +208,7 @@ class DiceExpressionParser
             $right = $this->parseTerm();
             if ($this->astRoot === null) {
                 throw new ParseException(
-                    "Invalid expression: missing left operand",
+                    'Invalid expression: missing left operand',
                     $this->getCurrentPosition()
                 );
             }
@@ -226,7 +226,7 @@ class DiceExpressionParser
 
         if ($this->astRoot === null) {
             throw new ParseException(
-                "Invalid expression: empty or incomplete expression",
+                'Invalid expression: empty or incomplete expression',
                 0
             );
         }
