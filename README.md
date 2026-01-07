@@ -56,7 +56,7 @@ See [docs/expressions.md](docs/expressions.md) for all supported dice expression
 
 | System | Example | Features |
 |--------|---------|----------|
-| **D&D 5e** | `1d20+5 >= 15 crit 20` | Advantage, modifiers, comparisons, criticals |
+| **D&D 5e** | `1d20 auto 20 crit 20 +5 dc >= 15` | Auto success, criticals, modifiers, comparisons |
 | **Pathfinder** | `3d6+2` | Basic dice, modifiers |
 | **Shadowrun 5e** | `12d6 reroll ==1 >=5` | Success counting, rerolls |
 | **World of Darkness** | `10d10 >=8` | Success counting |
