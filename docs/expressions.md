@@ -91,6 +91,20 @@ Examples:
 
 ```max(2d10, 3d6, 2d8)``` - Min/max functions can take multiple arguments
 
+## Math only expressions
+
+You can use mathematical expressions without dice rolls:
+
+```
+Z + N * (M - P) / Q
+```
+
+Examples:
+
+```5 + 3 * (10 - 2) / 4``` - Basic arithmetic expression without dice
+
+```(15 - 4) ^ 2 + 10 % 3``` - Another arithmetic expression without dice
+
 ## Advantage/Disadvantage
 
 Use advantage/disadvantage mechanics:
