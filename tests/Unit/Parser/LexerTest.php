@@ -149,7 +149,7 @@ class LexerTest extends BaseTestCase
         $lexer = new Lexer('max(1,3)');
         $tokens = $lexer->tokenize();
 
-        $this->assertSame(Token::TYPE_KEYWORD, $tokens[0]->type);
+        $this->assertSame(Token::TYPE_FUNCTION, $tokens[0]->type);
         $this->assertSame(Token::TYPE_LPAREN, $tokens[1]->type);
         $this->assertSame(Token::TYPE_NUMBER, $tokens[2]->type);
         $this->assertSame(Token::TYPE_COMMA, $tokens[3]->type);
