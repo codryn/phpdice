@@ -206,6 +206,12 @@ class DiceExpressionParser
         while ($this->match(Token::TYPE_OPERATOR, ['+', '-'])) {
             $operator = $this->previous()->value;
             $right = $this->parseTerm();
+            if ($this->astRoot === null) {
+                throw new ParseException(
+                    "Invalid expression: missing left operand",
+                    $this->getCurrentPosition()
+                );
+            }
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
         }
 
@@ -215,6 +221,13 @@ class DiceExpressionParser
             throw new ParseException(
                 "Unexpected token: {$remaining->type} '{$remaining->value}'",
                 $this->getCurrentPosition()
+            );
+        }
+
+        if ($this->astRoot === null) {
+            throw new ParseException(
+                "Invalid expression: empty or incomplete expression",
+                0
             );
         }
 

@@ -688,7 +688,6 @@ class StatisticalCalculator
                         max(array_map(fn($s) => $s->maximum, $argStats)),
                         round(max(array_map(fn($s) => $s->expected, $argStats)), 3)
                     ),
-                    default => new StatisticalData(0, 0, 0.0),
                 };
             }
             
