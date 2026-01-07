@@ -12,6 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional game system presets
 - Web-based dice roller demo
 
+## [0.2.1] - 2026-01-07
+
+### Added
+- **Math only Mode**: Introduced a "math only" mode to evaluate expressions without rolling dice (e.g., `5 + 3 * 2`) (#10)
+- **Variable Argument Functions**: `min()` and `max()` now support multiple arguments (e.g., `min(1, 2, 3, 4)`) (#6)
+- **Decimal Number Support**: Dice expressions can now include decimal numbers as modifiers (e.g., `3d6+2.5`, `1d20*1.5`) (#21)
+- **Exponentiation Operator**: Added support for the exponentiation operator `^` in expressions (e.g., `2d6^2` raises the result of `2d6` to the power of 2)
+- **Modulo Operator**: Added support for the modulo operator `%` in expressions (e.g., `5d10 % 3` computes the remainder of the roll divided by 3) (#30)
+
+### Fixed
+- **Allow dot in placeholder names**: Placeholders can now include dots in their names for hierarchical variable access (e.g., `$ability.str.bonus$`) (#31)
+- **Comparison Operators**: All comparison operators (`<`, `<=`, `==`, `>`, `>=`) now work correctly with success counting (#20)
+- **Duplicate Keywords**: Removed duplicate keyword entries that could cause parsing confusion (#27)
+- **Operator Consistency**: Fixed loose vs strict comparison for equality operator to ensure consistent behavior
+- **Modulo Operator**: use correct operator symbol `%` for modulo operations instead of incorrect `~` (#30)
+
+### Changed
+- Improved code formatting to maintain PSR-12 compliance across all changes
+
 ## [0.2.0] - 2025-01-06
 
 ### Added

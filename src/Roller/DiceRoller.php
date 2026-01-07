@@ -30,6 +30,11 @@ class DiceRoller
      */
     public function roll(DiceExpression $expression, ?Node $ast = null): RollResult
     {
+        // Handle math-only expressions (no dice)
+        if ($expression->specification === null) {
+            return $this->rollMathOnly($ast, $expression);
+        }
+
         // If we have an AST with multiple dice groups, handle them separately
         if ($ast !== null && $this->hasMultipleDiceGroups($ast)) {
             return $this->rollMultipleDiceGroups($ast, $expression);
@@ -491,6 +496,30 @@ class DiceRoller
                 $this->rollDiceNode($argument, $allDiceValues);
             }
         }
+    }
+
+    /**
+     * Roll a math-only expression (no dice).
+     *
+     * @param Node|null $ast AST to evaluate
+     * @param DiceExpression $expression Original expression
+     * @return RollResult Result with empty dice values and computed total
+     */
+    private function rollMathOnly(?Node $ast, DiceExpression $expression): RollResult
+    {
+        if ($ast === null) {
+            throw new \PHPDice\Exception\ValidationException('Math-only expression must have an AST', 'expression');
+        }
+
+        // Evaluate the AST to get the total
+        $total = $ast->evaluate();
+
+        // Return result with no dice values
+        return new RollResult(
+            expression: $expression,
+            total: $total,
+            diceValues: []
+        );
     }
 
 }

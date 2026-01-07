@@ -68,7 +68,7 @@ class Lexer
             }
 
             // Operators
-            if (in_array($char, ['+', '-', '*', '/', '~', '^'], true)) {
+            if (in_array($char, ['+', '-', '*', '/', '%', '^'], true)) {
                 $tokens[] = new Token(Token::TYPE_OPERATOR, $char, $this->position);
                 $this->position++;
                 continue;
@@ -228,7 +228,7 @@ class Lexer
                 return new Token(Token::TYPE_PLACEHOLDER, $name, $start);
             }
 
-            if (ctype_alnum($char) || $char === '_') {
+            if (ctype_alnum($char) || $char === '_' || $char === '.') {
                 $name .= $char;
                 $this->position++;
             } else {

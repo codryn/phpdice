@@ -41,8 +41,8 @@ final class PlaceholdersTest extends BaseTestCase
      */
     public function testPlaceholdersInComplexExpression(): void
     {
-        $expression = '2d6+$strength$+$proficiency$-1';
-        $variables = ['strength' => 4, 'proficiency' => 2];
+        $expression = '2d6+$ability.str.bonus$+$skill.climb.proficiency$-1';
+        $variables = ['ability.str.bonus' => 4, 'skill.climb.proficiency' => 2];
 
         $expr = $this->phpdice->parse($expression, $variables);
 

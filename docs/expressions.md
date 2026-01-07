@@ -23,13 +23,15 @@ Examples:
 ```1d20``` - Roll one twenty-sided die
 
 ## Arithmetic Modifiers
-Roll X dice with Y sides and add/subtract/multiply/divide by Z:
+Roll X dice with Y sides and add/subtract/multiply/divide/modulo/exponentiate by Z:
 
 ```
 XdY+Z
 XdY-Z
 XdY*Z
 XdY/Z
+XdY%Z
+XdY^Z
 ```
 
 Examples:
@@ -41,6 +43,10 @@ Examples:
 ```2d6 * 2``` - Roll two six-sided dice and multiply the result by 2
 
 ```4d6 / 2``` - Roll four six-sided dice and divide the result by 2 (results in float, use `floor()`, `ceil()`, or `round()` to convert to integer)
+
+```5d10 % 3``` - Roll five ten-sided dice and take the result modulo 3
+
+```2d8 ^ 2``` - Roll two eight-sided dice and raise the result to the power of 2
 
 ## Arithmetic Expressions
 Group expressions with parentheses and use standard operator precedence:
@@ -84,6 +90,20 @@ Examples:
 ```max(2d10, 3d6)``` - Roll two ten-sided dice and three six-sided dice, take the maximum result
 
 ```max(2d10, 3d6, 2d8)``` - Min/max functions can take multiple arguments
+
+## Math only expressions
+
+You can use mathematical expressions without dice rolls:
+
+```
+Z + N * (M - P) / Q
+```
+
+Examples:
+
+```5 + 3 * (10 - 2) / 4``` - Basic arithmetic expression without dice
+
+```(15 - 4) ^ 2 + 10 % 3``` - Another arithmetic expression without dice
 
 ## Advantage/Disadvantage
 
@@ -225,7 +245,7 @@ Examples:
 ```1d20 + $str$ + $proficiency$``` - Roll one d20, add strength and proficiency 
 modifiers from variables
 
-```(1d8 + $str$) * 2 + 5``` - Damage roll with strength multiplier from variable
+```(1d8 + $ability.str.bonus$) * 2 + 5``` - Damage roll with strength multiplier from variable
 
 ### Use in code:
 ```php

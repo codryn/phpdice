@@ -29,7 +29,7 @@ class BinaryOpNode extends Node
             '*' => $leftValue * $rightValue,
             '^' => pow($leftValue, $rightValue),
             '/' => $this->divide($leftValue, $rightValue),
-            '~' => $this->modulo($leftValue, $rightValue),
+            '%' => $this->modulo($leftValue, $rightValue),
             default => throw new ValidationException("Unknown operator: {$this->operator}", 'operator'),
         };
     }
