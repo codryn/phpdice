@@ -363,47 +363,7 @@ class DiceExpressionParser
 
         // Check for keep X highest/lowest
         if ($this->match(Token::TYPE_KEYWORD, ['keep'])) {
-            $count = $this->consumeNumber();
-
-            if ($this->match(Token::TYPE_KEYWORD, ['highest'])) {
-                if ($keepHighest !== null || $keepLowest !== null) {
-                    throw new \PHPDice\Exception\ValidationException(
-                        'Cannot specify keep multiple times',
-                        'modifiers'
-                    );
-                }
-                $keepHighest = $count;
-            } elseif ($this->match(Token::TYPE_KEYWORD, ['lowest'])) {
-                if ($keepHighest !== null || $keepLowest !== null) {
-                    throw new \PHPDice\Exception\ValidationException(
-                        'Cannot specify keep multiple times',
-                        'modifiers'
-                    );
-                }
-                $keepLowest = $count;
-            } else {
-                throw new ParseException('Expected "highest" or "lowest" after keep count', $this->getCurrentPosition());
-            }
-
-            // Calculate total dice to roll (base + advantage)
-            $totalDiceToRoll = $spec->count;
-            if ($advantageCount !== null) {
-                $totalDiceToRoll += $advantageCount;
-            }
-
-            // Validate keep count doesn't exceed total dice
-            if ($keepHighest !== null && $keepHighest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Cannot keep {$keepHighest} dice when only rolling {$totalDiceToRoll}",
-                    'keep'
-                );
-            }
-            if ($keepLowest !== null && $keepLowest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Cannot keep {$keepLowest} dice when only rolling {$totalDiceToRoll}",
-                    'keep'
-                );
-            }
+            $this->parseKeepModifier($spec, $advantageCount, $keepHighest, $keepLowest);
         }
 
         // Check for explode: "explode [limit] [operator threshold]"
@@ -464,35 +424,7 @@ class DiceExpressionParser
 
         // Check for keep X highest/lowest again after explode (to allow "explode keep 3 highest")
         if ($keepHighest === null && $keepLowest === null && $this->match(Token::TYPE_KEYWORD, ['keep'])) {
-            $count = $this->consumeNumber();
-
-            if ($this->match(Token::TYPE_KEYWORD, ['highest'])) {
-                $keepHighest = $count;
-            } elseif ($this->match(Token::TYPE_KEYWORD, ['lowest'])) {
-                $keepLowest = $count;
-            } else {
-                throw new ParseException('Expected "highest" or "lowest" after keep count', $this->getCurrentPosition());
-            }
-
-            // Calculate total dice to roll (base + advantage)
-            $totalDiceToRoll = $spec->count;
-            if ($advantageCount !== null) {
-                $totalDiceToRoll += $advantageCount;
-            }
-
-            // Validate keep count doesn't exceed total dice
-            if ($keepHighest !== null && $keepHighest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Cannot keep {$keepHighest} dice when only rolling {$totalDiceToRoll}",
-                    'keep'
-                );
-            }
-            if ($keepLowest !== null && $keepLowest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Cannot keep {$keepLowest} dice when only rolling {$totalDiceToRoll}",
-                    'keep'
-                );
-            }
+            $this->parseKeepModifier($spec, $advantageCount, $keepHighest, $keepLowest);
         }
 
         // Check for reroll: "reroll [limit] operator threshold"
@@ -607,6 +539,63 @@ class DiceExpressionParser
             criticalFailure: $criticalFailure,
             resolvedVariables: $this->usedVariables
         );
+    }
+
+    /**
+     * Parse keep modifier (highest or lowest).
+     *
+     * @param DiceSpecification $spec Dice specification
+     * @param int|null $advantageCount Advantage count (if any)
+     * @param int|null &$keepHighest Keep highest reference (will be updated)
+     * @param int|null &$keepLowest Keep lowest reference (will be updated)
+     */
+    private function parseKeepModifier(
+        DiceSpecification $spec,
+        ?int $advantageCount,
+        ?int &$keepHighest,
+        ?int &$keepLowest
+    ): void {
+        $count = $this->consumeNumber();
+
+        if ($this->match(Token::TYPE_KEYWORD, ['highest'])) {
+            if ($keepHighest !== null || $keepLowest !== null) {
+                throw new \PHPDice\Exception\ValidationException(
+                    'Cannot specify keep multiple times',
+                    'modifiers'
+                );
+            }
+            $keepHighest = $count;
+        } elseif ($this->match(Token::TYPE_KEYWORD, ['lowest'])) {
+            if ($keepHighest !== null || $keepLowest !== null) {
+                throw new \PHPDice\Exception\ValidationException(
+                    'Cannot specify keep multiple times',
+                    'modifiers'
+                );
+            }
+            $keepLowest = $count;
+        } else {
+            throw new ParseException('Expected "highest" or "lowest" after keep count', $this->getCurrentPosition());
+        }
+
+        // Calculate total dice to roll (base + advantage)
+        $totalDiceToRoll = $spec->count;
+        if ($advantageCount !== null) {
+            $totalDiceToRoll += $advantageCount;
+        }
+
+        // Validate keep count doesn't exceed total dice
+        if ($keepHighest !== null && $keepHighest > $totalDiceToRoll) {
+            throw new \PHPDice\Exception\ValidationException(
+                "Cannot keep {$keepHighest} dice when only rolling {$totalDiceToRoll}",
+                'keep'
+            );
+        }
+        if ($keepLowest !== null && $keepLowest > $totalDiceToRoll) {
+            throw new \PHPDice\Exception\ValidationException(
+                "Cannot keep {$keepLowest} dice when only rolling {$totalDiceToRoll}",
+                'keep'
+            );
+        }
     }
 
     /**
