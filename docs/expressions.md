@@ -64,6 +64,9 @@ Use `floor()`, `ceil()`, and `round()` to round results:
 floor(expression)
 ceil(expression)
 round(expression)
+abs(expression)
+min(expression1, expression2, ...)
+max(expression1, expression2, ...)
 ```
 
 Examples:
@@ -73,6 +76,14 @@ Examples:
 ```ceil(3d6 / 2)``` - Roll three six-sided dice, divide by 2, round up
 
 ```round(1d20 * 1.5)``` - Roll one twenty-sided die, multiply by 1.5, round to nearest integer
+
+```abs(1d6 - 10)``` - Roll one six-sided die, subtract from 10, take absolute value
+
+```min(1d6, 1d8)``` - Roll one six-sided die and one eight-sided die, take the minimum result
+
+```max(2d10, 3d6)``` - Roll two ten-sided dice and three six-sided dice, take the maximum result
+
+```max(2d10, 3d6, 2d8)``` - Min/max functions can take multiple arguments
 
 ## Advantage/Disadvantage
 

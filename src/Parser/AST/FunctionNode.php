@@ -51,7 +51,7 @@ class FunctionNode extends Node
                 throw new ValidationException("Function '{$this->name}' expects at least 2 arguments, got " . count($this->arguments), 'function');
             }
 
-            $values = array_map(fn(Node $arg) => $arg->evaluate(), $this->arguments);
+            $values = array_map(fn (Node $arg) => $arg->evaluate(), $this->arguments);
 
             return match ($lowerName) {
                 'min' => min(...$values),
