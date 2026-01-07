@@ -279,7 +279,30 @@ Examples:
 Notes: 
 
 - The success check is done on the final roll result with all modifiers applied.
-- A maximal roll (natural 20 on d20) is always counted as a success.
+- Without the `auto` keyword, a roll must meet the DC threshold to be considered a success.
+
+## Auto Success/Failure
+
+Use the auto mechanic to designate certain die values as automatic successes or failures, regardless of the DC:
+
+```
+XdY auto N
+```
+
+Examples:
+
+```1d20 auto 20 dc >= 25``` - Roll one d20, natural 20 is automatic success even though DC 25 is impossible
+
+```1d20 auto 20 crit 19 dc >= 15``` - Roll one d20, natural 20 is auto success and critical, 19-20 are critical if DC is met
+
+```1d100 auto 100 crit 95 dc >= 105``` - Roll one d100, natural 100 is automatic success and critical
+
+Notes:
+
+- Auto success means the roll is counted as a success regardless of whether the total meets the DC.
+- Auto success is typically used with critical success (D&D/Pathfinder: natural 20 is always a success and a crit).
+- When auto success is triggered, if the value is also in the crit range, it's treated as a critical success.
+- Without the `auto` keyword, rolls must meet the DC to be successful, even on maximum die values.
 
 ## Critical Success/Failure
 
@@ -293,18 +316,21 @@ XdY crit N glitch M
 
 Examples:
 
-```1d20 crit 20``` - Roll one d20, critical success on natural 20
+```1d20 crit 20``` - Roll one d20, critical success on natural 20 (if DC is met or no DC)
 
 ```1d20 glitch 1``` - Roll one d20, critical failure on natural 1
 
 ```1d20 crit 19 glitch 2``` - Roll one d20, critical success on 19 or 20, critical failure on 1 or 2
 
+```1d20 auto 20 crit 19 dc >= 15``` - Roll one d20, 19-20 are critical if DC is met, natural 20 is always a success
+
 Notes: 
 
-- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and should no be combined with multiple dice, reroll or explode.
+- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and should not be combined with multiple dice, reroll or explode.
 - Crit and glitch keywords can be used together to define both critical success and failure ranges.
 - A crit is only counted when the roll is also a success according to any DC check in the expression.
-- A maximal roll (natural 20 on d20) is always a success and therfore a crit, even if the total fails the DC check.
+- To make a critical value automatically succeed regardless of DC, use the `auto` keyword.
+- Without `auto`, a roll in the crit range still needs to meet the DC to be a critical success.
 
 ## Complex Combinations
 
@@ -324,7 +350,8 @@ When combining multiple modifiers, they must be specified in the following order
 
 1. **advantage** or **disadvantage** or **reroll** or **explode**  (cannot combine these keywords on the same dice)
 2. **keep** or **drop** (highest/lowest)
-3. **crit and/or **glitch**
+3. **auto** (automatic success/failure)
+4. **crit** and/or **glitch** (critical success/failure)
 5. **count** (success counting)
 6. **modifiers** (addition, subtraction, etc.)
 7. **dc** (difficulty class comparison)
@@ -332,19 +359,23 @@ When combining multiple modifiers, they must be specified in the following order
 **Important:** 
 - `explode` and `reroll` cannot be combined on the same dice roll
 - `explode` or `reroll` must come before `keep`
+- `auto` must come before `crit` and `glitch`
 - `count` must come after `explode`/`reroll` and `keep`
 - `dc` must be at the end
 
 Examples of correct ordering:
 - `4d6 explode keep 3 highest` - ✓ Correct
 - `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
+- `1d20 auto 20 crit 19 glitch 1 dc >= 15` - ✓ Correct
 - `4d6 keep 3 highest explode` - ✗ Incorrect (keep before explode)
 - `4d6 explode reroll <=1` - ✗ Incorrect (both explode and reroll)
+- `1d20 crit 19 auto 20` - ✗ Incorrect (crit before auto)
 
 Notes:
 - Advantage/Disadvantage shall be the first keyword to ensure correct die selection.
 - Reroll/explode must come before keep/drop to ensure all dice are considered for rerolls/explosions.
-- Crit/Glitch must come after any rerolls to apply to the final selected die.
+- Auto must come before crit/glitch to establish automatic success behavior first.
+- Crit/Glitch must come after auto and any rerolls to apply to the final selected die.
 - Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and are normally not combined with multiple dice, reroll or explode.
 - Keep/drop must come before count to ensure the correct dice are counted.
 - The `count` keyword must be after any reroll/explode/keep mechanics to ensure correct success counting and can only be used once per expression.

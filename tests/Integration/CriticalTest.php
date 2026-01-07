@@ -97,6 +97,7 @@ final class CriticalTest extends BaseTestCaseMock
 
     /**
      * Parser captures critical hits with thresholds.
+     * Without auto keyword, natural 20 does NOT automatically succeed if DC is not met.
      */
     public function testParserCapturesCriticalHitWithThrehsholdAbove(): void
     {
@@ -114,8 +115,8 @@ final class CriticalTest extends BaseTestCaseMock
 
         $result = $this->phpdice->roll($expression);
         $this->assertEquals(20, $result->diceValues[0]);
-        $this->assertTrue($result->isSuccess, 'Expected hit (nat 20)');
-        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success');
+        $this->assertFalse($result->isSuccess, 'Not expected hit (no auto keyword, DC not met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Not expected critical success (DC not met)');
         $this->assertFalse($result->isCriticalFailure, 'Not expected critical failure');
     }
 
@@ -619,5 +620,258 @@ final class CriticalTest extends BaseTestCaseMock
         // Verify placeholders are resolved
         $this->assertArrayHasKey('bonus', $expr->modifiers->resolvedVariables);
         $this->assertSame(3, $expr->modifiers->resolvedVariables['bonus']);
+    }
+
+    /**
+     * Test auto success mechanic - Example 1 from issue.
+     * 1d20 auto 20 crit 19 glitch 1 + 1 dc 25
+     * Roll: 1 -> critical failure, total 2
+     * Roll: 19 -> failure, total 20
+     * Roll: 20 -> critical success, total 21 (below dc, but auto success)
+     */
+    public function testAutoSuccessWithImpossibleDC(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 19, 20);
+
+        // Test roll 1 - critical failure
+        $result = $this->phpdice->roll('1d20 auto 20 crit 19 glitch 1 + 1 dc >= 25');
+        $this->assertEquals(1, $result->diceValues[0]);
+        $this->assertEquals(2, $result->total); // 1 + 1
+        $this->assertFalse($result->isSuccess, 'Roll 1: not expected success');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 1: not expected critical success');
+        $this->assertTrue($result->isCriticalFailure, 'Roll 1: expected critical failure');
+
+        // Test roll 19 - failure (in crit range but DC not met)
+        $result = $this->phpdice->roll('1d20 auto 20 crit 19 glitch 1 + 1 dc >= 25');
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertEquals(20, $result->total); // 19 + 1
+        $this->assertFalse($result->isSuccess, 'Roll 19: not expected success (DC not met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 19: not expected critical success (DC not met)');
+        $this->assertFalse($result->isCriticalFailure, 'Roll 19: not expected critical failure');
+
+        // Test roll 20 - critical success (auto success + crit range)
+        $result = $this->phpdice->roll('1d20 auto 20 crit 19 glitch 1 + 1 dc >= 25');
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertEquals(21, $result->total); // 20 + 1
+        $this->assertTrue($result->isSuccess, 'Roll 20: expected success (auto success)');
+        $this->assertTrue($result->isCriticalSuccess, 'Roll 20: expected critical success (auto + crit range)');
+        $this->assertFalse($result->isCriticalFailure, 'Roll 20: not expected critical failure');
+    }
+
+    /**
+     * Test crit without auto - Example 2 from issue.
+     * 1d20 crit 20 glitch 1 + 1 dc 25
+     * Roll: 1 -> critical failure, total 2
+     * Roll: 19 -> failure, total 20
+     * Roll: 20 -> failure, total 21 (in crit range but no auto, DC not met)
+     */
+    public function testCritWithoutAutoSuccess(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 19, 20);
+
+        // Test roll 1 - critical failure
+        $result = $this->phpdice->roll('1d20 crit 20 glitch 1 + 1 dc >= 25');
+        $this->assertEquals(1, $result->diceValues[0]);
+        $this->assertEquals(2, $result->total);
+        $this->assertFalse($result->isSuccess, 'Roll 1: not expected success');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 1: not expected critical success');
+        $this->assertTrue($result->isCriticalFailure, 'Roll 1: expected critical failure');
+
+        // Test roll 19 - failure
+        $result = $this->phpdice->roll('1d20 crit 20 glitch 1 + 1 dc >= 25');
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertEquals(20, $result->total);
+        $this->assertFalse($result->isSuccess, 'Roll 19: not expected success');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 19: not expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Roll 19: not expected critical failure');
+
+        // Test roll 20 - failure (no auto success, DC not met)
+        $result = $this->phpdice->roll('1d20 crit 20 glitch 1 + 1 dc >= 25');
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertEquals(21, $result->total);
+        $this->assertFalse($result->isSuccess, 'Roll 20: not expected success (no auto, DC not met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 20: not expected critical success (DC not met)');
+        $this->assertFalse($result->isCriticalFailure, 'Roll 20: not expected critical failure');
+    }
+
+    /**
+     * Test auto success with achievable DC - Example 3 from issue.
+     * 1d20 auto 20 crit 19 glitch 1 + 1 dc 21
+     * Roll: 1 -> critical failure, total 2
+     * Roll: 19 -> failure, total 20 (not a crit because below dc)
+     * Roll: 20 -> critical success, total 21 (hits dc AND crit range)
+     */
+    public function testAutoSuccessWithAchievableDC(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 19, 20);
+
+        // Test roll 1 - critical failure
+        $result = $this->phpdice->roll('1d20 auto 20 crit 19 glitch 1 + 1 dc >= 21');
+        $this->assertEquals(1, $result->diceValues[0]);
+        $this->assertEquals(2, $result->total);
+        $this->assertFalse($result->isSuccess, 'Roll 1: not expected success');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 1: not expected critical success');
+        $this->assertTrue($result->isCriticalFailure, 'Roll 1: expected critical failure');
+
+        // Test roll 19 - failure (in crit range but DC not met)
+        $result = $this->phpdice->roll('1d20 auto 20 crit 19 glitch 1 + 1 dc >= 21');
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertEquals(20, $result->total);
+        $this->assertFalse($result->isSuccess, 'Roll 19: not expected success (DC not met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 19: not expected critical success (DC not met)');
+        $this->assertFalse($result->isCriticalFailure, 'Roll 19: not expected critical failure');
+
+        // Test roll 20 - critical success (both auto success AND DC met)
+        $result = $this->phpdice->roll('1d20 auto 20 crit 19 glitch 1 + 1 dc >= 21');
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertEquals(21, $result->total);
+        $this->assertTrue($result->isSuccess, 'Roll 20: expected success (auto + DC met)');
+        $this->assertTrue($result->isCriticalSuccess, 'Roll 20: expected critical success (auto + crit range)');
+        $this->assertFalse($result->isCriticalFailure, 'Roll 20: not expected critical failure');
+    }
+
+    /**
+     * Test inverted logic with auto success.
+     * 1d20 auto 1 crit 1 glitch 20 dc <= 5
+     * Lower rolls are better, 1 is auto success, 20 is glitch
+     */
+    public function testAutoSuccessInvertedLogic(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 10, 20);
+
+        // Test roll 1 - auto success and critical success
+        $result = $this->phpdice->roll('1d20 auto 1 crit 1 glitch 20 dc <= 5');
+        $this->assertEquals(1, $result->diceValues[0]);
+        $this->assertEquals(1, $result->total);
+        $this->assertTrue($result->isSuccess, 'Roll 1: expected success (auto + DC met)');
+        $this->assertTrue($result->isCriticalSuccess, 'Roll 1: expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Roll 1: not expected critical failure');
+
+        // Test roll 10 - failure (DC not met)
+        $result = $this->phpdice->roll('1d20 auto 1 crit 1 glitch 20 dc <= 5');
+        $this->assertEquals(10, $result->diceValues[0]);
+        $this->assertEquals(10, $result->total);
+        $this->assertFalse($result->isSuccess, 'Roll 10: not expected success (DC not met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 10: not expected critical success');
+        $this->assertFalse($result->isCriticalFailure, 'Roll 10: not expected critical failure');
+
+        // Test roll 20 - critical failure
+        $result = $this->phpdice->roll('1d20 auto 1 crit 1 glitch 20 dc <= 5');
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertEquals(20, $result->total);
+        $this->assertFalse($result->isSuccess, 'Roll 20: not expected success (DC not met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 20: not expected critical success');
+        $this->assertTrue($result->isCriticalFailure, 'Roll 20: expected critical failure');
+    }
+
+    /**
+     * Test auto success with d100.
+     */
+    public function testAutoSuccessWithD100(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(99, 100, 50);
+
+        // Test roll 99 - failure (in crit range but DC not met, no auto)
+        $result = $this->phpdice->roll('1d100 auto 100 crit 95 dc >= 105');
+        $this->assertEquals(99, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Roll 99: not expected success');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 99: not expected critical success (DC not met)');
+
+        // Test roll 100 - auto success and critical success
+        $result = $this->phpdice->roll('1d100 auto 100 crit 95 dc >= 105');
+        $this->assertEquals(100, $result->diceValues[0]);
+        $this->assertTrue($result->isSuccess, 'Roll 100: expected success (auto)');
+        $this->assertTrue($result->isCriticalSuccess, 'Roll 100: expected critical success (auto + crit range)');
+
+        // Test roll 50 - failure
+        $result = $this->phpdice->roll('1d100 auto 100 crit 95 dc >= 105');
+        $this->assertEquals(50, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Roll 50: not expected success');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 50: not expected critical success');
+    }
+
+    /**
+     * Test auto success with d12.
+     */
+    public function testAutoSuccessWithD12(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(11, 12, 6);
+
+        // Test roll 11 - failure (in crit range but DC not met)
+        $result = $this->phpdice->roll('1d12 auto 12 crit 11 glitch 1 dc >= 15');
+        $this->assertEquals(11, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Roll 11: not expected success (DC not met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 11: not expected critical success (DC not met)');
+
+        // Test roll 12 - auto success and critical success
+        $result = $this->phpdice->roll('1d12 auto 12 crit 11 glitch 1 dc >= 15');
+        $this->assertEquals(12, $result->diceValues[0]);
+        $this->assertTrue($result->isSuccess, 'Roll 12: expected success (auto)');
+        $this->assertTrue($result->isCriticalSuccess, 'Roll 12: expected critical success (auto + crit range)');
+
+        // Test roll 6 - failure
+        $result = $this->phpdice->roll('1d12 auto 12 crit 11 glitch 1 dc >= 15');
+        $this->assertEquals(6, $result->diceValues[0]);
+        $this->assertFalse($result->isSuccess, 'Roll 6: not expected success');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 6: not expected critical success');
+    }
+
+    /**
+     * Test that auto success is stored in parsed expression.
+     */
+    public function testAutoSuccessStoredInExpression(): void
+    {
+        $expr = $this->phpdice->parse('1d20 auto 20 crit 19 glitch 1');
+
+        $this->assertSame(20, $expr->modifiers->autoSuccess);
+        $this->assertSame(19, $expr->modifiers->criticalSuccess);
+        $this->assertSame(1, $expr->modifiers->criticalFailure);
+    }
+
+    /**
+     * Test auto validation - threshold must be within die range.
+     */
+    public function testAutoSuccessValidation(): void
+    {
+        $this->expectException(\PHPDice\Exception\ValidationException::class);
+        $this->expectExceptionMessage('threshold 25 is outside die range (1-20)');
+
+        $this->phpdice->parse('1d20 auto 25');
+    }
+
+    /**
+     * Test that rolls without auto/crit/glitch work as before.
+     */
+    public function testRollsWithoutAutoCritGlitch(): void
+    {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(15, 20);
+
+        // Test normal roll without any special mechanics
+        $result = $this->phpdice->roll('1d20 + 5 dc >= 20');
+        $this->assertEquals(15, $result->diceValues[0]);
+        $this->assertEquals(20, $result->total);
+        $this->assertTrue($result->isSuccess, 'Roll 15+5: expected success (DC met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 15+5: not expected critical success (no crit keyword)');
+
+        // Test roll 20 without auto - should succeed only if DC is met
+        $result = $this->phpdice->roll('1d20 + 5 dc >= 20');
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertEquals(25, $result->total);
+        $this->assertTrue($result->isSuccess, 'Roll 20+5: expected success (DC met)');
+        $this->assertFalse($result->isCriticalSuccess, 'Roll 20+5: not expected critical success (no crit keyword)');
     }
 }
