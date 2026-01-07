@@ -263,13 +263,13 @@ class ExplodingDiceTest extends BaseTestCaseMock
         $allDice = $result->diceValues;
         rsort($allDice);
         $expectedKept = array_slice($allDice, 0, 3);
-        
+
         $actualKept = [];
         foreach ($result->keptDice as $index) {
             $actualKept[] = $result->diceValues[$index];
         }
         rsort($actualKept);
-        
+
         $this->assertEquals($expectedKept, $actualKept);
     }
 
