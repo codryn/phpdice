@@ -23,13 +23,15 @@ Examples:
 ```1d20``` - Roll one twenty-sided die
 
 ## Arithmetic Modifiers
-Roll X dice with Y sides and add/subtract/multiply/divide by Z:
+Roll X dice with Y sides and add/subtract/multiply/divide/modulo/exponentiate by Z:
 
 ```
 XdY+Z
 XdY-Z
 XdY*Z
 XdY/Z
+XdY%Z
+XdY^Z
 ```
 
 Examples:
@@ -41,6 +43,10 @@ Examples:
 ```2d6 * 2``` - Roll two six-sided dice and multiply the result by 2
 
 ```4d6 / 2``` - Roll four six-sided dice and divide the result by 2 (results in float, use `floor()`, `ceil()`, or `round()` to convert to integer)
+
+```5d10 % 3``` - Roll five ten-sided dice and take the result modulo 3
+
+```2d8 ^ 2``` - Roll two eight-sided dice and raise the result to the power of 2
 
 ## Arithmetic Expressions
 Group expressions with parentheses and use standard operator precedence:
