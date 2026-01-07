@@ -398,9 +398,9 @@ class StatisticalCalculatorTest extends TestCase
         $stats = $this->calculator->calculate($spec, $modifiers);
 
         // Variance for 1d6: (6^2 - 1) / 12 = 35/12 = 2.917
-        $this->assertSame(2.917, $stats->variance);
+        $this->assertEqualsWithDelta(2.917, $stats->variance, 0.001);
         // Standard deviation: sqrt(2.917) = 1.708
-        $this->assertSame(1.708, $stats->standardDeviation);
+        $this->assertEqualsWithDelta(1.708, $stats->standardDeviation, 0.001);
     }
 
     /**
@@ -415,10 +415,10 @@ class StatisticalCalculatorTest extends TestCase
 
         $stats = $this->calculator->calculate($spec, $modifiers);
 
-        // Variance for 3d6: 3 * 2.917 = 8.75
-        $this->assertSame(8.75, $stats->variance);
+        // Variance for 3d6: 3 * (35/12) = 105/12 = 8.75
+        $this->assertEqualsWithDelta(8.75, $stats->variance, 0.001);
         // Standard deviation: sqrt(8.75) = 2.958
-        $this->assertSame(2.958, $stats->standardDeviation);
+        $this->assertEqualsWithDelta(2.958, $stats->standardDeviation, 0.001);
     }
 
     /**
@@ -434,9 +434,9 @@ class StatisticalCalculatorTest extends TestCase
         $stats = $this->calculator->calculate($spec, $modifiers);
 
         // Variance for 1d20: (20^2 - 1) / 12 = 399/12 = 33.25
-        $this->assertSame(33.25, $stats->variance);
+        $this->assertEqualsWithDelta(33.25, $stats->variance, 0.001);
         // Standard deviation: sqrt(33.25) = 5.766
-        $this->assertSame(5.766, $stats->standardDeviation);
+        $this->assertEqualsWithDelta(5.766, $stats->standardDeviation, 0.001);
     }
 
     /**
@@ -451,10 +451,10 @@ class StatisticalCalculatorTest extends TestCase
 
         $stats = $this->calculator->calculate($spec, $modifiers);
 
-        // Variance for 4dF: 4 * (2/3) = 2.667
-        $this->assertSame(2.667, $stats->variance);
-        // Standard deviation: sqrt(2.667) = 1.633
-        $this->assertSame(1.633, $stats->standardDeviation);
+        // Variance for 4dF: 4 * (2/3) = 8/3 = 2.667
+        $this->assertEqualsWithDelta(2.667, $stats->variance, 0.001);
+        // Standard deviation: sqrt(8/3) = 1.633
+        $this->assertEqualsWithDelta(1.633, $stats->standardDeviation, 0.001);
     }
 
     /**
@@ -470,8 +470,8 @@ class StatisticalCalculatorTest extends TestCase
         $stats = $this->calculator->calculate($spec, $modifiers);
 
         // Variance should be same as 1d20 without modifier
-        $this->assertSame(33.25, $stats->variance);
-        $this->assertSame(5.766, $stats->standardDeviation);
+        $this->assertEqualsWithDelta(33.25, $stats->variance, 0.001);
+        $this->assertEqualsWithDelta(5.766, $stats->standardDeviation, 0.001);
     }
 
     /**
@@ -486,10 +486,11 @@ class StatisticalCalculatorTest extends TestCase
 
         $stats = $this->calculator->calculate($spec, $modifiers);
 
+        // Probability of success: p = 3/6 = 0.5 (for sides 4, 5, 6)
         // Binomial variance: n * p * (1-p) = 5 * 0.5 * 0.5 = 1.25
-        $this->assertSame(1.25, $stats->variance);
+        $this->assertEqualsWithDelta(1.25, $stats->variance, 0.001);
         // Standard deviation: sqrt(1.25) = 1.118
-        $this->assertSame(1.118, $stats->standardDeviation);
+        $this->assertEqualsWithDelta(1.118, $stats->standardDeviation, 0.001);
     }
 
     /**
@@ -505,8 +506,8 @@ class StatisticalCalculatorTest extends TestCase
         $stats = $this->calculator->calculate($spec, $modifiers);
 
         // Variance for 1d100: (100^2 - 1) / 12 = 9999/12 = 833.25
-        $this->assertSame(833.25, $stats->variance);
+        $this->assertEqualsWithDelta(833.25, $stats->variance, 0.001);
         // Standard deviation: sqrt(833.25) = 28.866
-        $this->assertSame(28.866, $stats->standardDeviation);
+        $this->assertEqualsWithDelta(28.866, $stats->standardDeviation, 0.001);
     }
 }

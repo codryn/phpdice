@@ -176,7 +176,7 @@ class StatisticalCalculator
             $maximum = $spec->count * $maxPerDie;
             $expected = $spec->count * $expectedPerDie;
 
-            // Variance for fudge dice: E[X^2] - E[X]^2 = (1 + 0 + 1)/3 - 0 = 2/3
+            // Variance for fudge dice: E[X^2] - E[X]^2 = ((-1)^2 + 0^2 + 1^2)/3 - 0 = 2/3
             $variancePerDie = 2.0 / 3.0;
             $variance = $spec->count * $variancePerDie;
             $standardDeviation = sqrt($variance);
