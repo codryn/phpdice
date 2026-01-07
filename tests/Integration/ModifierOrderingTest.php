@@ -20,7 +20,7 @@ use PHPDice\Exception\ValidationException;
 class ModifierOrderingTest extends BaseTestCaseMock
 {
     /**
-     * Test correct order: explode -> keep
+     * Test correct order: explode -> keep.
      */
     public function testExplodeThenKeep(): void
     {
@@ -32,7 +32,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test correct order: reroll -> keep
+     * Test correct order: reroll -> keep.
      */
     public function testRerollThenKeep(): void
     {
@@ -44,7 +44,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test correct order: explode -> keep -> count
+     * Test correct order: explode -> keep -> count.
      */
     public function testExplodeThenKeepThenCount(): void
     {
@@ -56,7 +56,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test correct order: reroll -> keep -> count
+     * Test correct order: reroll -> keep -> count.
      */
     public function testRerollThenKeepThenCount(): void
     {
@@ -68,7 +68,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test that keep before explode is rejected
+     * Test that keep before explode is rejected.
      */
     public function testKeepBeforeExplodeIsRejected(): void
     {
@@ -79,7 +79,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test that keep before reroll is rejected
+     * Test that keep before reroll is rejected.
      */
     public function testKeepBeforeRerollIsRejected(): void
     {
@@ -90,7 +90,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test that explode and reroll cannot be combined
+     * Test that explode and reroll cannot be combined.
      */
     public function testExplodeAndRerollCannotBeCombined(): void
     {
@@ -101,7 +101,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test that reroll and explode cannot be combined (reverse order)
+     * Test that reroll and explode cannot be combined (reverse order).
      */
     public function testRerollAndExplodeCannotBeCombined(): void
     {
@@ -112,7 +112,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test correct order with all modifiers: explode -> keep -> count -> dc
+     * Test correct order with all modifiers: explode -> keep -> count -> dc.
      */
     public function testFullCorrectOrdering(): void
     {
@@ -124,7 +124,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test that only explode or reroll can be used, not both
+     * Test that only explode or reroll can be used, not both.
      */
     public function testOnlyExplodeOrReroll(): void
     {
@@ -138,7 +138,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
     }
 
     /**
-     * Test explode with different thresholds
+     * Test explode with different thresholds.
      */
     public function testExplodeWithThresholds(): void
     {
@@ -157,7 +157,7 @@ class ModifierOrderingTest extends BaseTestCaseMock
 
     /**
      * Test that explode with keep preserves correct behavior
-     * Issue: Roll 4d6, explode on 6, keep 3 highest
+     * Issue: Roll 4d6, explode on 6, keep 3 highest.
      */
     public function testIssueScenario(): void
     {
