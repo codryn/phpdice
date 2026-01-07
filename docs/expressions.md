@@ -119,7 +119,7 @@ Examples:
 
 ```10d10 count > 7``` - Roll ten d10s, count how many are greater than 7
 
-**Note**: The `count` keyword is **required** to distinguish success counting from DC checks (e.g., `1d20+5 dc >= 15`).
+**Note**: The `count` keyword is **required** to distinguish success counting from DC checks (e.g., `1d20+5 dc >= 15`), rerolls and explosions.
 
 ## Rerolls
 
@@ -134,9 +134,9 @@ XdY reroll N
 
 Examples:
 
-```4d6 reroll <= 2``` - Roll four d6s, reroll any die that is 2 or less (once per die)
+```4d6 reroll <= 2``` - Roll four d6s, reroll any die that is 2 or less, unlimited rerolls (up to system limit to prevent infinite loops)
 
-```6d6 reroll 1``` - Roll six d6s, reroll any die that is exactly 1 (once per die)
+```6d6 reroll == 1``` - Roll six d6s, reroll any die that is exactly 1, unlimited rerolls (up to system limit to prevent infinite loops)
 
 ### Limit rerolls
 
@@ -168,9 +168,9 @@ XdY explode M >= N
 
 Examples:
 
-```3d6 explode``` - Roll three d6s, any die that rolls a 6 explodes (rolls again), unlimited explosions
+```3d6 explode``` - Roll three d6s, any die that rolls a 6 explodes (rolls again), unlimited explosions (up to system limit to prevent infinite loops)
 
-```3d6 explode >= 5``` - Roll three d6s, any die that rolls 5 or 6 explodes
+```3d6 explode >= 5``` - Roll three d6s, any die that rolls 5 or 6 explodes, unlimited explosions (up to system limit to prevent infinite loops)
 
 ### Limit exploding dice
 
@@ -267,7 +267,7 @@ Combine multiple mechanics in one expression.
 
 Examples:
 
-```1d20 crit 20 glitch 1 advantage + 5 >= 15``` - Roll d20 (crit and glitch) with advantage, add 5, check against DC 15
+```1d20 crit 20 glitch 1 advantage + 5 dc >= 15``` - Roll d20 (crit and glitch) with advantage, add 5, check against DC 15
 
 ```12d6 reroll <=1 count >=5``` - Roll 12d6, reroll any 1s, count successes of 5 or higher
 
