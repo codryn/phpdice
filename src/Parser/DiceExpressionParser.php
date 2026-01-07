@@ -321,10 +321,19 @@ class DiceExpressionParser
         $functionName = (string)$this->previous()->value;
 
         $this->consume(Token::TYPE_LPAREN, 'Expected opening parenthesis after function name');
-        $argument = $this->parseExpression();
+
+        // Parse first argument
+        $arguments = [$this->parseExpression()];
+
+        // Parse additional arguments if comma is present
+        while ($this->match(Token::TYPE_COMMA)) {
+            $arguments[] = $this->parseExpression();
+        }
+
         $this->consume(Token::TYPE_RPAREN, 'Expected closing parenthesis after function argument');
 
-        return new FunctionNode($functionName, $argument);
+        // Pass single argument directly for backward compatibility, or array for multiple arguments
+        return new FunctionNode($functionName, count($arguments) === 1 ? $arguments[0] : $arguments);
     }
 
     /**

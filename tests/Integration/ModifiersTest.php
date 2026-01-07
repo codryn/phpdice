@@ -308,4 +308,124 @@ class ModifiersTest extends BaseTestCaseMock
         //$expression = $this->phpdice->parse('1d20+0');
         $result = $this->phpdice->roll('1d20~0');
     }
+
+    /**
+     * Test min function with two arguments.
+     */
+    public function testMinFunctionWithTwoArguments(): void
+    {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(10, 5);
+
+        $result = $this->phpdice->roll('min(1d20, 1d20)');
+
+        $this->assertCount(2, $result->diceValues);
+        $this->assertEquals(5, $result->total);
+    }
+
+    /**
+     * Test min function with three arguments.
+     */
+    public function testMinFunctionWithThreeArguments(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(10, 5, 12);
+
+        $result = $this->phpdice->roll('min(1d20, 1d20, 1d20)');
+
+        $this->assertCount(3, $result->diceValues);
+        $this->assertEquals(5, $result->total);
+    }
+
+    /**
+     * Test min function with dice and numbers.
+     */
+    public function testMinFunctionWithDiceAndNumbers(): void
+    {
+        $this->mockRng->expects($this->exactly(1))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(15);
+
+        $result = $this->phpdice->roll('min(1d20, 10)');
+
+        $this->assertCount(1, $result->diceValues);
+        $this->assertEquals(10, $result->total);
+    }
+
+    /**
+     * Test max function with two arguments.
+     */
+    public function testMaxFunctionWithTwoArguments(): void
+    {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(10, 5);
+
+        $result = $this->phpdice->roll('max(1d20, 1d20)');
+
+        $this->assertCount(2, $result->diceValues);
+        $this->assertEquals(10, $result->total);
+    }
+
+    /**
+     * Test max function with three arguments.
+     */
+    public function testMaxFunctionWithThreeArguments(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(10, 5, 12);
+
+        $result = $this->phpdice->roll('max(1d20, 1d20, 1d20)');
+
+        $this->assertCount(3, $result->diceValues);
+        $this->assertEquals(12, $result->total);
+    }
+
+    /**
+     * Test max function with dice and numbers.
+     */
+    public function testMaxFunctionWithDiceAndNumbers(): void
+    {
+        $this->mockRng->expects($this->exactly(1))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(8);
+
+        $result = $this->phpdice->roll('max(1d20, 10)');
+
+        $this->assertCount(1, $result->diceValues);
+        $this->assertEquals(10, $result->total);
+    }
+
+    /**
+     * Test min function with expressions.
+     */
+    public function testMinFunctionWithExpressions(): void
+    {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(10, 3);
+
+        $result = $this->phpdice->roll('min(1d20+5, 1d6)');
+
+        $this->assertCount(2, $result->diceValues);
+        $this->assertEquals(3, $result->total); // min(10+5, 3) = 3
+    }
+
+    /**
+     * Test max function with expressions.
+     */
+    public function testMaxFunctionWithExpressions(): void
+    {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(10, 3);
+
+        $result = $this->phpdice->roll('max(1d20+5, 1d6)');
+
+        $this->assertCount(2, $result->diceValues);
+        $this->assertEquals(15, $result->total); // max(10+5, 3) = 15
+    }
 }
