@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ValidationException;
+use PHPDice\Exception\ParseException;
 
 /**
  * Integration tests for User Story 5a: Success Counting.
@@ -233,8 +233,8 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testInvalidOperatorThrowsException(): void
     {
-        $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Invalid success operator');
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Unexpected character');
 
         $this->phpdice->parse('5d6 count != 3');
     }
