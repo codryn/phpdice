@@ -540,18 +540,18 @@ class DiceExpressionParser
             }
         }
 
-        // Check for critical success: "crit N" or "critical N"
+        // Check for critical success: "crit N"
         $criticalSuccess = null;
-        if ($this->match(Token::TYPE_KEYWORD, ['crit', 'critical'])) {
+        if ($this->match(Token::TYPE_KEYWORD, ['crit'])) {
             $criticalSuccess = $this->consumeNumber();
 
             // Validate critical threshold is within die range (FR-035)
             $this->validator->validateCriticalThreshold($spec, $criticalSuccess, 'success');
         }
 
-        // Check for critical failure: "glitch N" or "failure N"
+        // Check for critical failure: "glitch N"
         $criticalFailure = null;
-        if ($this->match(Token::TYPE_KEYWORD, ['glitch', 'failure'])) {
+        if ($this->match(Token::TYPE_KEYWORD, ['glitch'])) {
             $criticalFailure = $this->consumeNumber();
 
             // Validate critical threshold is within die range (FR-036)
