@@ -585,7 +585,7 @@ final class CriticalTest extends BaseTestCaseMock
         $variables = [
             'str.bonus' => 3,
             'dex.bonus' => 2,
-            'proficiency' => 4
+            'proficiency' => 4,
         ];
 
         // Test natural 20 (always crit)
