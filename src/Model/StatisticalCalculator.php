@@ -115,9 +115,15 @@ class StatisticalCalculator
         // Calculate probability of success for a single die
         $successValues = 0;
         for ($value = $minValue; $value <= $maxValue; $value++) {
-            if ($operator === '>=' && $value >= $threshold) {
-                $successValues++;
-            } elseif ($operator === '>' && $value > $threshold) {
+            $matches = match ($operator) {
+                '>=' => $value >= $threshold,
+                '>' => $value > $threshold,
+                '<=' => $value <= $threshold,
+                '<' => $value < $threshold,
+                '==' => $value === $threshold,
+                default => false,
+            };
+            if ($matches) {
                 $successValues++;
             }
         }

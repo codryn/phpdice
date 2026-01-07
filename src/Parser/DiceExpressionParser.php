@@ -455,10 +455,10 @@ class DiceExpressionParser
             $comparison = $this->advance();
             $operator = (string)$comparison->value;
 
-            // Only allow >= and > for success counting
-            if (!in_array($operator, ['>=', '>'], true)) {
+            // Allow all comparison operators for success counting
+            if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
                 throw new \PHPDice\Exception\ValidationException(
-                    "Invalid success operator '{$operator}'. Only >= and > are supported for success counting.",
+                    "Invalid success operator '{$operator}'. Only >=, >, <=, <, and == are supported for success counting.",
                     'success'
                 );
             }
