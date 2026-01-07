@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Auto Success Mechanic**: New `auto N` keyword for automatic success/failure regardless of DC. This enables D&D/Pathfinder behavior where natural 20 is always a success. Example: `1d20 auto 20 crit 19 glitch 1 + 1 dc >= 25`
+
+### Changed
+- **BREAKING**: Natural max roll (e.g., 20 on d20) no longer automatically succeeds without the `auto` keyword. This makes the behavior explicit and allows for rolls without automatic success mechanics. To maintain D&D 5e behavior, use `1d20 auto 20 crit 20` instead of just `1d20 crit 20`.
+
 ### Planned
 - Performance optimizations for large dice pools
 - Additional game system presets

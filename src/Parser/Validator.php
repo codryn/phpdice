@@ -219,7 +219,12 @@ class Validator
         $maxValue = $spec->sides;
 
         if ($threshold < $minValue || $threshold > $maxValue) {
-            $label = $type === 'success' ? 'Critical success' : 'Critical failure';
+            $label = match ($type) {
+                'success' => 'Critical success',
+                'failure' => 'Critical failure',
+                'auto' => 'Auto success',
+                default => 'Critical',
+            };
             throw new ValidationException(
                 "{$label} threshold {$threshold} is outside die range ({$minValue}-{$maxValue})",
                 'critical'
