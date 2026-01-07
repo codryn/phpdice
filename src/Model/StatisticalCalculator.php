@@ -543,7 +543,7 @@ class StatisticalCalculator
                     $left->maximum / max($right->minimum, 1),
                     round($left->expected / max($right->expected, 1), 3)
                 ),
-                '~' => new StatisticalData(
+                '%' => new StatisticalData(
                     0,
                     max($right->maximum - 1, 0),
                     round(($right->maximum - 1) / 2, 3)
@@ -646,7 +646,7 @@ class StatisticalCalculator
                     $left->maximum / max($right->minimum, 1),
                     round($left->expected / max($right->expected, 1), 3)
                 ),
-                '~' => new StatisticalData(
+                '%' => new StatisticalData(
                     0,
                     max($right->maximum - 1, 0),
                     round(($right->maximum - 1) / 2, 3)

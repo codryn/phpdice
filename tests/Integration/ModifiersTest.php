@@ -82,7 +82,7 @@ class ModifiersTest extends BaseTestCaseMock
             ->method('generate')
             ->willReturnOnConsecutiveCalls(11);
 
-        $result = $this->phpdice->roll('1d20~2');
+        $result = $this->phpdice->roll('1d20%2');
 
         $this->assertCount(1, $result->diceValues);
         $this->assertEquals(1, $result->total);
@@ -258,7 +258,7 @@ class ModifiersTest extends BaseTestCaseMock
      */
     public function testStatisticsModulo(): void
     {
-        $expression = $this->phpdice->parse('2d6 ~ 2');
+        $expression = $this->phpdice->parse('2d6 % 2');
         $stats = $expression->statistics;
 
         $this->assertEquals(0, $stats->minimum);
@@ -306,7 +306,7 @@ class ModifiersTest extends BaseTestCaseMock
 
         // This will fail when we try to roll and evaluate
         //$expression = $this->phpdice->parse('1d20+0');
-        $result = $this->phpdice->roll('1d20~0');
+        $result = $this->phpdice->roll('1d20%0');
     }
 
     /**

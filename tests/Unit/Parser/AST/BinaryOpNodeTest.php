@@ -69,7 +69,7 @@ class BinaryOpNodeTest extends TestCase
     {
         $left = new NumberNode(17);
         $right = new NumberNode(5);
-        $node = new BinaryOpNode($left, '~', $right);
+        $node = new BinaryOpNode($left, '%', $right);
 
         $this->assertSame(2, $node->evaluate());
     }
@@ -78,7 +78,7 @@ class BinaryOpNodeTest extends TestCase
     {
         $left = new NumberNode(10);
         $right = new NumberNode(0);
-        $node = new BinaryOpNode($left, '~', $right);
+        $node = new BinaryOpNode($left, '%', $right);
 
         $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('Modulo by zero');

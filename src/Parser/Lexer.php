@@ -68,7 +68,7 @@ class Lexer
             }
 
             // Operators
-            if (in_array($char, ['+', '-', '*', '/', '~', '^'], true)) {
+            if (in_array($char, ['+', '-', '*', '/', '%', '^'], true)) {
                 $tokens[] = new Token(Token::TYPE_OPERATOR, $char, $this->position);
                 $this->position++;
                 continue;
