@@ -99,4 +99,114 @@ class FunctionNodeTest extends TestCase
 
         $this->assertSame($argument, $node->getArgument());
     }
+
+    public function testMinFunctionWithTwoArguments(): void
+    {
+        $arg1 = new NumberNode(5);
+        $arg2 = new NumberNode(3);
+        $node = new FunctionNode('min', [$arg1, $arg2]);
+
+        $this->assertSame(3, $node->evaluate());
+    }
+
+    public function testMinFunctionWithMultipleArguments(): void
+    {
+        $arg1 = new NumberNode(10);
+        $arg2 = new NumberNode(3);
+        $arg3 = new NumberNode(7);
+        $arg4 = new NumberNode(1);
+        $node = new FunctionNode('min', [$arg1, $arg2, $arg3, $arg4]);
+
+        $this->assertSame(1, $node->evaluate());
+    }
+
+    public function testMinFunctionWithFloats(): void
+    {
+        $arg1 = new NumberNode(3.5);
+        $arg2 = new NumberNode(2.1);
+        $arg3 = new NumberNode(4.8);
+        $node = new FunctionNode('min', [$arg1, $arg2, $arg3]);
+
+        $this->assertEquals(2.1, $node->evaluate());
+    }
+
+    public function testMinFunctionCaseInsensitive(): void
+    {
+        $arg1 = new NumberNode(5);
+        $arg2 = new NumberNode(3);
+        $node = new FunctionNode('MIN', [$arg1, $arg2]);
+
+        $this->assertSame(3, $node->evaluate());
+    }
+
+    public function testMaxFunctionWithTwoArguments(): void
+    {
+        $arg1 = new NumberNode(5);
+        $arg2 = new NumberNode(3);
+        $node = new FunctionNode('max', [$arg1, $arg2]);
+
+        $this->assertSame(5, $node->evaluate());
+    }
+
+    public function testMaxFunctionWithMultipleArguments(): void
+    {
+        $arg1 = new NumberNode(10);
+        $arg2 = new NumberNode(3);
+        $arg3 = new NumberNode(7);
+        $arg4 = new NumberNode(15);
+        $node = new FunctionNode('max', [$arg1, $arg2, $arg3, $arg4]);
+
+        $this->assertSame(15, $node->evaluate());
+    }
+
+    public function testMaxFunctionWithFloats(): void
+    {
+        $arg1 = new NumberNode(3.5);
+        $arg2 = new NumberNode(2.1);
+        $arg3 = new NumberNode(4.8);
+        $node = new FunctionNode('max', [$arg1, $arg2, $arg3]);
+
+        $this->assertEquals(4.8, $node->evaluate());
+    }
+
+    public function testMaxFunctionCaseInsensitive(): void
+    {
+        $arg1 = new NumberNode(5);
+        $arg2 = new NumberNode(3);
+        $node = new FunctionNode('MAX', [$arg1, $arg2]);
+
+        $this->assertSame(5, $node->evaluate());
+    }
+
+    public function testMinFunctionWithSingleArgumentThrowsException(): void
+    {
+        $arg = new NumberNode(5);
+        $node = new FunctionNode('min', [$arg]);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage("Function 'min' expects at least 2 arguments, got 1");
+        $node->evaluate();
+    }
+
+    public function testMaxFunctionWithSingleArgumentThrowsException(): void
+    {
+        $arg = new NumberNode(5);
+        $node = new FunctionNode('max', [$arg]);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage("Function 'max' expects at least 2 arguments, got 1");
+        $node->evaluate();
+    }
+
+    public function testGetArguments(): void
+    {
+        $arg1 = new NumberNode(5);
+        $arg2 = new NumberNode(3);
+        $node = new FunctionNode('max', [$arg1, $arg2]);
+
+        $arguments = $node->getArguments();
+        $this->assertCount(2, $arguments);
+        $this->assertSame($arg1, $arguments[0]);
+        $this->assertSame($arg2, $arguments[1]);
+    }
 }

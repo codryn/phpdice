@@ -68,7 +68,7 @@ class Lexer
             }
 
             // Operators
-            if (in_array($char, ['+', '-', '*', '/', '~', '^'], true)) {
+            if (in_array($char, ['+', '-', '*', '/', '%', '^'], true)) {
                 $tokens[] = new Token(Token::TYPE_OPERATOR, $char, $this->position);
                 $this->position++;
                 continue;
@@ -122,13 +122,30 @@ class Lexer
     {
         $start = $this->position;
         $number = '';
+        $hasDecimal = false;
 
         while ($this->position < $this->length && ctype_digit($this->input[$this->position])) {
             $number .= $this->input[$this->position];
             $this->position++;
         }
 
-        return new Token(Token::TYPE_NUMBER, (int)$number, $start);
+        // Check for decimal point
+        if ($this->position < $this->length && $this->input[$this->position] === '.') {
+            // Look ahead to ensure there's a digit after the decimal point
+            if ($this->position + 1 < $this->length && ctype_digit($this->input[$this->position + 1])) {
+                $hasDecimal = true;
+                $number .= '.';
+                $this->position++; // Consume the decimal point
+
+                // Read decimal digits
+                while ($this->position < $this->length && ctype_digit($this->input[$this->position])) {
+                    $number .= $this->input[$this->position];
+                    $this->position++;
+                }
+            }
+        }
+
+        return new Token(Token::TYPE_NUMBER, $hasDecimal ? (float)$number : (int)$number, $start);
     }
 
     /**
@@ -165,13 +182,13 @@ class Lexer
         }
 
         // Check if it's a known function
-        $functions = ['floor', 'ceil', 'round', 'abs'];
+        $functions = ['floor', 'ceil', 'round', 'abs', 'min', 'max'];
         if (in_array($lower, $functions, true)) {
             return new Token(Token::TYPE_FUNCTION, $lower, $start);
         }
 
         // Check for advantage/disadvantage/success/reroll/explode/critical/dc keywords
-        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'crit', 'critical', 'glitch', 'failure', 'dc', 'count'];
+        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'crit', 'glitch', 'dc', 'count'];
         if (in_array($lower, $keywords, true)) {
             return new Token(Token::TYPE_KEYWORD, $lower, $start);
         }
@@ -211,7 +228,7 @@ class Lexer
                 return new Token(Token::TYPE_PLACEHOLDER, $name, $start);
             }
 
-            if (ctype_alnum($char) || $char === '_') {
+            if (ctype_alnum($char) || $char === '_' || $char === '.') {
                 $name .= $char;
                 $this->position++;
             } else {

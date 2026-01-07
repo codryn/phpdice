@@ -149,7 +149,7 @@ class LexerTest extends BaseTestCase
         $lexer = new Lexer('max(1,3)');
         $tokens = $lexer->tokenize();
 
-        $this->assertSame(Token::TYPE_KEYWORD, $tokens[0]->type);
+        $this->assertSame(Token::TYPE_FUNCTION, $tokens[0]->type);
         $this->assertSame(Token::TYPE_LPAREN, $tokens[1]->type);
         $this->assertSame(Token::TYPE_NUMBER, $tokens[2]->type);
         $this->assertSame(Token::TYPE_COMMA, $tokens[3]->type);
@@ -182,5 +182,84 @@ class LexerTest extends BaseTestCase
 
         $lexer = new Lexer('3#6');
         $lexer->tokenize();
+    }
+
+    /**
+     * Test tokenizing decimal numbers.
+     */
+    public function testTokenizeDecimalNumbers(): void
+    {
+        $lexer = new Lexer('1.5 + 2.75');
+        $tokens = $lexer->tokenize();
+
+        $this->assertCount(4, $tokens); // 1.5, +, 2.75, EOF
+
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[0]->type);
+        $this->assertSame(1.5, $tokens[0]->value);
+
+        $this->assertSame(Token::TYPE_OPERATOR, $tokens[1]->type);
+        $this->assertSame('+', $tokens[1]->value);
+
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[2]->type);
+        $this->assertSame(2.75, $tokens[2]->value);
+
+        $this->assertSame(Token::TYPE_EOF, $tokens[3]->type);
+    }
+
+    /**
+     * Test tokenizing decimal in dice expression.
+     */
+    public function testTokenizeDecimalInDiceExpression(): void
+    {
+        $lexer = new Lexer('1d20 * 1.4');
+        $tokens = $lexer->tokenize();
+
+        $this->assertCount(6, $tokens); // 1, d, 20, *, 1.4, EOF
+
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[0]->type);
+        $this->assertSame(1, $tokens[0]->value);
+
+        $this->assertSame(Token::TYPE_DICE, $tokens[1]->type);
+        $this->assertSame('d', $tokens[1]->value);
+
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[2]->type);
+        $this->assertSame(20, $tokens[2]->value);
+
+        $this->assertSame(Token::TYPE_OPERATOR, $tokens[3]->type);
+        $this->assertSame('*', $tokens[3]->value);
+
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[4]->type);
+        $this->assertSame(1.4, $tokens[4]->value);
+
+        $this->assertSame(Token::TYPE_EOF, $tokens[5]->type);
+    }
+
+    /**
+     * Test decimal point without following digits is not treated as decimal.
+     */
+    public function testDecimalPointWithoutDigitsNotTreatedAsDecimal(): void
+    {
+        // A decimal point followed by a non-digit should leave the decimal point
+        // to be handled as an unexpected character
+        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectExceptionMessage("Unexpected character '.'");
+
+        $lexer = new Lexer('5.d6');
+        $lexer->tokenize();
+    }
+
+    /**
+     * Test integer numbers still work correctly.
+     */
+    public function testIntegerNumbersStillWork(): void
+    {
+        $lexer = new Lexer('42');
+        $tokens = $lexer->tokenize();
+
+        $this->assertCount(2, $tokens); // 42, EOF
+
+        $this->assertSame(Token::TYPE_NUMBER, $tokens[0]->type);
+        $this->assertSame(42, $tokens[0]->value);
+        $this->assertIsInt($tokens[0]->value);
     }
 }

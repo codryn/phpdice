@@ -54,15 +54,19 @@ class DiceExpressionParser
         $this->tokens = $lexer->tokenize();
         $this->current = 0;
 
-        // Parse initial dice notation to get base AST
+        // Parse initial expression to get base AST
         $this->astRoot = $this->parseTerm(); // Start with term to get just the dice
 
         // Extract dice specification from AST
         $diceNode = $this->findDiceNode($this->astRoot);
+
+        // Handle math-only expressions (no dice notation)
         if ($diceNode === null) {
-            // Fallback: try simple validation for backward compatibility
+            // Validate expression is not empty
             $this->validator->validateExpression($expression);
-            throw new ParseException('No dice notation found in expression', 0);
+
+            // For math-only expressions, we don't need dice specification or modifiers
+            return $this->createMathOnlyExpression($expression);
         }
 
         // Create dice specification
@@ -191,6 +195,61 @@ class DiceExpressionParser
     }
 
     /**
+     * Create a DiceExpression for math-only expressions (no dice).
+     *
+     * @param string $expression Original expression
+     * @return DiceExpression Expression for pure math
+     */
+    private function createMathOnlyExpression(string $expression): DiceExpression
+    {
+        // Continue parsing the rest of the expression (arithmetic operators)
+        while ($this->match(Token::TYPE_OPERATOR, ['+', '-'])) {
+            $operator = $this->previous()->value;
+            $right = $this->parseTerm();
+            if ($this->astRoot === null) {
+                throw new ParseException(
+                    'Invalid expression: missing left operand',
+                    $this->getCurrentPosition()
+                );
+            }
+            $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
+        }
+
+        // Ensure all tokens are consumed
+        if (!$this->isAtEnd()) {
+            $remaining = $this->peek();
+            throw new ParseException(
+                "Unexpected token: {$remaining->type} '{$remaining->value}'",
+                $this->getCurrentPosition()
+            );
+        }
+
+        if ($this->astRoot === null) {
+            throw new ParseException(
+                'Invalid expression: empty or incomplete expression',
+                0
+            );
+        }
+
+        // Calculate statistics from AST (for math-only expressions)
+        $statistics = $this->calculator->calculateFromAst($this->astRoot);
+
+        // Create empty modifiers (no dice-specific modifiers for math-only expressions)
+        $modifiers = new RollModifiers();
+
+        // Build expression with null specification (math-only)
+        return new DiceExpression(
+            specification: null,
+            modifiers: $modifiers,
+            statistics: $statistics,
+            originalExpression: $expression,
+            astRoot: $this->astRoot,
+            comparisonOperator: null,
+            comparisonThreshold: null
+        );
+    }
+
+    /**
      * Parse an expression (handles +, -).
      *
      * @return Node Expression node
@@ -217,7 +276,7 @@ class DiceExpressionParser
     {
         $node = $this->parseFactor();
 
-        while ($this->match(Token::TYPE_OPERATOR, ['*', '/', '~', '^'])) {
+        while ($this->match(Token::TYPE_OPERATOR, ['*', '/', '%', '^'])) {
             $operator = $this->previous()->value;
             $right = $this->parseFactor();
             $node = new BinaryOpNode($node, (string)$operator, $right);
@@ -300,7 +359,12 @@ class DiceExpressionParser
 
         // Plain number
         if ($this->match(Token::TYPE_NUMBER)) {
-            return new NumberNode((int)$this->previous()->value);
+            $value = $this->previous()->value;
+            // Keep the original type (int or float) from the token
+            if (!is_int($value) && !is_float($value)) {
+                throw new ParseException('Number token must have int or float value', $this->getCurrentPosition());
+            }
+            return new NumberNode($value);
         }
 
         throw new ParseException('Expected number, dice, or expression', $this->getCurrentPosition());
@@ -316,14 +380,25 @@ class DiceExpressionParser
         $functionName = (string)$this->previous()->value;
 
         $this->consume(Token::TYPE_LPAREN, 'Expected opening parenthesis after function name');
-        $argument = $this->parseExpression();
+
+        // Parse first argument
+        $arguments = [$this->parseExpression()];
+
+        // Parse additional arguments if comma is present
+        while ($this->match(Token::TYPE_COMMA)) {
+            $arguments[] = $this->parseExpression();
+        }
+
         $this->consume(Token::TYPE_RPAREN, 'Expected closing parenthesis after function argument');
 
-        return new FunctionNode($functionName, $argument);
+        // Pass single argument directly for backward compatibility, or array for multiple arguments
+        return new FunctionNode($functionName, count($arguments) === 1 ? $arguments[0] : $arguments);
     }
 
     /**
      * Parse modifiers like advantage, disadvantage, keep.
+     *
+     * Order: explode/reroll -> keep -> count -> dc
      *
      * @param DiceSpecification $spec Dice specification
      * @return RollModifiers Roll modifiers
@@ -356,135 +431,15 @@ class DiceExpressionParser
             $keepLowest = $spec->count;
         }
 
-        // Check for keep X highest/lowest
-        if ($this->match(Token::TYPE_KEYWORD, ['keep'])) {
-            $count = $this->consumeNumber();
-
-            if ($this->match(Token::TYPE_KEYWORD, ['highest'])) {
-                if ($keepHighest !== null || $keepLowest !== null) {
-                    throw new \PHPDice\Exception\ValidationException(
-                        'Cannot specify keep multiple times',
-                        'modifiers'
-                    );
-                }
-                $keepHighest = $count;
-            } elseif ($this->match(Token::TYPE_KEYWORD, ['lowest'])) {
-                if ($keepHighest !== null || $keepLowest !== null) {
-                    throw new \PHPDice\Exception\ValidationException(
-                        'Cannot specify keep multiple times',
-                        'modifiers'
-                    );
-                }
-                $keepLowest = $count;
-            } else {
-                throw new ParseException('Expected "highest" or "lowest" after keep count', $this->getCurrentPosition());
-            }
-
-            // Calculate total dice to roll (base + advantage)
-            $totalDiceToRoll = $spec->count;
-            if ($advantageCount !== null) {
-                $totalDiceToRoll += $advantageCount;
-            }
-
-            // Validate keep count doesn't exceed total dice
-            if ($keepHighest !== null && $keepHighest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Cannot keep {$keepHighest} dice when only rolling {$totalDiceToRoll}",
-                    'keep'
-                );
-            }
-            if ($keepLowest !== null && $keepLowest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Cannot keep {$keepLowest} dice when only rolling {$totalDiceToRoll}",
-                    'keep'
-                );
-            }
-        }
-
-        // Check for reroll FIRST: "reroll [limit] operator threshold"
-        // Must parse before success counting to handle "reroll <= 2 >= 4" correctly
+        // STEP 1: Parse explode/reroll (must come before keep)
         $rerollThreshold = null;
         $rerollOperator = null;
         $rerollLimit = 100; // Default limit
-
-        if ($this->match(Token::TYPE_KEYWORD, ['reroll'])) {
-            // Check for optional limit number
-            if ($this->check(Token::TYPE_NUMBER)) {
-                $nextPos = $this->current + 1;
-                // Peek ahead to see if the next token after the number is a comparison operator
-                if ($nextPos < count($this->tokens) && $this->tokens[$nextPos]->type === Token::TYPE_COMPARISON) {
-                    // This number is the limit
-                    $rerollLimit = $this->consumeNumber();
-                }
-            }
-
-            // Expect comparison operator
-            if (!$this->check(Token::TYPE_COMPARISON)) {
-                throw new ParseException('Expected comparison operator after "reroll"', $this->getCurrentPosition());
-            }
-
-            $comparison = $this->advance();
-            $rerollOperator = (string)$comparison->value;
-
-            // Validate operator (all comparison operators allowed for reroll)
-            if (!in_array($rerollOperator, ['<=', '<', '>=', '>', '=='], true)) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Invalid reroll operator '{$rerollOperator}'",
-                    'reroll'
-                );
-            }
-
-            // Get threshold value
-            $rerollThreshold = $this->consumeNumber();
-
-            // Validate reroll range doesn't cover entire die (FR-005b)
-            $this->validator->validateRerollRange($spec, $rerollThreshold, $rerollOperator);
-        }
-
-        // Check for success counting: "count >=N" or "count >N" or "success threshold N" (legacy)
-        // Parsed after reroll to allow "reroll <= 2 count >= 4" syntax
-        if ($this->match(Token::TYPE_KEYWORD, ['count'])) {
-            // After 'count', comparison operator is required
-            if (!$this->check(Token::TYPE_COMPARISON)) {
-                throw new ParseException(
-                    "Expected comparison operator after 'count' keyword",
-                    $this->peek()->position
-                );
-            }
-
-            $comparison = $this->advance();
-            $operator = (string)$comparison->value;
-
-            // Only allow >= and > for success counting
-            if (!in_array($operator, ['>=', '>'], true)) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Invalid success operator '{$operator}'. Only >= and > are supported for success counting.",
-                    'success'
-                );
-            }
-
-            $successOperator = $operator;
-            $successThreshold = $this->consumeNumber();
-        } elseif ($this->match(Token::TYPE_KEYWORD, ['success'])) {
-            // Legacy syntax: "success threshold N"
-            // Expect "threshold N"
-            if (!$this->match(Token::TYPE_KEYWORD, ['threshold'])) {
-                throw new ParseException('Expected "threshold" after "success"', $this->getCurrentPosition());
-            }
-            $successThreshold = $this->consumeNumber();
-            $successOperator = '>='; // Default to >= for "success threshold N" syntax
-        } elseif ($this->match(Token::TYPE_KEYWORD, ['threshold'])) {
-            // Legacy syntax: just "threshold N" (shorthand for "success threshold N")
-            $successThreshold = $this->consumeNumber();
-            $successOperator = '>=';
-        }
-
-        // Check for explode: "explode [limit] [operator threshold]"
-        // Parsed after keep but before reroll/success to allow "keep 3 highest explode >=5"
         $explosionThreshold = null;
         $explosionOperator = null;
         $explosionLimit = 100; // Default limit
 
+        // Check for explode: "explode [limit] [operator threshold]"
         if ($this->match(Token::TYPE_KEYWORD, ['explode'])) {
             // Check for optional limit number
             if ($this->check(Token::TYPE_NUMBER)) {
@@ -535,18 +490,145 @@ class DiceExpressionParser
             }
         }
 
-        // Check for critical success: "crit N" or "critical N"
+        // Check for reroll: "reroll [limit] operator threshold"
+        if ($this->match(Token::TYPE_KEYWORD, ['reroll'])) {
+            // Validate: cannot combine explode and reroll on same dice
+            if ($explosionThreshold !== null) {
+                throw new \PHPDice\Exception\ValidationException(
+                    'Cannot combine explode and reroll on the same dice',
+                    'modifiers'
+                );
+            }
+
+            // Check for optional limit number
+            if ($this->check(Token::TYPE_NUMBER)) {
+                $nextPos = $this->current + 1;
+                // Peek ahead to see if the next token after the number is a comparison operator
+                if ($nextPos < count($this->tokens) && $this->tokens[$nextPos]->type === Token::TYPE_COMPARISON) {
+                    // This number is the limit
+                    $rerollLimit = $this->consumeNumber();
+                }
+            }
+
+            // Expect comparison operator
+            if (!$this->check(Token::TYPE_COMPARISON)) {
+                throw new ParseException('Expected comparison operator after "reroll"', $this->getCurrentPosition());
+            }
+
+            $comparison = $this->advance();
+            $rerollOperator = (string)$comparison->value;
+
+            // Validate operator (all comparison operators allowed for reroll)
+            if (!in_array($rerollOperator, ['<=', '<', '>=', '>', '=='], true)) {
+                throw new \PHPDice\Exception\ValidationException(
+                    "Invalid reroll operator '{$rerollOperator}'",
+                    'reroll'
+                );
+            }
+
+            // Get threshold value
+            $rerollThreshold = $this->consumeNumber();
+
+            // Validate reroll range doesn't cover entire die (FR-005b)
+            $this->validator->validateRerollRange($spec, $rerollThreshold, $rerollOperator);
+        }
+
+        // STEP 2: Parse keep (must come after explode/reroll)
+        // Check for keep X highest/lowest
+        if ($this->match(Token::TYPE_KEYWORD, ['keep'])) {
+            $count = $this->consumeNumber();
+
+            if ($this->match(Token::TYPE_KEYWORD, ['highest'])) {
+                if ($keepHighest !== null || $keepLowest !== null) {
+                    throw new \PHPDice\Exception\ValidationException(
+                        'Cannot specify keep multiple times',
+                        'modifiers'
+                    );
+                }
+                $keepHighest = $count;
+            } elseif ($this->match(Token::TYPE_KEYWORD, ['lowest'])) {
+                if ($keepHighest !== null || $keepLowest !== null) {
+                    throw new \PHPDice\Exception\ValidationException(
+                        'Cannot specify keep multiple times',
+                        'modifiers'
+                    );
+                }
+                $keepLowest = $count;
+            } else {
+                throw new ParseException('Expected "highest" or "lowest" after keep count', $this->getCurrentPosition());
+            }
+
+            // Calculate total dice to roll (base + advantage)
+            $totalDiceToRoll = $spec->count;
+            if ($advantageCount !== null) {
+                $totalDiceToRoll += $advantageCount;
+            }
+
+            // Validate keep count doesn't exceed total dice
+            if ($keepHighest !== null && $keepHighest > $totalDiceToRoll) {
+                throw new \PHPDice\Exception\ValidationException(
+                    "Cannot keep {$keepHighest} dice when only rolling {$totalDiceToRoll}",
+                    'keep'
+                );
+            }
+            if ($keepLowest !== null && $keepLowest > $totalDiceToRoll) {
+                throw new \PHPDice\Exception\ValidationException(
+                    "Cannot keep {$keepLowest} dice when only rolling {$totalDiceToRoll}",
+                    'keep'
+                );
+            }
+        }
+
+        // STEP 3: Parse count (success counting - must come after keep)
+        // Check for success counting: "count >=N" or "count >N" or "success threshold N" (legacy)
+        if ($this->match(Token::TYPE_KEYWORD, ['count'])) {
+            // After 'count', comparison operator is required
+            if (!$this->check(Token::TYPE_COMPARISON)) {
+                throw new ParseException(
+                    "Expected comparison operator after 'count' keyword",
+                    $this->peek()->position
+                );
+            }
+
+            $comparison = $this->advance();
+            $operator = (string)$comparison->value;
+
+            // Allow all comparison operators for success counting
+            if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
+                throw new \PHPDice\Exception\ValidationException(
+                    "Invalid success operator '{$operator}'. Only >=, >, <=, <, and == are supported for success counting.",
+                    'success'
+                );
+            }
+
+            $successOperator = $operator;
+            $successThreshold = $this->consumeNumber();
+        } elseif ($this->match(Token::TYPE_KEYWORD, ['success'])) {
+            // Legacy syntax: "success threshold N"
+            // Expect "threshold N"
+            if (!$this->match(Token::TYPE_KEYWORD, ['threshold'])) {
+                throw new ParseException('Expected "threshold" after "success"', $this->getCurrentPosition());
+            }
+            $successThreshold = $this->consumeNumber();
+            $successOperator = '>='; // Default to >= for "success threshold N" syntax
+        } elseif ($this->match(Token::TYPE_KEYWORD, ['threshold'])) {
+            // Legacy syntax: just "threshold N" (shorthand for "success threshold N")
+            $successThreshold = $this->consumeNumber();
+            $successOperator = '>=';
+        }
+
+        // Check for critical success: "crit N"
         $criticalSuccess = null;
-        if ($this->match(Token::TYPE_KEYWORD, ['crit', 'critical'])) {
+        if ($this->match(Token::TYPE_KEYWORD, ['crit'])) {
             $criticalSuccess = $this->consumeNumber();
 
             // Validate critical threshold is within die range (FR-035)
             $this->validator->validateCriticalThreshold($spec, $criticalSuccess, 'success');
         }
 
-        // Check for critical failure: "glitch N" or "failure N"
+        // Check for critical failure: "glitch N"
         $criticalFailure = null;
-        if ($this->match(Token::TYPE_KEYWORD, ['glitch', 'failure'])) {
+        if ($this->match(Token::TYPE_KEYWORD, ['glitch'])) {
             $criticalFailure = $this->consumeNumber();
 
             // Validate critical threshold is within die range (FR-036)

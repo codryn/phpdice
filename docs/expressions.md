@@ -7,7 +7,9 @@ General rules:
 - Supported dice types: standard (d4, d6, d8, d10, d12, d20, d%), FATE dice (dF).
 - Expressions can contain space characters for readability.
 - Parentheses can be used to group sub-expressions.
-- Mathematical functions supported: `floor()`, `ceil()`, `round()`.
+- Mathematical functions supported: `floor()`, `ceil()`, `round(), abs(), min(), max()`.
+- Arethmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
+- Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `crit`, `glitch`, `dc`.
 
 ## Basic Dice Notation
 Roll X dice with Y sides:
@@ -23,13 +25,15 @@ Examples:
 ```1d20``` - Roll one twenty-sided die
 
 ## Arithmetic Modifiers
-Roll X dice with Y sides and add/subtract/multiply/divide by Z:
+Roll X dice with Y sides and add/subtract/multiply/divide/modulo/exponentiate by Z:
 
 ```
 XdY+Z
 XdY-Z
 XdY*Z
 XdY/Z
+XdY%Z
+XdY^Z
 ```
 
 Examples:
@@ -41,6 +45,10 @@ Examples:
 ```2d6 * 2``` - Roll two six-sided dice and multiply the result by 2
 
 ```4d6 / 2``` - Roll four six-sided dice and divide the result by 2 (results in float, use `floor()`, `ceil()`, or `round()` to convert to integer)
+
+```5d10 % 3``` - Roll five ten-sided dice and take the result modulo 3
+
+```2d8 ^ 2``` - Roll two eight-sided dice and raise the result to the power of 2
 
 ## Arithmetic Expressions
 Group expressions with parentheses and use standard operator precedence:
@@ -64,6 +72,9 @@ Use `floor()`, `ceil()`, and `round()` to round results:
 floor(expression)
 ceil(expression)
 round(expression)
+abs(expression)
+min(expression1, expression2, ...)
+max(expression1, expression2, ...)
 ```
 
 Examples:
@@ -73,6 +84,28 @@ Examples:
 ```ceil(3d6 / 2)``` - Roll three six-sided dice, divide by 2, round up
 
 ```round(1d20 * 1.5)``` - Roll one twenty-sided die, multiply by 1.5, round to nearest integer
+
+```abs(1d6 - 10)``` - Roll one six-sided die, subtract from 10, take absolute value
+
+```min(1d6, 1d8)``` - Roll one six-sided die and one eight-sided die, take the minimum result
+
+```max(2d10, 3d6)``` - Roll two ten-sided dice and three six-sided dice, take the maximum result
+
+```max(2d10, 3d6, 2d8)``` - Min/max functions can take multiple arguments
+
+## Math only expressions
+
+You can use mathematical expressions without dice rolls:
+
+```
+Z + N * (M - P) / Q
+```
+
+Examples:
+
+```5 + 3 * (10 - 2) / 4``` - Basic arithmetic expression without dice
+
+```(15 - 4) ^ 2 + 10 % 3``` - Another arithmetic expression without dice
 
 ## Advantage/Disadvantage
 
@@ -119,7 +152,7 @@ Examples:
 
 ```10d10 count > 7``` - Roll ten d10s, count how many are greater than 7
 
-**Note**: The `count` keyword is **required** to distinguish success counting from DC checks (e.g., `1d20+5 dc >= 15`).
+**Note**: The `count` keyword is **required** to distinguish success counting from DC checks (e.g., `1d20+5 dc >= 15`), rerolls and explosions.
 
 ## Rerolls
 
@@ -134,9 +167,9 @@ XdY reroll N
 
 Examples:
 
-```4d6 reroll <= 2``` - Roll four d6s, reroll any die that is 2 or less (once per die)
+```4d6 reroll <= 2``` - Roll four d6s, reroll any die that is 2 or less, unlimited rerolls (up to system limit to prevent infinite loops)
 
-```6d6 reroll 1``` - Roll six d6s, reroll any die that is exactly 1 (once per die)
+```6d6 reroll == 1``` - Roll six d6s, reroll any die that is exactly 1, unlimited rerolls (up to system limit to prevent infinite loops)
 
 ### Limit rerolls
 
@@ -168,9 +201,9 @@ XdY explode M >= N
 
 Examples:
 
-```3d6 explode``` - Roll three d6s, any die that rolls a 6 explodes (rolls again), unlimited explosions
+```3d6 explode``` - Roll three d6s, any die that rolls a 6 explodes (rolls again), unlimited explosions (up to system limit to prevent infinite loops)
 
-```3d6 explode >= 5``` - Roll three d6s, any die that rolls 5 or 6 explodes
+```3d6 explode >= 5``` - Roll three d6s, any die that rolls 5 or 6 explodes, unlimited explosions (up to system limit to prevent infinite loops)
 
 ### Limit exploding dice
 
@@ -214,7 +247,7 @@ Examples:
 ```1d20 + $str$ + $proficiency$``` - Roll one d20, add strength and proficiency 
 modifiers from variables
 
-```(1d8 + $str$) * 2 + 5``` - Damage roll with strength multiplier from variable
+```(1d8 + $ability.str.bonus$) * 2 + 5``` - Damage roll with strength multiplier from variable
 
 ### Use in code:
 ```php
@@ -243,6 +276,11 @@ Examples:
 
 ```1d20 + 3 dc == 18``` - Roll one d20, add 3, check if total equals 18 (DC check)
 
+Notes: 
+
+- The success check is done on the final roll result with all modifiers applied.
+- A maximal roll (natural 20 on d20) is always counted as a success.
+
 ## Critical Success/Failure
 
 Use the crit and glitch mechanics:
@@ -261,14 +299,54 @@ Examples:
 
 ```1d20 crit 19 glitch 2``` - Roll one d20, critical success on 19 or 20, critical failure on 1 or 2
 
+Notes: 
+
+- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and should no be combined with multiple dice, reroll or explode.
+- Crit and glitch keywords can be used together to define both critical success and failure ranges.
+- A crit is only counted when the roll is also a success according to any DC check in the expression.
+- A maximal roll (natural 20 on d20) is always a success and therfore a crit, even if the total fails the DC check.
+
 ## Complex Combinations
 
 Combine multiple mechanics in one expression.
 
 Examples:
 
-```1d20 crit 20 glitch 1 advantage + 5 >= 15``` - Roll d20 (crit and glitch) with advantage, add 5, check against DC 15
+```1d20 crit 20 glitch 1 advantage + 5 dc >= 15``` - Roll d20 (crit and glitch) with advantage, add 5, check against DC 15
 
 ```12d6 reroll <=1 count >=5``` - Roll 12d6, reroll any 1s, count successes of 5 or higher
 
 ```4d6 explode keep 3 highest + $modifier$``` - Roll 4d6 with exploding dice, keep highest 3, add modifier from variable
+
+## Modifier Ordering Rules
+
+When combining multiple modifiers, they must be specified in the following order:
+
+1. **advantage** or **disadvantage** or **reroll** or **explode**  (cannot combine these keywords on the same dice)
+2. **keep** or **drop** (highest/lowest)
+3. **crit and/or **glitch**
+5. **count** (success counting)
+6. **modifiers** (addition, subtraction, etc.)
+7. **dc** (difficulty class comparison)
+
+**Important:** 
+- `explode` and `reroll` cannot be combined on the same dice roll
+- `explode` or `reroll` must come before `keep`
+- `count` must come after `explode`/`reroll` and `keep`
+- `dc` must be at the end
+
+Examples of correct ordering:
+- `4d6 explode keep 3 highest` - ✓ Correct
+- `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
+- `4d6 keep 3 highest explode` - ✗ Incorrect (keep before explode)
+- `4d6 explode reroll <=1` - ✗ Incorrect (both explode and reroll)
+
+Notes:
+- Advantage/Disadvantage shall be the first keyword to ensure correct die selection.
+- Reroll/explode must come before keep/drop to ensure all dice are considered for rerolls/explosions.
+- Crit/Glitch must come after any rerolls to apply to the final selected die.
+- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and are normally not combined with multiple dice, reroll or explode.
+- Keep/drop must come before count to ensure the correct dice are counted.
+- The `count` keyword must be after any reroll/explode/keep mechanics to ensure correct success counting and can only be used once per expression.
+- Modifiers (addition, subtraction, etc.) must come after all dice mechanics to apply to the final roll total / number of successes.
+- The `dc` keyword must be the last keyword in the expression to ensure correct DC checking with the roll total or number of successes and all modifiers.

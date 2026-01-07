@@ -30,6 +30,11 @@ class DiceRoller
      */
     public function roll(DiceExpression $expression, ?Node $ast = null): RollResult
     {
+        // Handle math-only expressions (no dice)
+        if ($expression->specification === null) {
+            return $this->rollMathOnly($ast, $expression);
+        }
+
         // If we have an AST with multiple dice groups, handle them separately
         if ($ast !== null && $this->hasMultipleDiceGroups($ast)) {
             return $this->rollMultipleDiceGroups($ast, $expression);
@@ -265,16 +270,22 @@ class DiceRoller
      *
      * @param array<int> $diceValues Dice values to check
      * @param int $threshold Success threshold
-     * @param string $operator Comparison operator (>= or >)
+     * @param string $operator Comparison operator (>=, >, <=, <, ==)
      * @return int Number of successful dice
      */
     private function countSuccesses(array $diceValues, int $threshold, string $operator): int
     {
         $count = 0;
         foreach ($diceValues as $value) {
-            if ($operator === '>=' && $value >= $threshold) {
-                $count++;
-            } elseif ($operator === '>' && $value > $threshold) {
+            $matches = match ($operator) {
+                '>=' => $value >= $threshold,
+                '>' => $value > $threshold,
+                '<=' => $value <= $threshold,
+                '<' => $value < $threshold,
+                '==' => $value === $threshold,
+                default => false,
+            };
+            if ($matches) {
                 $count++;
             }
         }
@@ -421,7 +432,10 @@ class DiceRoller
             $this->countDiceNodes($node->getLeft(), $count);
             $this->countDiceNodes($node->getRight(), $count);
         } elseif ($node instanceof FunctionNode) {
-            $this->countDiceNodes($node->getArgument(), $count);
+            // Count dice in all arguments
+            foreach ($node->getArguments() as $argument) {
+                $this->countDiceNodes($argument, $count);
+            }
         }
     }
 
@@ -477,8 +491,35 @@ class DiceRoller
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
         } elseif ($node instanceof FunctionNode) {
-            $this->rollDiceNode($node->getArgument(), $allDiceValues);
+            // Roll dice in all arguments
+            foreach ($node->getArguments() as $argument) {
+                $this->rollDiceNode($argument, $allDiceValues);
+            }
         }
+    }
+
+    /**
+     * Roll a math-only expression (no dice).
+     *
+     * @param Node|null $ast AST to evaluate
+     * @param DiceExpression $expression Original expression
+     * @return RollResult Result with empty dice values and computed total
+     */
+    private function rollMathOnly(?Node $ast, DiceExpression $expression): RollResult
+    {
+        if ($ast === null) {
+            throw new \PHPDice\Exception\ValidationException('Math-only expression must have an AST', 'expression');
+        }
+
+        // Evaluate the AST to get the total
+        $total = $ast->evaluate();
+
+        // Return result with no dice values
+        return new RollResult(
+            expression: $expression,
+            total: $total,
+            diceValues: []
+        );
     }
 
 }
