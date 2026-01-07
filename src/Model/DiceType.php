@@ -23,4 +23,9 @@ enum DiceType: string
      * Percentile dice (d% or d100) with values 1-100.
      */
     case PERCENTILE = 'percentile';
+
+    /**
+     * No dice - math-only expression.
+     */
+    case NONE = 'none';
 }

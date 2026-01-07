@@ -21,6 +21,11 @@ class Validator
      */
     public function validateDiceSpecification(DiceSpecification $spec): void
     {
+        // Allow math-only expressions (NONE type)
+        if ($spec->type === \PHPDice\Model\DiceType::NONE) {
+            return;
+        }
+        
         // FR-027: Dice count must be >= 1
         if ($spec->count < 1) {
             throw new ValidationException(

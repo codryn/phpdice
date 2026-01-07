@@ -59,24 +59,38 @@ class DiceExpressionParser
 
         // Extract dice specification from AST
         $diceNode = $this->findDiceNode($this->astRoot);
-        if ($diceNode === null) {
-            // Fallback: try simple validation for backward compatibility
-            $this->validator->validateExpression($expression);
-            throw new ParseException('No dice notation found in expression', 0);
-        }
-
+        
         // Create dice specification
-        $spec = new DiceSpecification(
-            count: $diceNode->getCount(),
-            sides: $diceNode->getSides(),
-            type: $diceNode->getType()
-        );
+        if ($diceNode === null) {
+            // No dice found - this is a math-only expression
+            // Validate that it's not empty
+            $this->validator->validateExpression($expression);
+            
+            // Create a special "NONE" dice specification for math-only expressions
+            $spec = new DiceSpecification(
+                count: 0,
+                sides: 0,
+                type: \PHPDice\Model\DiceType::NONE
+            );
+        } else {
+            // Standard dice expression
+            $spec = new DiceSpecification(
+                count: $diceNode->getCount(),
+                sides: $diceNode->getSides(),
+                type: $diceNode->getType()
+            );
+        }
 
         // Validate specification
         $this->validator->validateDiceSpecification($spec);
 
         // Parse modifiers (advantage, disadvantage, keep) - these consume KEYWORD tokens
-        $modifiers = $this->parseModifiers($spec);
+        // Skip modifiers for math-only expressions
+        if ($spec->type === \PHPDice\Model\DiceType::NONE) {
+            $modifiers = new RollModifiers();
+        } else {
+            $modifiers = $this->parseModifiers($spec);
+        }
 
         // Validate modifiers for conflicts
         $this->validator->validateModifiers($modifiers);

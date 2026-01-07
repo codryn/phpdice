@@ -25,6 +25,16 @@ class StatisticalCalculator
      */
     public function calculate(DiceSpecification $spec, RollModifiers $modifiers, ?Node $ast = null): StatisticalData
     {
+        // Handle math-only expressions (no dice)
+        if ($spec->type === DiceType::NONE) {
+            if ($ast === null) {
+                throw new \RuntimeException('Math-only expression requires AST');
+            }
+            // For math-only, all values are deterministic
+            $value = $ast->evaluate();
+            return new StatisticalData($value, $value, $value);
+        }
+        
         // Handle success counting mode
         if ($modifiers->successThreshold !== null && $modifiers->successOperator !== null) {
             return $this->calculateSuccessCount($spec, $modifiers);
