@@ -384,4 +384,130 @@ class StatisticalCalculatorTest extends TestCase
         $this->assertSame(16, $stats->maximum);
         $this->assertSame(9.0, $stats->expected);
     }
+
+    /**
+     * Test variance and standard deviation for basic dice.
+     *
+     * @test
+     */
+    public function testBasicDiceVarianceAndStandardDeviation(): void
+    {
+        $spec = new DiceSpecification(count: 1, sides: 6, type: DiceType::STANDARD);
+        $modifiers = new RollModifiers();
+
+        $stats = $this->calculator->calculate($spec, $modifiers);
+
+        // Variance for 1d6: (6^2 - 1) / 12 = 35/12 = 2.917
+        $this->assertEqualsWithDelta(2.917, $stats->variance, 0.001);
+        // Standard deviation: sqrt(2.917) = 1.708
+        $this->assertEqualsWithDelta(1.708, $stats->standardDeviation, 0.001);
+    }
+
+    /**
+     * Test variance scales with multiple dice.
+     *
+     * @test
+     */
+    public function testMultipleDiceVariance(): void
+    {
+        $spec = new DiceSpecification(count: 3, sides: 6, type: DiceType::STANDARD);
+        $modifiers = new RollModifiers();
+
+        $stats = $this->calculator->calculate($spec, $modifiers);
+
+        // Variance for 3d6: 3 * (35/12) = 105/12 = 8.75
+        $this->assertEqualsWithDelta(8.75, $stats->variance, 0.001);
+        // Standard deviation: sqrt(8.75) = 2.958
+        $this->assertEqualsWithDelta(2.958, $stats->standardDeviation, 0.001);
+    }
+
+    /**
+     * Test variance for d20.
+     *
+     * @test
+     */
+    public function testD20Variance(): void
+    {
+        $spec = new DiceSpecification(count: 1, sides: 20, type: DiceType::STANDARD);
+        $modifiers = new RollModifiers();
+
+        $stats = $this->calculator->calculate($spec, $modifiers);
+
+        // Variance for 1d20: (20^2 - 1) / 12 = 399/12 = 33.25
+        $this->assertEqualsWithDelta(33.25, $stats->variance, 0.001);
+        // Standard deviation: sqrt(33.25) = 5.766
+        $this->assertEqualsWithDelta(5.766, $stats->standardDeviation, 0.001);
+    }
+
+    /**
+     * Test variance for fudge dice.
+     *
+     * @test
+     */
+    public function testFudgeDiceVariance(): void
+    {
+        $spec = new DiceSpecification(count: 4, sides: 3, type: DiceType::FUDGE);
+        $modifiers = new RollModifiers();
+
+        $stats = $this->calculator->calculate($spec, $modifiers);
+
+        // Variance for 4dF: 4 * (2/3) = 8/3 = 2.667
+        $this->assertEqualsWithDelta(2.667, $stats->variance, 0.001);
+        // Standard deviation: sqrt(8/3) = 1.633
+        $this->assertEqualsWithDelta(1.633, $stats->standardDeviation, 0.001);
+    }
+
+    /**
+     * Test variance unaffected by arithmetic modifier.
+     *
+     * @test
+     */
+    public function testVarianceUnaffectedByArithmeticModifier(): void
+    {
+        $spec = new DiceSpecification(count: 1, sides: 20, type: DiceType::STANDARD);
+        $modifiers = new RollModifiers(arithmeticModifier: 5);
+
+        $stats = $this->calculator->calculate($spec, $modifiers);
+
+        // Variance should be same as 1d20 without modifier
+        $this->assertEqualsWithDelta(33.25, $stats->variance, 0.001);
+        $this->assertEqualsWithDelta(5.766, $stats->standardDeviation, 0.001);
+    }
+
+    /**
+     * Test variance for success counting.
+     *
+     * @test
+     */
+    public function testSuccessCountingVariance(): void
+    {
+        $spec = new DiceSpecification(count: 5, sides: 6, type: DiceType::STANDARD);
+        $modifiers = new RollModifiers(successThreshold: 4, successOperator: '>=');
+
+        $stats = $this->calculator->calculate($spec, $modifiers);
+
+        // Probability of success: p = 3/6 = 0.5 (for sides 4, 5, 6)
+        // Binomial variance: n * p * (1-p) = 5 * 0.5 * 0.5 = 1.25
+        $this->assertEqualsWithDelta(1.25, $stats->variance, 0.001);
+        // Standard deviation: sqrt(1.25) = 1.118
+        $this->assertEqualsWithDelta(1.118, $stats->standardDeviation, 0.001);
+    }
+
+    /**
+     * Test variance for percentile dice.
+     *
+     * @test
+     */
+    public function testPercentileDiceVariance(): void
+    {
+        $spec = new DiceSpecification(count: 1, sides: 100, type: DiceType::PERCENTILE);
+        $modifiers = new RollModifiers();
+
+        $stats = $this->calculator->calculate($spec, $modifiers);
+
+        // Variance for 1d100: (100^2 - 1) / 12 = 9999/12 = 833.25
+        $this->assertEqualsWithDelta(833.25, $stats->variance, 0.001);
+        // Standard deviation: sqrt(833.25) = 28.866
+        $this->assertEqualsWithDelta(28.866, $stats->standardDeviation, 0.001);
+    }
 }
