@@ -427,7 +427,10 @@ class DiceRoller
             $this->countDiceNodes($node->getLeft(), $count);
             $this->countDiceNodes($node->getRight(), $count);
         } elseif ($node instanceof FunctionNode) {
-            $this->countDiceNodes($node->getArgument(), $count);
+            // Count dice in all arguments
+            foreach ($node->getArguments() as $argument) {
+                $this->countDiceNodes($argument, $count);
+            }
         }
     }
 
@@ -483,7 +486,10 @@ class DiceRoller
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
         } elseif ($node instanceof FunctionNode) {
-            $this->rollDiceNode($node->getArgument(), $allDiceValues);
+            // Roll dice in all arguments
+            foreach ($node->getArguments() as $argument) {
+                $this->rollDiceNode($argument, $allDiceValues);
+            }
         }
     }
 
