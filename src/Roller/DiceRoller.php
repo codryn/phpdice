@@ -177,7 +177,15 @@ class DiceRoller
 
         if ($modifiers->autoSuccess !== null) {
             foreach ($originalDiceValues as $i => $value) {
-                if ($value >= $modifiers->autoSuccess) {
+                // Auto success uses >= for high values (e.g., auto 20 on d20)
+                // and <= for low values (e.g., auto 1 on d20 for inverted logic)
+                // We determine which to use based on whether the threshold is in the upper or lower half
+                $midpoint = ($spec->sides + 1) / 2;
+                $isAutoSuccess = ($modifiers->autoSuccess >= $midpoint)
+                    ? ($value >= $modifiers->autoSuccess)
+                    : ($value <= $modifiers->autoSuccess);
+
+                if ($isAutoSuccess) {
                     $hasAutoSuccess = true;
                     // Override isSuccess if we have a DC comparison
                     if ($expression->comparisonOperator !== null && $expression->comparisonThreshold !== null) {
@@ -217,8 +225,15 @@ class DiceRoller
 
         if ($modifiers->criticalFailure !== null) {
             // Check if ANY die rolled the critical failure value (using original values)
+            // Glitch uses <= for low values (e.g., glitch 1 on d20)
+            // and >= for high values (e.g., glitch 20 on d20 for inverted logic)
             foreach ($originalDiceValues as $i => $value) {
-                if ($value <= $modifiers->criticalFailure) {
+                $midpoint = ($spec->sides + 1) / 2;
+                $isCritFailure = ($modifiers->criticalFailure >= $midpoint)
+                    ? ($value >= $modifiers->criticalFailure)
+                    : ($value <= $modifiers->criticalFailure);
+
+                if ($isCritFailure) {
                     $isCriticalFailure = true;
                     break;
                 }
