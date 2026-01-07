@@ -252,8 +252,8 @@ class RerollTest extends BaseTestCase
      */
     public function testRerollWithKeepMechanics(): void
     {
-        // Parser expects modifiers in order: advantage/disadvantage, keep, reroll, success
-        $result = $this->phpdice->roll('6d6 keep 4 highest reroll <= 2');
+        // Parser expects modifiers in order: reroll, keep, count, dc
+        $result = $this->phpdice->roll('6d6 reroll <= 2 keep 4 highest');
 
         // Should roll 6 dice
         $this->assertCount(6, $result->diceValues);

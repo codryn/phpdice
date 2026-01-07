@@ -9,6 +9,28 @@ General rules:
 - Parentheses can be used to group sub-expressions.
 - Mathematical functions supported: `floor()`, `ceil()`, `round()`.
 
+## Modifier Ordering Rules
+
+When combining multiple modifiers, they must be specified in the following order:
+
+1. **explode** or **reroll** (cannot combine both on the same dice)
+2. **keep** (highest/lowest)
+3. **count** (success counting)
+4. **dc** (difficulty class comparison)
+
+**Important:** 
+- `explode` and `reroll` cannot be combined on the same dice roll
+- `explode` or `reroll` must come before `keep`
+- `count` must come after `explode`/`reroll` and `keep`
+- `dc` must be at the end
+
+Examples of correct ordering:
+- `4d6 explode keep 3 highest` - ✓ Correct
+- `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
+- `4d6 keep 3 highest explode` - ✗ Incorrect (keep before explode)
+- `4d6 explode reroll <=1` - ✗ Incorrect (both explode and reroll)
+
+
 ## Basic Dice Notation
 Roll X dice with Y sides:
 
