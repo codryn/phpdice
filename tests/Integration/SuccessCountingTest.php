@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ValidationException;
+use PHPDice\Exception\ParseException;
 
 /**
  * Integration tests for User Story 5a: Success Counting.
@@ -172,14 +172,71 @@ class SuccessCountingTest extends BaseTestCase
 
     /**
      * @test
-     * Verify only >= and > operators are allowed for success counting
+     * Test < operator (less than)
+     */
+    public function testLessThanOperator(): void
+    {
+        $result = $this->phpdice->roll('5d6 count < 4');
+
+        // Count dice < 4 (i.e., 1, 2, 3)
+        $expected = 0;
+        foreach ($result->diceValues as $value) {
+            if ($value < 4) {
+                $expected++;
+            }
+        }
+
+        $this->assertEquals($expected, $result->successCount);
+    }
+
+    /**
+     * @test
+     * Test <= operator (less than or equal)
+     */
+    public function testLessThanOrEqualOperator(): void
+    {
+        $result = $this->phpdice->roll('5d6 count <= 3');
+
+        // Count dice <= 3 (i.e., 1, 2, 3)
+        $expected = 0;
+        foreach ($result->diceValues as $value) {
+            if ($value <= 3) {
+                $expected++;
+            }
+        }
+
+        $this->assertEquals($expected, $result->successCount);
+    }
+
+    /**
+     * @test
+     * Test == operator (equals)
+     */
+    public function testEqualsOperator(): void
+    {
+        $result = $this->phpdice->roll('5d6 count == 4');
+
+        // Count dice == 4
+        $expected = 0;
+        foreach ($result->diceValues as $value) {
+            if ($value === 4) {
+                $expected++;
+            }
+        }
+
+        $this->assertEquals($expected, $result->successCount);
+    }
+
+    /**
+     * @test
+     * Verify invalid operators throw exception
      */
     public function testInvalidOperatorThrowsException(): void
     {
-        $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Invalid success operator');
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Unexpected character');
 
-        $this->phpdice->parse('5d6 count < 3');
+        $this->phpdice->parse('5d6 count != 3');
     }
 
     /**
