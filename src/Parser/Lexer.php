@@ -122,13 +122,30 @@ class Lexer
     {
         $start = $this->position;
         $number = '';
+        $hasDecimal = false;
 
         while ($this->position < $this->length && ctype_digit($this->input[$this->position])) {
             $number .= $this->input[$this->position];
             $this->position++;
         }
 
-        return new Token(Token::TYPE_NUMBER, (int)$number, $start);
+        // Check for decimal point
+        if ($this->position < $this->length && $this->input[$this->position] === '.') {
+            // Look ahead to ensure there's a digit after the decimal point
+            if ($this->position + 1 < $this->length && ctype_digit($this->input[$this->position + 1])) {
+                $hasDecimal = true;
+                $number .= '.';
+                $this->position++; // Consume the decimal point
+
+                // Read decimal digits
+                while ($this->position < $this->length && ctype_digit($this->input[$this->position])) {
+                    $number .= $this->input[$this->position];
+                    $this->position++;
+                }
+            }
+        }
+
+        return new Token(Token::TYPE_NUMBER, $hasDecimal ? (float)$number : (int)$number, $start);
     }
 
     /**
