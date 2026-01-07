@@ -99,7 +99,7 @@ final class CriticalTest extends BaseTestCaseMock
      * Parser captures critical hits with thresholds.
      * Without auto keyword, natural 20 does NOT automatically succeed if DC is not met.
      */
-    public function testParserCapturesCriticalHitWithThrehsholdAbove(): void
+    public function testParserCapturesCriticalHitWithThresholdAbove(): void
     {
         $expression = '1d20 crit 19 glitch 1 dc >= 21';
 
@@ -123,7 +123,7 @@ final class CriticalTest extends BaseTestCaseMock
     /**
      * Parser captures critical hits with thresholds.
      */
-    public function testParserCapturesCriticalHitWithThrehshold(): void
+    public function testParserCapturesCriticalHitWithThreshold(): void
     {
         $expression = '1d20 crit 18 glitch 1 dc >= 19';
 
