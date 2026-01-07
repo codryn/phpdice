@@ -390,24 +390,14 @@ class StatisticalCalculator
                     $left->maximum + $right->maximum,
                     round($left->expected + $right->expected, 3),
                     // Var(X + Y) = Var(X) + Var(Y) for independent variables
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round($left->variance + $right->variance, 3) 
-                        : null,
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round(sqrt($left->variance + $right->variance), 3) 
-                        : null
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '-' => new StatisticalData(
                     $left->minimum - $right->maximum,
                     $left->maximum - $right->minimum,
                     round($left->expected - $right->expected, 3),
                     // Var(X - Y) = Var(X) + Var(Y) for independent variables
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round($left->variance + $right->variance, 3) 
-                        : null,
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round(sqrt($left->variance + $right->variance), 3) 
-                        : null
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '*' => new StatisticalData(
                     min(
@@ -561,23 +551,13 @@ class StatisticalCalculator
                     $left->minimum + $right->minimum,
                     $left->maximum + $right->maximum,
                     round($left->expected + $right->expected, 3),
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round($left->variance + $right->variance, 3) 
-                        : null,
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round(sqrt($left->variance + $right->variance), 3) 
-                        : null
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '-' => new StatisticalData(
                     $left->minimum - $right->maximum,
                     $left->maximum - $right->minimum,
                     round($left->expected - $right->expected, 3),
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round($left->variance + $right->variance, 3) 
-                        : null,
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round(sqrt($left->variance + $right->variance), 3) 
-                        : null
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '*' => new StatisticalData(
                     min(
@@ -692,23 +672,13 @@ class StatisticalCalculator
                     $left->minimum + $right->minimum,
                     $left->maximum + $right->maximum,
                     round($left->expected + $right->expected, 3),
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round($left->variance + $right->variance, 3) 
-                        : null,
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round(sqrt($left->variance + $right->variance), 3) 
-                        : null
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '-' => new StatisticalData(
                     $left->minimum - $right->maximum,
                     $left->maximum - $right->minimum,
                     round($left->expected - $right->expected, 3),
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round($left->variance + $right->variance, 3) 
-                        : null,
-                    ($left->variance !== null && $right->variance !== null) 
-                        ? round(sqrt($left->variance + $right->variance), 3) 
-                        : null
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '*' => new StatisticalData(
                     min(
@@ -824,5 +794,22 @@ class StatisticalCalculator
         }
 
         return new StatisticalData(0, 0, 0.0, null, null);
+    }
+
+    /**
+     * Calculate combined variance and standard deviation for addition/subtraction.
+     * For independent random variables: Var(X ± Y) = Var(X) + Var(Y)
+     *
+     * @param float|null $leftVariance Left operand variance
+     * @param float|null $rightVariance Right operand variance
+     * @return array{0: float|null, 1: float|null} [variance, standardDeviation]
+     */
+    private function calculateCombinedVariance(?float $leftVariance, ?float $rightVariance): array
+    {
+        if ($leftVariance !== null && $rightVariance !== null) {
+            $variance = $leftVariance + $rightVariance;
+            return [round($variance, 3), round(sqrt($variance), 3)];
+        }
+        return [null, null];
     }
 }
