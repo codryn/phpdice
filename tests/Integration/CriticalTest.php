@@ -627,7 +627,7 @@ final class CriticalTest extends BaseTestCaseMock
      * 1d20 auto 20 crit 19 glitch 1 + 1 dc 25
      * Roll: 1 -> critical failure, total 2
      * Roll: 19 -> failure, total 20
-     * Roll: 20 -> critical success, total 21 (below dc, but auto success)
+     * Roll: 20 -> critical success, total 21 (below dc, but auto success).
      */
     public function testAutoSuccessWithImpossibleDC(): void
     {
@@ -665,7 +665,7 @@ final class CriticalTest extends BaseTestCaseMock
      * 1d20 crit 20 glitch 1 + 1 dc 25
      * Roll: 1 -> critical failure, total 2
      * Roll: 19 -> failure, total 20
-     * Roll: 20 -> failure, total 21 (in crit range but no auto, DC not met)
+     * Roll: 20 -> failure, total 21 (in crit range but no auto, DC not met).
      */
     public function testCritWithoutAutoSuccess(): void
     {
@@ -703,7 +703,7 @@ final class CriticalTest extends BaseTestCaseMock
      * 1d20 auto 20 crit 19 glitch 1 + 1 dc 21
      * Roll: 1 -> critical failure, total 2
      * Roll: 19 -> failure, total 20 (not a crit because below dc)
-     * Roll: 20 -> critical success, total 21 (hits dc AND crit range)
+     * Roll: 20 -> critical success, total 21 (hits dc AND crit range).
      */
     public function testAutoSuccessWithAchievableDC(): void
     {
@@ -739,7 +739,7 @@ final class CriticalTest extends BaseTestCaseMock
     /**
      * Test inverted logic with auto success.
      * 1d20 auto 1 crit 1 glitch 20 dc <= 5
-     * Lower rolls are better, 1 is auto success, 20 is glitch
+     * Lower rolls are better, 1 is auto success, 20 is glitch.
      */
     public function testAutoSuccessInvertedLogic(): void
     {
