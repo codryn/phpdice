@@ -218,7 +218,7 @@ class ExplodingDiceTest extends BaseTestCaseMock
 
     /**
      * Test explosion with keep mechanics
-     * Parser expects order: keep, explode, reroll, success.
+     * Parser supports both "keep explode" and "explode keep" order.
      */
     public function testExplosionWithKeepMechanics(): void
     {
@@ -236,6 +236,41 @@ class ExplodingDiceTest extends BaseTestCaseMock
             $total += $result->diceValues[$index];
         }
         $this->assertEquals($total, $result->total);
+    }
+
+    /**
+     * Test explosion before keep (alternative syntax order)
+     * Parser should support "explode keep" order as shown in documentation.
+     */
+    public function testExplosionBeforeKeepMechanics(): void
+    {
+        $result = $this->phpdice->roll('4d6 explode keep 3 highest');
+
+        // Should roll 4 dice
+        $this->assertCount(4, $result->diceValues);
+
+        // Should keep 3 highest
+        $this->assertCount(3, $result->keptDice ?? []);
+
+        // Total should be sum of kept dice (which may have exploded)
+        $total = 0;
+        foreach ($result->keptDice as $index) {
+            $total += $result->diceValues[$index];
+        }
+        $this->assertEquals($total, $result->total);
+
+        // Verify kept dice are actually the 3 highest
+        $allDice = $result->diceValues;
+        rsort($allDice);
+        $expectedKept = array_slice($allDice, 0, 3);
+        
+        $actualKept = [];
+        foreach ($result->keptDice as $index) {
+            $actualKept[] = $result->diceValues[$index];
+        }
+        rsort($actualKept);
+        
+        $this->assertEquals($expectedKept, $actualKept);
     }
 
     /**
