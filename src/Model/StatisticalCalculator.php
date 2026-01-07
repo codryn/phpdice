@@ -798,7 +798,7 @@ class StatisticalCalculator
 
     /**
      * Calculate combined variance and standard deviation for addition/subtraction.
-     * For independent random variables: Var(X ± Y) = Var(X) + Var(Y)
+     * For independent random variables: Var(X ± Y) = Var(X) + Var(Y).
      *
      * @param float|null $leftVariance Left operand variance
      * @param float|null $rightVariance Right operand variance
