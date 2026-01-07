@@ -403,26 +403,62 @@ class StatisticalCalculator
         }
 
         if ($node instanceof FunctionNode) {
-            $arg = $this->applyAstOperations($node->getArgument(), $diceStats);
-
-            return match (strtolower($node->getName())) {
-                'floor' => new StatisticalData(
-                    floor($arg->minimum),
-                    floor($arg->maximum),
-                    round(floor($arg->expected), 3)
-                ),
-                'ceil' => new StatisticalData(
-                    ceil($arg->minimum),
-                    ceil($arg->maximum),
-                    round(ceil($arg->expected), 3)
-                ),
-                'round' => new StatisticalData(
-                    round($arg->minimum),
-                    round($arg->maximum),
-                    round($arg->expected, 3)
-                ),
-                default => $arg,
-            };
+            $funcName = strtolower($node->getName());
+            
+            // Handle single-argument functions
+            if (in_array($funcName, ['floor', 'ceil', 'round', 'abs'], true)) {
+                $arg = $this->applyAstOperations($node->getArguments()[0], $diceStats);
+                
+                return match ($funcName) {
+                    'floor' => new StatisticalData(
+                        floor($arg->minimum),
+                        floor($arg->maximum),
+                        round(floor($arg->expected), 3)
+                    ),
+                    'ceil' => new StatisticalData(
+                        ceil($arg->minimum),
+                        ceil($arg->maximum),
+                        round(ceil($arg->expected), 3)
+                    ),
+                    'round' => new StatisticalData(
+                        round($arg->minimum),
+                        round($arg->maximum),
+                        round($arg->expected, 3)
+                    ),
+                    'abs' => new StatisticalData(
+                        abs($arg->minimum),
+                        abs($arg->maximum),
+                        round(abs($arg->expected), 3)
+                    ),
+                };
+            }
+            
+            // Handle multi-argument functions (max, min)
+            if (in_array($funcName, ['max', 'min'], true)) {
+                $args = array_map(
+                    fn($argNode) => $this->applyAstOperations($argNode, $diceStats),
+                    $node->getArguments()
+                );
+                
+                if ($funcName === 'max') {
+                    return new StatisticalData(
+                        max(array_map(fn($a) => $a->minimum, $args)),
+                        max(array_map(fn($a) => $a->maximum, $args)),
+                        round(max(array_map(fn($a) => $a->expected, $args)), 3)
+                    );
+                } else { // min
+                    return new StatisticalData(
+                        min(array_map(fn($a) => $a->minimum, $args)),
+                        min(array_map(fn($a) => $a->maximum, $args)),
+                        round(min(array_map(fn($a) => $a->expected, $args)), 3)
+                    );
+                }
+            }
+            
+            // Unknown function - return first argument or dice stats
+            return !empty($node->getArguments())
+                ? $this->applyAstOperations($node->getArguments()[0], $diceStats)
+                : $diceStats;
         }
 
         return $diceStats;
@@ -567,31 +603,62 @@ class StatisticalCalculator
         }
 
         if ($node instanceof FunctionNode) {
-            $arg = $this->calculateFromAst($node->getArgument(), $spec, $modifiers);
-
-            return match (strtolower($node->getName())) {
-                'floor' => new StatisticalData(
-                    floor($arg->minimum),
-                    floor($arg->maximum),
-                    round(floor($arg->expected), 3)
-                ),
-                'ceil' => new StatisticalData(
-                    ceil($arg->minimum),
-                    ceil($arg->maximum),
-                    round(ceil($arg->expected), 3)
-                ),
-                'round' => new StatisticalData(
-                    round($arg->minimum),
-                    round($arg->maximum),
-                    round($arg->expected, 3)
-                ),
-                'abs' => new StatisticalData(
-                    abs($arg->minimum),
-                    abs($arg->maximum),
-                    round(abs($arg->expected), 3)
-                ),
-                default => $arg,
-            };
+            $funcName = strtolower($node->getName());
+            
+            // Handle single-argument functions
+            if (in_array($funcName, ['floor', 'ceil', 'round', 'abs'], true)) {
+                $arg = $this->calculateFromAst($node->getArguments()[0], $spec, $modifiers);
+                
+                return match ($funcName) {
+                    'floor' => new StatisticalData(
+                        floor($arg->minimum),
+                        floor($arg->maximum),
+                        round(floor($arg->expected), 3)
+                    ),
+                    'ceil' => new StatisticalData(
+                        ceil($arg->minimum),
+                        ceil($arg->maximum),
+                        round(ceil($arg->expected), 3)
+                    ),
+                    'round' => new StatisticalData(
+                        round($arg->minimum),
+                        round($arg->maximum),
+                        round($arg->expected, 3)
+                    ),
+                    'abs' => new StatisticalData(
+                        abs($arg->minimum),
+                        abs($arg->maximum),
+                        round(abs($arg->expected), 3)
+                    ),
+                };
+            }
+            
+            // Handle multi-argument functions (max, min)
+            if (in_array($funcName, ['max', 'min'], true)) {
+                $args = array_map(
+                    fn($argNode) => $this->calculateFromAst($argNode, $spec, $modifiers),
+                    $node->getArguments()
+                );
+                
+                if ($funcName === 'max') {
+                    return new StatisticalData(
+                        max(array_map(fn($a) => $a->minimum, $args)),
+                        max(array_map(fn($a) => $a->maximum, $args)),
+                        round(max(array_map(fn($a) => $a->expected, $args)), 3)
+                    );
+                } else { // min
+                    return new StatisticalData(
+                        min(array_map(fn($a) => $a->minimum, $args)),
+                        min(array_map(fn($a) => $a->maximum, $args)),
+                        round(min(array_map(fn($a) => $a->expected, $args)), 3)
+                    );
+                }
+            }
+            
+            // Unknown function - return first argument
+            return !empty($node->getArguments())
+                ? $this->calculateFromAst($node->getArguments()[0], $spec, $modifiers)
+                : new StatisticalData(0, 0, 0.0);
         }
 
         return new StatisticalData(0, 0, 0.0);

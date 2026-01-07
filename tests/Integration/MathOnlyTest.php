@@ -38,6 +38,28 @@ class MathOnlyTest extends BaseTestCaseMock
     }
 
     /**
+     * Test min function without dice.
+     */
+    public function testMinFunction(): void
+    {
+        $result = $this->phpdice->roll('min(5,3)');
+
+        $this->assertEquals(3, $result->total);
+        $this->assertEmpty($result->diceValues);
+    }
+
+    /**
+     * Test max with multiple arguments.
+     */
+    public function testMaxWithMultipleArguments(): void
+    {
+        $result = $this->phpdice->roll('max(1,5,3)');
+
+        $this->assertEquals(5, $result->total);
+        $this->assertEmpty($result->diceValues);
+    }
+
+    /**
      * Test round function with addition.
      */
     public function testRoundWithAddition(): void

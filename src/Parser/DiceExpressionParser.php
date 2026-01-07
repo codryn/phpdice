@@ -335,10 +335,18 @@ class DiceExpressionParser
         $functionName = (string)$this->previous()->value;
 
         $this->consume(Token::TYPE_LPAREN, 'Expected opening parenthesis after function name');
-        $argument = $this->parseExpression();
-        $this->consume(Token::TYPE_RPAREN, 'Expected closing parenthesis after function argument');
+        
+        // Parse arguments (comma-separated)
+        $arguments = [];
+        if (!$this->check(Token::TYPE_RPAREN)) {
+            do {
+                $arguments[] = $this->parseExpression();
+            } while ($this->match(Token::TYPE_COMMA));
+        }
+        
+        $this->consume(Token::TYPE_RPAREN, 'Expected closing parenthesis after function arguments');
 
-        return new FunctionNode($functionName, $argument);
+        return new FunctionNode($functionName, $arguments);
     }
 
     /**
@@ -611,7 +619,14 @@ class DiceExpressionParser
         }
 
         if ($node instanceof FunctionNode) {
-            return $this->findDiceNode($node->getArgument());
+            // Check all arguments for dice nodes
+            foreach ($node->getArguments() as $argument) {
+                $diceNode = $this->findDiceNode($argument);
+                if ($diceNode !== null) {
+                    return $diceNode;
+                }
+            }
+            return null;
         }
 
         return null;
