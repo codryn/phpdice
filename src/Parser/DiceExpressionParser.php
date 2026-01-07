@@ -302,6 +302,9 @@ class DiceExpressionParser
         if ($this->match(Token::TYPE_NUMBER)) {
             $value = $this->previous()->value;
             // Keep the original type (int or float) from the token
+            if (!is_int($value) && !is_float($value)) {
+                throw new ParseException('Number token must have int or float value', $this->getCurrentPosition());
+            }
             return new NumberNode($value);
         }
 
