@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Duplicate Keywords**: Removed duplicate keyword entries that could cause parsing confusion (#27)
 - **Operator Consistency**: Fixed loose vs strict comparison for equality operator to ensure consistent behavior
 - **Modulo Operator**: use correct operator symbol `%` for modulo operations instead of incorrect `~` (#30)
+- **Keyword order**: Adjusted keyword order in lexer to prevent misinterpretation of keywords (#21)
 
 ### Changed
 - Improved code formatting to maintain PSR-12 compliance across all changes
