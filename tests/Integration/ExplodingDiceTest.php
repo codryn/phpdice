@@ -218,11 +218,11 @@ class ExplodingDiceTest extends BaseTestCaseMock
 
     /**
      * Test explosion with keep mechanics
-     * Parser expects order: keep, explode, reroll, success.
+     * Parser expects order: explode, keep, count, dc.
      */
     public function testExplosionWithKeepMechanics(): void
     {
-        $result = $this->phpdice->roll('6d6 keep 4 highest explode >=5');
+        $result = $this->phpdice->roll('6d6 explode >=5 keep 4 highest');
 
         // Should roll 6 dice
         $this->assertCount(6, $result->diceValues);
