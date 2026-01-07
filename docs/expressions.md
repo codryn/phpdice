@@ -11,28 +11,6 @@ General rules:
 - Arethmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
 - Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `crit`, `glitch`, `dc`.
 
-## Modifier Ordering Rules
-
-When combining multiple modifiers, they must be specified in the following order:
-
-1. **explode** or **reroll** (cannot combine both on the same dice)
-2. **keep** (highest/lowest)
-3. **count** (success counting)
-4. **dc** (difficulty class comparison)
-
-**Important:** 
-- `explode` and `reroll` cannot be combined on the same dice roll
-- `explode` or `reroll` must come before `keep`
-- `count` must come after `explode`/`reroll` and `keep`
-- `dc` must be at the end
-
-Examples of correct ordering:
-- `4d6 explode keep 3 highest` - ✓ Correct
-- `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
-- `4d6 keep 3 highest explode` - ✗ Incorrect (keep before explode)
-- `4d6 explode reroll <=1` - ✗ Incorrect (both explode and reroll)
-
-
 ## Basic Dice Notation
 Roll X dice with Y sides:
 
@@ -340,23 +318,35 @@ Examples:
 
 ```4d6 explode keep 3 highest + $modifier$``` - Roll 4d6 with exploding dice, keep highest 3, add modifier from variable
 
-### Keyword Order
+## Modifier Ordering Rules
 
-When combining keywords, the order is important. The recommended order is:
-1. Advantage/Disadvantage
-2. Crit/Glitch
-3. Reroll or explode
-4. Keep/Drop
-5. Count
-6. Modifiers (addition, subtraction, etc.)
-7. DC
+When combining multiple modifiers, they must be specified in the following order:
+
+1. **advantage** or **disadvantage** or **reroll** or **explode**  (cannot combine these keywords on the same dice)
+2. **keep** or **drop** (highest/lowest)
+3. **crit and/or **glitch**
+5. **count** (success counting)
+6. **modifiers** (addition, subtraction, etc.)
+7. **dc** (difficulty class comparison)
+
+**Important:** 
+- `explode` and `reroll` cannot be combined on the same dice roll
+- `explode` or `reroll` must come before `keep`
+- `count` must come after `explode`/`reroll` and `keep`
+- `dc` must be at the end
+
+Examples of correct ordering:
+- `4d6 explode keep 3 highest` - ✓ Correct
+- `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
+- `4d6 keep 3 highest explode` - ✗ Incorrect (keep before explode)
+- `4d6 explode reroll <=1` - ✗ Incorrect (both explode and reroll)
 
 Notes:
 - Advantage/Disadvantage shall be the first keyword to ensure correct die selection.
-- Crit/Glitch must come after advantage/disadvantage to apply to the final selected die.
-- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and should no be combined with multiple dice, reroll or explode.
 - Reroll/explode must come before keep/drop to ensure all dice are considered for rerolls/explosions.
-- Keep/drop must come before count to ensure the correct dice are counted
+- Crit/Glitch must come after any rerolls to apply to the final selected die.
+- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and are normally not combined with multiple dice, reroll or explode.
+- Keep/drop must come before count to ensure the correct dice are counted.
 - The `count` keyword must be after any reroll/explode/keep mechanics to ensure correct success counting and can only be used once per expression.
 - Modifiers (addition, subtraction, etc.) must come after all dice mechanics to apply to the final roll total / number of successes.
 - The `dc` keyword must be the last keyword in the expression to ensure correct DC checking with the roll total or number of successes and all modifiers.
