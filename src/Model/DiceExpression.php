@@ -14,7 +14,7 @@ class DiceExpression
     /**
      * Create a new dice expression.
      *
-     * @param DiceSpecification $specification The base dice being rolled
+     * @param DiceSpecification|null $specification The base dice being rolled (null for math-only expressions)
      * @param RollModifiers $modifiers All modifiers and mechanics
      * @param StatisticalData $statistics Pre-calculated probability data
      * @param string $originalExpression Raw input string
@@ -23,7 +23,7 @@ class DiceExpression
      * @param int|null $comparisonThreshold Target number for comparisons
      */
     public function __construct(
-        public readonly DiceSpecification $specification,
+        public readonly ?DiceSpecification $specification,
         public readonly RollModifiers $modifiers,
         public readonly StatisticalData $statistics,
         public readonly string $originalExpression,

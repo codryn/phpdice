@@ -42,7 +42,7 @@ class StatisticalCalculator
 
         // Calculate base statistics
         $baseStats = $ast !== null
-            ? $this->calculateFromAst($ast, $spec, $modifiers)
+            ? $this->calculateFromAstWithSpec($ast, $spec, $modifiers)
             : $this->calculateBasicDice($spec);
 
         // Apply keep modifiers if present
@@ -84,6 +84,17 @@ class StatisticalCalculator
         }
 
         return $baseStats;
+    }
+
+    /**
+     * Calculate statistics from AST for math-only expressions (no dice).
+     *
+     * @param Node $ast AST node
+     * @return StatisticalData Statistical data
+     */
+    public function calculateFromAst(Node $ast): StatisticalData
+    {
+        return $this->calculateFromAstInternal($ast);
     }
 
     /**
@@ -463,14 +474,14 @@ class StatisticalCalculator
     }
 
     /**
-     * Calculate statistics from AST.
+     * Calculate statistics from AST (internal method with dice spec).
      *
      * @param Node $node AST node
      * @param DiceSpecification $spec Dice specification for dice nodes
      * @param RollModifiers $modifiers Roll modifiers
      * @return StatisticalData Statistical data
      */
-    private function calculateFromAst(Node $node, DiceSpecification $spec, RollModifiers $modifiers): StatisticalData
+    private function calculateFromAstWithSpec(Node $node, DiceSpecification $spec, RollModifiers $modifiers): StatisticalData
     {
         if ($node instanceof NumberNode) {
             $value = $node->getValue();
@@ -498,8 +509,8 @@ class StatisticalCalculator
         }
 
         if ($node instanceof BinaryOpNode) {
-            $left = $this->calculateFromAst($node->getLeft(), $spec, $modifiers);
-            $right = $this->calculateFromAst($node->getRight(), $spec, $modifiers);
+            $left = $this->calculateFromAstWithSpec($node->getLeft(), $spec, $modifiers);
+            $right = $this->calculateFromAstWithSpec($node->getRight(), $spec, $modifiers);
 
             return match ($node->getOperator()) {
                 '+' => new StatisticalData(
@@ -557,7 +568,132 @@ class StatisticalCalculator
         }
 
         if ($node instanceof FunctionNode) {
-            $arg = $this->calculateFromAst($node->getArgument(), $spec, $modifiers);
+            $arg = $this->calculateFromAstWithSpec($node->getArgument(), $spec, $modifiers);
+
+            return match (strtolower($node->getName())) {
+                'floor' => new StatisticalData(
+                    floor($arg->minimum),
+                    floor($arg->maximum),
+                    round(floor($arg->expected), 3)
+                ),
+                'ceil' => new StatisticalData(
+                    ceil($arg->minimum),
+                    ceil($arg->maximum),
+                    round(ceil($arg->expected), 3)
+                ),
+                'round' => new StatisticalData(
+                    round($arg->minimum),
+                    round($arg->maximum),
+                    round($arg->expected, 3)
+                ),
+                'abs' => new StatisticalData(
+                    abs($arg->minimum),
+                    abs($arg->maximum),
+                    round(abs($arg->expected), 3)
+                ),
+                default => $arg,
+            };
+        }
+
+        return new StatisticalData(0, 0, 0.0);
+    }
+
+    /**
+     * Calculate statistics from AST (internal method for math-only expressions).
+     *
+     * @param Node $node AST node
+     * @return StatisticalData Statistical data
+     */
+    private function calculateFromAstInternal(Node $node): StatisticalData
+    {
+        if ($node instanceof NumberNode) {
+            $value = $node->getValue();
+            return new StatisticalData($value, $value, (float)$value);
+        }
+
+        if ($node instanceof BinaryOpNode) {
+            $left = $this->calculateFromAstInternal($node->getLeft());
+            $right = $this->calculateFromAstInternal($node->getRight());
+
+            return match ($node->getOperator()) {
+                '+' => new StatisticalData(
+                    $left->minimum + $right->minimum,
+                    $left->maximum + $right->maximum,
+                    round($left->expected + $right->expected, 3)
+                ),
+                '-' => new StatisticalData(
+                    $left->minimum - $right->maximum,
+                    $left->maximum - $right->minimum,
+                    round($left->expected - $right->expected, 3)
+                ),
+                '*' => new StatisticalData(
+                    min(
+                        $left->minimum * $right->minimum,
+                        $left->minimum * $right->maximum,
+                        $left->maximum * $right->minimum,
+                        $left->maximum * $right->maximum
+                    ),
+                    max(
+                        $left->minimum * $right->minimum,
+                        $left->minimum * $right->maximum,
+                        $left->maximum * $right->minimum,
+                        $left->maximum * $right->maximum
+                    ),
+                    round($left->expected * $right->expected, 3)
+                ),
+                '/' => new StatisticalData(
+                    $left->minimum / max($right->maximum, 1),
+                    $left->maximum / max($right->minimum, 1),
+                    round($left->expected / max($right->expected, 1), 3)
+                ),
+                '~' => new StatisticalData(
+                    0,
+                    max($right->maximum - 1, 0),
+                    round(($right->maximum - 1) / 2, 3)
+                ),
+                '^' => new StatisticalData(
+                    min(
+                        pow($left->minimum, $right->minimum),
+                        pow($left->minimum, $right->maximum),
+                        pow($left->maximum, $right->minimum),
+                        pow($left->maximum, $right->maximum)
+                    ),
+                    max(
+                        pow($left->minimum, $right->minimum),
+                        pow($left->minimum, $right->maximum),
+                        pow($left->maximum, $right->minimum),
+                        pow($left->maximum, $right->maximum)
+                    ),
+                    round(pow($left->expected, $right->expected), 3)
+                ),
+                default => new StatisticalData(0, 0, 0.0),
+            };
+        }
+
+        if ($node instanceof FunctionNode) {
+            // For multi-argument functions like min/max
+            $argNode = $node->getArgument();
+            if (is_array($argNode)) {
+                // Handle multiple arguments
+                $argStats = array_map(fn($arg) => $this->calculateFromAstInternal($arg), $argNode);
+                
+                return match (strtolower($node->getName())) {
+                    'min' => new StatisticalData(
+                        min(array_map(fn($s) => $s->minimum, $argStats)),
+                        min(array_map(fn($s) => $s->maximum, $argStats)),
+                        round(min(array_map(fn($s) => $s->expected, $argStats)), 3)
+                    ),
+                    'max' => new StatisticalData(
+                        max(array_map(fn($s) => $s->minimum, $argStats)),
+                        max(array_map(fn($s) => $s->maximum, $argStats)),
+                        round(max(array_map(fn($s) => $s->expected, $argStats)), 3)
+                    ),
+                    default => $argStats[0] ?? new StatisticalData(0, 0, 0.0),
+                };
+            }
+            
+            // Single argument functions
+            $arg = $this->calculateFromAstInternal($argNode);
 
             return match (strtolower($node->getName())) {
                 'floor' => new StatisticalData(

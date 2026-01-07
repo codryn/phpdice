@@ -54,15 +54,19 @@ class DiceExpressionParser
         $this->tokens = $lexer->tokenize();
         $this->current = 0;
 
-        // Parse initial dice notation to get base AST
+        // Parse initial expression to get base AST
         $this->astRoot = $this->parseTerm(); // Start with term to get just the dice
 
         // Extract dice specification from AST
         $diceNode = $this->findDiceNode($this->astRoot);
+        
+        // Handle math-only expressions (no dice notation)
         if ($diceNode === null) {
-            // Fallback: try simple validation for backward compatibility
+            // Validate expression is not empty
             $this->validator->validateExpression($expression);
-            throw new ParseException('No dice notation found in expression', 0);
+            
+            // For math-only expressions, we don't need dice specification or modifiers
+            return $this->createMathOnlyExpression($expression);
         }
 
         // Create dice specification
@@ -188,6 +192,48 @@ class DiceExpressionParser
     public function getAstRoot(): ?Node
     {
         return $this->astRoot;
+    }
+
+    /**
+     * Create a DiceExpression for math-only expressions (no dice).
+     *
+     * @param string $expression Original expression
+     * @return DiceExpression Expression for pure math
+     */
+    private function createMathOnlyExpression(string $expression): DiceExpression
+    {
+        // Continue parsing the rest of the expression (arithmetic operators)
+        while ($this->match(Token::TYPE_OPERATOR, ['+', '-'])) {
+            $operator = $this->previous()->value;
+            $right = $this->parseTerm();
+            $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
+        }
+
+        // Ensure all tokens are consumed
+        if (!$this->isAtEnd()) {
+            $remaining = $this->peek();
+            throw new ParseException(
+                "Unexpected token: {$remaining->type} '{$remaining->value}'",
+                $this->getCurrentPosition()
+            );
+        }
+
+        // Calculate statistics from AST (for math-only expressions)
+        $statistics = $this->calculator->calculateFromAst($this->astRoot);
+
+        // Create empty modifiers (no dice-specific modifiers for math-only expressions)
+        $modifiers = new RollModifiers();
+
+        // Build expression with null specification (math-only)
+        return new DiceExpression(
+            specification: null,
+            modifiers: $modifiers,
+            statistics: $statistics,
+            originalExpression: $expression,
+            astRoot: $this->astRoot,
+            comparisonOperator: null,
+            comparisonThreshold: null
+        );
     }
 
     /**
