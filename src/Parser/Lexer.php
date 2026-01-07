@@ -228,7 +228,7 @@ class Lexer
                 return new Token(Token::TYPE_PLACEHOLDER, $name, $start);
             }
 
-            if (ctype_alnum($char) || $char === '_') {
+            if (ctype_alnum($char) || $char === '_' || $char === '.') {
                 $name .= $char;
                 $this->position++;
             } else {

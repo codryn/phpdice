@@ -245,7 +245,7 @@ Examples:
 ```1d20 + $str$ + $proficiency$``` - Roll one d20, add strength and proficiency 
 modifiers from variables
 
-```(1d8 + $str$) * 2 + 5``` - Damage roll with strength multiplier from variable
+```(1d8 + $ability.str.bonus$) * 2 + 5``` - Damage roll with strength multiplier from variable
 
 ### Use in code:
 ```php
