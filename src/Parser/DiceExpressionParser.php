@@ -165,6 +165,8 @@ class DiceExpressionParser
                 rerollThreshold: $modifiers->rerollThreshold,
                 rerollOperator: $modifiers->rerollOperator,
                 rerollLimit: $modifiers->rerollLimit,
+                criticalSuccess: $modifiers->criticalSuccess,
+                criticalFailure: $modifiers->criticalFailure,
                 resolvedVariables: $this->usedVariables
             );
         }

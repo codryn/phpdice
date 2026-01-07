@@ -6,6 +6,7 @@ namespace PHPDice\Tests\Integration;
 
 use PHPDice\PHPDice;
 use PHPDice\Roller\RandomNumberGenerator;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**

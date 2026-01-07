@@ -465,4 +465,159 @@ final class CriticalTest extends BaseTestCaseMock
         $this->assertSame(3, $expr->modifiers->criticalSuccess);
         $this->assertSame(1, $expr->modifiers->criticalFailure);
     }
+
+    /**
+     * Test critical success with placeholder modifiers.
+     *
+     * Issue: Crit does not work with placeholder modifiers
+     * Given: 1d20 crit 15 + $str.bonus$ + $dex.bonus$ dc >= 10
+     * When: Die rolls 15-20 (in crit range)
+     * Then: Roll should be marked as critical success
+     */
+    public function testCriticalSuccessWithPlaceholders(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(15, 19, 14);
+
+        $variables = ['str.bonus' => 3, 'dex.bonus' => 4];
+
+        // Test die value at crit threshold (15)
+        $result = $this->phpdice->roll('1d20 crit 15 + $str.bonus$ + $dex.bonus$ dc >= 10', $variables);
+        $this->assertEquals(15, $result->diceValues[0]);
+        $this->assertEquals(22, $result->total); // 15 + 3 + 4
+        $this->assertTrue($result->isSuccess);
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success when die rolls 15');
+
+        // Test die value in crit range (19)
+        $result = $this->phpdice->roll('1d20 crit 15 + $str.bonus$ + $dex.bonus$ dc >= 10', $variables);
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertEquals(26, $result->total); // 19 + 3 + 4
+        $this->assertTrue($result->isSuccess);
+        $this->assertTrue($result->isCriticalSuccess, 'Expected critical success when die rolls 19');
+
+        // Test die value below crit threshold
+        $result = $this->phpdice->roll('1d20 crit 15 + $str.bonus$ + $dex.bonus$ dc >= 10', $variables);
+        $this->assertEquals(14, $result->diceValues[0]);
+        $this->assertEquals(21, $result->total); // 14 + 3 + 4
+        $this->assertTrue($result->isSuccess);
+        $this->assertFalse($result->isCriticalSuccess, 'Should not be critical when die rolls below 15');
+    }
+
+    /**
+     * Test critical failure with placeholder modifiers.
+     */
+    public function testCriticalFailureWithPlaceholders(): void
+    {
+        $this->mockRng->expects($this->exactly(3))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 5, 6);
+
+        $variables = ['bonus' => 2];
+
+        // Test die value at glitch threshold (1)
+        $result = $this->phpdice->roll('1d20 glitch 5 + $bonus$ dc >= 10', $variables);
+        $this->assertEquals(1, $result->diceValues[0]);
+        $this->assertEquals(3, $result->total); // 1 + 2
+        $this->assertFalse($result->isSuccess);
+        $this->assertTrue($result->isCriticalFailure, 'Expected critical failure when die rolls 1');
+
+        // Test die value in glitch range (5)
+        $result = $this->phpdice->roll('1d20 glitch 5 + $bonus$ dc >= 10', $variables);
+        $this->assertEquals(5, $result->diceValues[0]);
+        $this->assertEquals(7, $result->total); // 5 + 2
+        $this->assertFalse($result->isSuccess);
+        $this->assertTrue($result->isCriticalFailure, 'Expected critical failure when die rolls 5');
+
+        // Test die value above glitch threshold
+        $result = $this->phpdice->roll('1d20 glitch 5 + $bonus$ dc >= 10', $variables);
+        $this->assertEquals(6, $result->diceValues[0]);
+        $this->assertEquals(8, $result->total); // 6 + 2
+        $this->assertFalse($result->isSuccess);
+        $this->assertFalse($result->isCriticalFailure, 'Should not be critical failure when die rolls above 5');
+    }
+
+    /**
+     * Test both critical success and failure with placeholders.
+     */
+    public function testBothCriticalThresholdsWithPlaceholders(): void
+    {
+        $this->mockRng->expects($this->exactly(4))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(18, 3, 10, 2);
+
+        $variables = ['mod' => 5];
+
+        // Test critical success
+        $result = $this->phpdice->roll('1d20 crit 18 glitch 3 + $mod$', $variables);
+        $this->assertEquals(18, $result->diceValues[0]);
+        $this->assertTrue($result->isCriticalSuccess);
+        $this->assertFalse($result->isCriticalFailure);
+
+        // Test critical failure
+        $result = $this->phpdice->roll('1d20 crit 18 glitch 3 + $mod$', $variables);
+        $this->assertEquals(3, $result->diceValues[0]);
+        $this->assertFalse($result->isCriticalSuccess);
+        $this->assertTrue($result->isCriticalFailure);
+
+        // Test neither critical
+        $result = $this->phpdice->roll('1d20 crit 18 glitch 3 + $mod$', $variables);
+        $this->assertEquals(10, $result->diceValues[0]);
+        $this->assertFalse($result->isCriticalSuccess);
+        $this->assertFalse($result->isCriticalFailure);
+
+        // Test critical failure at lower bound
+        $result = $this->phpdice->roll('1d20 crit 18 glitch 3 + $mod$', $variables);
+        $this->assertEquals(2, $result->diceValues[0]);
+        $this->assertFalse($result->isCriticalSuccess);
+        $this->assertTrue($result->isCriticalFailure);
+    }
+
+    /**
+     * Test critical success with multiple placeholders in complex expression.
+     */
+    public function testCriticalWithMultiplePlaceholders(): void
+    {
+        $this->mockRng->expects($this->exactly(2))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(20, 19);
+
+        $variables = [
+            'str.bonus' => 3,
+            'dex.bonus' => 2,
+            'proficiency' => 4,
+        ];
+
+        // Test natural 20 (always crit)
+        $result = $this->phpdice->roll('1d20 crit 19 + $str.bonus$ + $dex.bonus$ + $proficiency$ dc >= 15', $variables);
+        $this->assertEquals(20, $result->diceValues[0]);
+        $this->assertEquals(29, $result->total); // 20 + 3 + 2 + 4
+        $this->assertTrue($result->isSuccess);
+        $this->assertTrue($result->isCriticalSuccess);
+
+        // Test crit threshold with success
+        $result = $this->phpdice->roll('1d20 crit 19 + $str.bonus$ + $dex.bonus$ + $proficiency$ dc >= 15', $variables);
+        $this->assertEquals(19, $result->diceValues[0]);
+        $this->assertEquals(28, $result->total); // 19 + 3 + 2 + 4
+        $this->assertTrue($result->isSuccess);
+        $this->assertTrue($result->isCriticalSuccess);
+    }
+
+    /**
+     * Test that placeholder modifiers are properly stored in expression.
+     */
+    public function testCriticalThresholdsStoredWithPlaceholders(): void
+    {
+        $variables = ['bonus' => 3];
+
+        $expr = $this->phpdice->parse('1d20 crit 19 glitch 2 + $bonus$', $variables);
+
+        // Verify critical thresholds are stored in modifiers
+        $this->assertSame(19, $expr->modifiers->criticalSuccess);
+        $this->assertSame(2, $expr->modifiers->criticalFailure);
+
+        // Verify placeholders are resolved
+        $this->assertArrayHasKey('bonus', $expr->modifiers->resolvedVariables);
+        $this->assertSame(3, $expr->modifiers->resolvedVariables['bonus']);
+    }
 }
