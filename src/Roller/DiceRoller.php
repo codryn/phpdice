@@ -170,6 +170,32 @@ class DiceRoller
             );
         }
 
+        // Check for auto success/failure first (before critical checks)
+        // Auto success/failure means the roll is a success/failure regardless of DC
+        $hasAutoSuccess = false;
+        $hasAutoFailure = false;
+
+        if ($modifiers->autoSuccess !== null) {
+            foreach ($originalDiceValues as $i => $value) {
+                // Auto success uses >= for high values (e.g., auto 20 on d20)
+                // and <= for low values (e.g., auto 1 on d20 for inverted logic)
+                // We determine which to use based on whether the threshold is in the upper or lower half
+                $midpoint = ($spec->sides + 1) / 2;
+                $isAutoSuccess = ($modifiers->autoSuccess >= $midpoint)
+                    ? ($value >= $modifiers->autoSuccess)
+                    : ($value <= $modifiers->autoSuccess);
+
+                if ($isAutoSuccess) {
+                    $hasAutoSuccess = true;
+                    // Override isSuccess if we have a DC comparison
+                    if ($expression->comparisonOperator !== null && $expression->comparisonThreshold !== null) {
+                        $isSuccess = true;
+                    }
+                    break;
+                }
+            }
+        }
+
         // Check for critical success/failure (US9)
         // Criticals are based on ORIGINAL die values (before explosions, after rerolls)
         // Exploded dice DO count as criticals - explosion is a separate mechanic
@@ -181,16 +207,10 @@ class DiceRoller
             foreach ($originalDiceValues as $i => $value) {
                 if ($value >= $modifiers->criticalSuccess) {
                     // If there's a comparison threshold, critical only counts if the roll would hit
-                    // Exception: natural max (e.g., 20 on d20) always hits regardless of threshold
+                    // OR if the roll has auto success
                     if ($expression->comparisonOperator !== null && $expression->comparisonThreshold !== null) {
-                        $isNaturalMax = ($value === $spec->sides);
-                        if ($isNaturalMax) {
-                            // Natural max always hits and is always critical
-                            $isCriticalSuccess = true;
-                            // Override isSuccess for natural max
-                            $isSuccess = true;
-                        } elseif ($isSuccess === true) {
-                            // Roll would hit the threshold, so it's a critical
+                        if ($hasAutoSuccess || $isSuccess === true) {
+                            // Roll would hit the threshold (or has auto success), so it's a critical
                             $isCriticalSuccess = true;
                         }
                         // Otherwise, roll is in crit range but doesn't hit - not a critical
@@ -205,8 +225,15 @@ class DiceRoller
 
         if ($modifiers->criticalFailure !== null) {
             // Check if ANY die rolled the critical failure value (using original values)
+            // Glitch uses <= for low values (e.g., glitch 1 on d20)
+            // and >= for high values (e.g., glitch 20 on d20 for inverted logic)
             foreach ($originalDiceValues as $i => $value) {
-                if ($value <= $modifiers->criticalFailure) {
+                $midpoint = ($spec->sides + 1) / 2;
+                $isCritFailure = ($modifiers->criticalFailure >= $midpoint)
+                    ? ($value >= $modifiers->criticalFailure)
+                    : ($value <= $modifiers->criticalFailure);
+
+                if ($isCritFailure) {
                     $isCriticalFailure = true;
                     break;
                 }

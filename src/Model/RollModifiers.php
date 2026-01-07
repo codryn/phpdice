@@ -27,6 +27,7 @@ class RollModifiers
      * @param string|null $successOperator Success comparison operator (>=, >)
      * @param int|null $criticalSuccess Flag critical success on this value
      * @param int|null $criticalFailure Flag critical failure on this value
+     * @param int|null $autoSuccess Automatic success on this value (regardless of DC)
      * @param array<string, int> $resolvedVariables Placeholder values (name => value)
      */
     public function __construct(
@@ -45,6 +46,7 @@ class RollModifiers
         public readonly ?string $successOperator = null,
         public readonly ?int $criticalSuccess = null,
         public readonly ?int $criticalFailure = null,
+        public readonly ?int $autoSuccess = null,
         public readonly array $resolvedVariables = []
     ) {
     }

@@ -167,6 +167,7 @@ class DiceExpressionParser
                 rerollLimit: $modifiers->rerollLimit,
                 criticalSuccess: $modifiers->criticalSuccess,
                 criticalFailure: $modifiers->criticalFailure,
+                autoSuccess: $modifiers->autoSuccess,
                 resolvedVariables: $this->usedVariables
             );
         }
@@ -619,6 +620,15 @@ class DiceExpressionParser
             $successOperator = '>=';
         }
 
+        // Check for auto success: "auto N"
+        $autoSuccess = null;
+        if ($this->match(Token::TYPE_KEYWORD, ['auto'])) {
+            $autoSuccess = $this->consumeNumber();
+
+            // Validate auto threshold is within die range
+            $this->validator->validateCriticalThreshold($spec, $autoSuccess, 'auto');
+        }
+
         // Check for critical success: "crit N"
         $criticalSuccess = null;
         if ($this->match(Token::TYPE_KEYWORD, ['crit'])) {
@@ -651,6 +661,7 @@ class DiceExpressionParser
             rerollLimit: $rerollLimit,
             criticalSuccess: $criticalSuccess,
             criticalFailure: $criticalFailure,
+            autoSuccess: $autoSuccess,
             resolvedVariables: $this->usedVariables
         );
     }
