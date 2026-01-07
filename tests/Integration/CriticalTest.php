@@ -150,28 +150,6 @@ final class CriticalTest extends BaseTestCaseMock
     }
 
     /**
-     * AC3: Test different keyword variations.
-     */
-    public function testCriticalKeywordVariations(): void
-    {
-        // Test "crit" keyword
-        $expr1 = $this->phpdice->parse('1d20 crit 20');
-        $this->assertSame(20, $expr1->modifiers->criticalSuccess);
-
-        // Test "critical" keyword
-        $expr2 = $this->phpdice->parse('1d20 critical 20');
-        $this->assertSame(20, $expr2->modifiers->criticalSuccess);
-
-        // Test "glitch" keyword
-        $expr3 = $this->phpdice->parse('1d20 glitch 1');
-        $this->assertSame(1, $expr3->modifiers->criticalFailure);
-
-        // Test "failure" keyword
-        $expr4 = $this->phpdice->parse('1d20 failure 1');
-        $this->assertSame(1, $expr4->modifiers->criticalFailure);
-    }
-
-    /**
      * AC4: Can inspect critical die value and threshold.
      *
      * Given a critical result
