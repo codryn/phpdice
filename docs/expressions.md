@@ -7,7 +7,9 @@ General rules:
 - Supported dice types: standard (d4, d6, d8, d10, d12, d20, d%), FATE dice (dF).
 - Expressions can contain space characters for readability.
 - Parentheses can be used to group sub-expressions.
-- Mathematical functions supported: `floor()`, `ceil()`, `round()`.
+- Mathematical functions supported: `floor()`, `ceil()`, `round(), abs(), min(), max()`.
+- Arethmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
+- Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `crit`, `glitch`, `dc`.
 
 ## Modifier Ordering Rules
 
@@ -296,6 +298,11 @@ Examples:
 
 ```1d20 + 3 dc == 18``` - Roll one d20, add 3, check if total equals 18 (DC check)
 
+Notes: 
+
+- The success check is done on the final roll result with all modifiers applied.
+- A maximal roll (natural 20 on d20) is always counted as a success.
+
 ## Critical Success/Failure
 
 Use the crit and glitch mechanics:
@@ -314,6 +321,13 @@ Examples:
 
 ```1d20 crit 19 glitch 2``` - Roll one d20, critical success on 19 or 20, critical failure on 1 or 2
 
+Notes: 
+
+- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and should no be combined with multiple dice, reroll or explode.
+- Crit and glitch keywords can be used together to define both critical success and failure ranges.
+- A crit is only counted when the roll is also a success according to any DC check in the expression.
+- A maximal roll (natural 20 on d20) is always a success and therfore a crit, even if the total fails the DC check.
+
 ## Complex Combinations
 
 Combine multiple mechanics in one expression.
@@ -325,3 +339,24 @@ Examples:
 ```12d6 reroll <=1 count >=5``` - Roll 12d6, reroll any 1s, count successes of 5 or higher
 
 ```4d6 explode keep 3 highest + $modifier$``` - Roll 4d6 with exploding dice, keep highest 3, add modifier from variable
+
+### Keyword Order
+
+When combining keywords, the order is important. The recommended order is:
+1. Advantage/Disadvantage
+2. Crit/Glitch
+3. Reroll or explode
+4. Keep/Drop
+5. Count
+6. Modifiers (addition, subtraction, etc.)
+7. DC
+
+Notes:
+- Advantage/Disadvantage shall be the first keyword to ensure correct die selection.
+- Crit/Glitch must come after advantage/disadvantage to apply to the final selected die.
+- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and should no be combined with multiple dice, reroll or explode.
+- Reroll/explode must come before keep/drop to ensure all dice are considered for rerolls/explosions.
+- Keep/drop must come before count to ensure the correct dice are counted
+- The `count` keyword must be after any reroll/explode/keep mechanics to ensure correct success counting and can only be used once per expression.
+- Modifiers (addition, subtraction, etc.) must come after all dice mechanics to apply to the final roll total / number of successes.
+- The `dc` keyword must be the last keyword in the expression to ensure correct DC checking with the roll total or number of successes and all modifiers.
