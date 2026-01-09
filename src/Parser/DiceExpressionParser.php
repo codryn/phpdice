@@ -10,6 +10,7 @@ use PHPDice\Model\DiceSpecification;
 use PHPDice\Model\RollModifiers;
 use PHPDice\Model\StatisticalCalculator;
 use PHPDice\Parser\AST\BinaryOpNode;
+use PHPDice\Parser\AST\DiceExpressionNode;
 use PHPDice\Parser\AST\DiceNode;
 use PHPDice\Parser\AST\FunctionNode;
 use PHPDice\Parser\AST\Node;
@@ -20,6 +21,9 @@ use PHPDice\Parser\AST\NumberNode;
  */
 class DiceExpressionParser
 {
+    /** @var array<string> Dice modifier keywords that can appear after dice notation */
+    private const MODIFIER_KEYWORDS = ['advantage', 'disadvantage', 'keep', 'explode', 'reroll', 'edge', 'count', 'success', 'threshold', 'crit', 'glitch', 'auto'];
+
     /** @var array<int, Token> */
     private array $tokens = [];
     private int $current = 0;
@@ -307,24 +311,28 @@ class DiceExpressionParser
             return $expr;
         }
 
-        // Dice notation (XdY) - DON'T consume modifiers here, they're parsed separately
+        // Dice notation (XdY) - Check for modifiers and wrap in DiceExpressionNode if present
         if ($this->check(Token::TYPE_NUMBER) && $this->checkNext(Token::TYPE_DICE)) {
             $count = $this->consumeNumber();
             $diceToken = $this->advance();
             $diceValue = (string)$diceToken->value;
 
             // Check for special dice types
+            $diceNode = null;
             if ($diceValue === 'dF') {
                 // Fudge dice: count is specified, sides is always 3 (representing -1, 0, +1)
-                return new DiceNode($count, 3, \PHPDice\Model\DiceType::FUDGE);
+                $diceNode = new DiceNode($count, 3, \PHPDice\Model\DiceType::FUDGE);
             } elseif ($diceValue === 'd%') {
                 // Percentile dice: count is specified, sides is always 100
-                return new DiceNode($count, 100, \PHPDice\Model\DiceType::PERCENTILE);
+                $diceNode = new DiceNode($count, 100, \PHPDice\Model\DiceType::PERCENTILE);
             } else {
                 // Standard dice: get the sides
                 $sides = $this->consumeNumber();
-                return new DiceNode($count, $sides);
+                $diceNode = new DiceNode($count, $sides);
             }
+
+            // Check if modifiers follow (for use in function arguments)
+            return $this->tryParseModifiersForDiceNode($diceNode);
         }
 
         // Standalone d% or dF (equivalent to 1d% or 1dF)
@@ -332,12 +340,18 @@ class DiceExpressionParser
             $diceToken = $this->peek();
             $diceValue = (string)$diceToken->value;
 
+            $diceNode = null;
             if ($diceValue === 'd%') {
                 $this->advance(); // Consume d%
-                return new DiceNode(1, 100, \PHPDice\Model\DiceType::PERCENTILE);
+                $diceNode = new DiceNode(1, 100, \PHPDice\Model\DiceType::PERCENTILE);
             } elseif ($diceValue === 'dF') {
                 $this->advance(); // Consume dF
-                return new DiceNode(1, 3, \PHPDice\Model\DiceType::FUDGE);
+                $diceNode = new DiceNode(1, 3, \PHPDice\Model\DiceType::FUDGE);
+            }
+
+            // Check if modifiers follow (for use in function arguments)
+            if ($diceNode !== null) {
+                return $this->tryParseModifiersForDiceNode($diceNode);
             }
         }
 
@@ -396,6 +410,66 @@ class DiceExpressionParser
 
         // Pass single argument directly for backward compatibility, or array for multiple arguments
         return new FunctionNode($functionName, count($arguments) === 1 ? $arguments[0] : $arguments);
+    }
+
+    /**
+     * Try to parse modifiers after a dice node. If modifiers are found,
+     * wrap the dice node in a DiceExpressionNode. Otherwise, return the plain dice node.
+     *
+     * This method only parses modifiers when inside a function argument context.
+     * For top-level expressions, modifiers are parsed separately by the parse() method.
+     *
+     * @param DiceNode $diceNode The dice node to potentially wrap
+     * @return Node Either the original DiceNode or a DiceExpressionNode with modifiers
+     */
+    private function tryParseModifiersForDiceNode(DiceNode $diceNode): Node
+    {
+        // Check if the next token is a modifier keyword
+        // We need to be careful not to consume tokens that belong to the parent expression
+        // Only parse modifiers if we see a modifier keyword followed by something that indicates
+        // we're in a function context (comma or closing parenthesis)
+
+        if ($this->check(Token::TYPE_KEYWORD)) {
+            $keyword = (string)$this->peek()->value;
+            if (in_array($keyword, self::MODIFIER_KEYWORDS, true)) {
+                // Look ahead to see if there's a comma or closing paren later
+                // This indicates we're in a function argument context
+                $hasCommaOrRParenAhead = false;
+                $lookahead = $this->current + 1;
+                while ($lookahead < count($this->tokens)) {
+                    $token = $this->tokens[$lookahead];
+                    if ($token->type === Token::TYPE_COMMA || $token->type === Token::TYPE_RPAREN) {
+                        $hasCommaOrRParenAhead = true;
+                        break;
+                    }
+                    // Stop looking if we hit EOF or an operator that suggests top-level expression
+                    if ($token->type === Token::TYPE_EOF) {
+                        break;
+                    }
+                    // If we see 'dc' keyword, we're likely in a top-level expression with comparison
+                    // (dc = "difficulty class", used for success rolls like "1d20+5 dc >= 15")
+                    if ($token->type === Token::TYPE_KEYWORD && $token->value === 'dc') {
+                        break;
+                    }
+                    $lookahead++;
+                }
+
+                if ($hasCommaOrRParenAhead) {
+                    // We're in a function argument - parse modifiers and wrap
+                    $spec = new DiceSpecification(
+                        count: $diceNode->getCount(),
+                        sides: $diceNode->getSides(),
+                        type: $diceNode->getType()
+                    );
+
+                    $modifiers = $this->parseModifiers($spec);
+                    return new DiceExpressionNode($diceNode, $modifiers);
+                }
+            }
+        }
+
+        // No modifiers or not in function context - return plain dice node
+        return $diceNode;
     }
 
     /**
@@ -739,7 +813,7 @@ class DiceExpressionParser
     }
 
     /**
-     * Find the first dice node in the AST.
+     * Find the first dice node in the AST that isn't already wrapped in a DiceExpressionNode.
      *
      * @param Node $node Node to search
      * @return DiceNode|null Dice node if found
@@ -748,6 +822,12 @@ class DiceExpressionParser
     {
         if ($node instanceof DiceNode) {
             return $node;
+        }
+
+        // Don't look inside DiceExpressionNode - those dice already have their modifiers
+        // and should be treated as complete sub-expressions
+        if ($node instanceof DiceExpressionNode) {
+            return null;
         }
 
         if ($node instanceof BinaryOpNode) {
@@ -759,7 +839,14 @@ class DiceExpressionParser
         }
 
         if ($node instanceof FunctionNode) {
-            return $this->findDiceNode($node->getArgument());
+            // Check all arguments for dice
+            foreach ($node->getArguments() as $argument) {
+                $found = $this->findDiceNode($argument);
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+            return null;
         }
 
         return null;
