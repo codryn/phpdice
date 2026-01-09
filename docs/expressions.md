@@ -9,7 +9,7 @@ General rules:
 - Parentheses can be used to group sub-expressions.
 - Mathematical functions supported: `floor()`, `ceil()`, `round(), abs(), min(), max()`.
 - Arethmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
-- Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `crit`, `glitch`, `dc`.
+- Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `edge`, `crit`, `glitch`, `dc`.
 
 ## Basic Dice Notation
 Roll X dice with Y sides:
@@ -218,6 +218,43 @@ Examples:
 ```3d6 explode 3``` - Roll three d6s, any die that rolls a 6 explodes, up to 3 explosions per die
 
 ```3d6 explode 3 >= 5``` - Roll three d6s, any die that rolls 5 or 6 explodes, up to 3 explosions per die
+
+## Edge Dice (Shadowrun Rule of Six)
+
+Use edge mechanics to add additional dice when a threshold is met (different from explode which sums):
+
+```
+XdY edge
+XdY edge >= N
+XdY edge M
+XdY edge M >= N
+```
+
+Examples:
+
+```3d6 edge``` - Roll three d6s, any die that rolls a 6 adds an additional die to the pool (not summed into original die), unlimited edge dice (up to system limit to prevent infinite loops)
+
+```5d6 edge count >=5``` - Roll five d6s with Shadowrun success counting, 6s add additional dice that can also be successes
+
+```3d6 edge >= 5``` - Roll three d6s, any die that rolls 5 or 6 adds an additional die to the pool, unlimited edge dice
+
+**Key Difference from Explode**: Edge adds new dice to the pool, while explode sums additional rolls into one die. For example:
+- `1d6 explode` rolling a 6 then 4 results in one die with value 10
+- `1d6 edge` rolling a 6 then 4 results in two dice with values [6, 4]
+
+### Limit edge dice
+
+Use edge dice mechanics with limits:
+```
+XdY edge M
+XdY edge M >= N
+```
+
+Examples:
+
+```3d6 edge 3``` - Roll three d6s, any die that rolls a 6 adds additional dice, up to 3 edge dice per original die
+
+```5d6 edge 2 >= 5``` - Roll five d6s, any die that rolls 5 or 6 adds additional dice, up to 2 edge dice per original die
 
 ## Special Dice
 
