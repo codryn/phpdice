@@ -7,6 +7,7 @@ namespace PHPDice\Roller;
 use PHPDice\Model\DiceExpression;
 use PHPDice\Model\RollResult;
 use PHPDice\Parser\AST\BinaryOpNode;
+use PHPDice\Parser\AST\DiceExpressionNode;
 use PHPDice\Parser\AST\DiceNode;
 use PHPDice\Parser\AST\FunctionNode;
 use PHPDice\Parser\AST\Node;
@@ -490,6 +491,9 @@ class DiceRoller
     {
         if ($node instanceof DiceNode) {
             $node->setRollResult($result);
+        } elseif ($node instanceof DiceExpressionNode) {
+            // DiceExpressionNode will be rolled separately, don't set here
+            return;
         } elseif ($node instanceof BinaryOpNode) {
             $this->setDiceResults($node->getLeft(), $result);
             $this->setDiceResults($node->getRight(), $result);
@@ -520,6 +524,9 @@ class DiceRoller
     private function countDiceNodes(Node $node, int &$count): void
     {
         if ($node instanceof DiceNode) {
+            $count++;
+        } elseif ($node instanceof DiceExpressionNode) {
+            // Count as a single dice group (even though it may have modifiers)
             $count++;
         } elseif ($node instanceof BinaryOpNode) {
             $this->countDiceNodes($node->getLeft(), $count);
@@ -564,7 +571,40 @@ class DiceRoller
      */
     private function rollDiceNode(Node $node, array &$allDiceValues): void
     {
-        if ($node instanceof DiceNode) {
+        if ($node instanceof DiceExpressionNode) {
+            // This is a complete dice expression with modifiers - roll it properly
+            $spec = $node->getSpecification();
+            $modifiers = $node->getModifiers();
+            
+            // Create a temporary DiceExpression for rolling
+            // We need statistics even if we don't use them for the final result
+            $calculator = new \PHPDice\Model\StatisticalCalculator();
+            $stats = $calculator->calculate($spec, $modifiers, $node->getDiceNode());
+            
+            $tempExpression = new \PHPDice\Model\DiceExpression(
+                specification: $spec,
+                modifiers: $modifiers,
+                statistics: $stats,
+                originalExpression: '', // Not needed for this context
+                astRoot: $node->getDiceNode()
+            );
+            
+            // Roll the dice expression with all modifiers
+            $result = $this->roll($tempExpression);
+            
+            // For success counting, use the success count as the result
+            // Otherwise, use the total
+            if ($modifiers->successThreshold !== null) {
+                $node->setRollResult($result->successCount ?? 0);
+            } else {
+                $node->setRollResult($result->total);
+            }
+            
+            // Add individual dice values to the collection
+            foreach ($result->diceValues as $value) {
+                $allDiceValues[] = $value;
+            }
+        } elseif ($node instanceof DiceNode) {
             // Roll this dice group
             $diceValues = [];
             for ($i = 0; $i < $node->getCount(); $i++) {
