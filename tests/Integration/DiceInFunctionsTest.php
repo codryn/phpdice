@@ -95,16 +95,16 @@ class DiceInFunctionsTest extends BaseTestCaseMock
     public function testMaxWithExplodingDice(): void
     {
         // Roll 2d6 explode (>=6), compare with 1d6
-        // First dice group: 6 (explodes) -> 5 = 11
+        // First dice group: 6 (explodes) -> 5 = 6+5=11, 3 = 11+3=14
         // Second dice group: 3
-        // max(11, 3) = 11
+        // max(14, 3) = 14
         $this->mockRng->expects($this->exactly(4))
             ->method('generate')
             ->willReturnOnConsecutiveCalls(6, 5, 3, 3);
 
         $result = $this->phpdice->roll('max(2d6 explode, 1d6)');
 
-        $this->assertEquals(11, $result->total);
+        $this->assertEquals(14, $result->total);
     }
 
     /**
@@ -116,9 +116,9 @@ class DiceInFunctionsTest extends BaseTestCaseMock
         // Dice: 6, 3, 5, 2
         // Keep highest 3: 6, 5, 3 = 14
         // max(14, 10) = 14
-        $this->mockRng->expects($this->exactly(5))
+        $this->mockRng->expects($this->exactly(4))
             ->method('generate')
-            ->willReturnOnConsecutiveCalls(6, 3, 5, 2, 4);
+            ->willReturnOnConsecutiveCalls(6, 3, 5, 2);
 
         $result = $this->phpdice->roll('max(4d6 keep 3 highest, 10)');
 
@@ -239,7 +239,7 @@ class DiceInFunctionsTest extends BaseTestCaseMock
     {
         // 12d6 count >4
         // Dice: 2, 3, 2, 6, 1, 4, 5, 6, 2, 3, 6, 3
-        // Success count (>4): 5, 6, 5, 6, 6 = 5 successes
+        // Success count (>4): 6, 5, 6, 6 = 4 successes
         $this->mockRng->expects($this->exactly(12))
             ->method('generate')
             ->willReturnOnConsecutiveCalls(2, 3, 2, 6, 1, 4, 5, 6, 2, 3, 6, 3);
@@ -247,7 +247,7 @@ class DiceInFunctionsTest extends BaseTestCaseMock
         $result = $this->phpdice->roll('12d6 count >4');
 
         $this->assertCount(12, $result->diceValues);
-        $this->assertEquals(5, $result->successCount);
+        $this->assertEquals(4, $result->successCount);
     }
 
     /**

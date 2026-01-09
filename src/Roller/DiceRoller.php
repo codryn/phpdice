@@ -576,12 +576,12 @@ class DiceRoller
             // This is a complete dice expression with modifiers - roll it properly
             $spec = $node->getSpecification();
             $modifiers = $node->getModifiers();
-            
+
             // Create a temporary DiceExpression for rolling
             // We need statistics even if we don't use them for the final result
             $calculator = new StatisticalCalculator();
             $stats = $calculator->calculate($spec, $modifiers, $node->getDiceNode());
-            
+
             $tempExpression = new DiceExpression(
                 specification: $spec,
                 modifiers: $modifiers,
@@ -589,10 +589,10 @@ class DiceRoller
                 originalExpression: '', // Not needed for this context
                 astRoot: $node->getDiceNode()
             );
-            
+
             // Roll the dice expression with all modifiers, passing the AST
             $result = $this->roll($tempExpression, $node->getDiceNode());
-            
+
             // For success counting, use the success count as the result
             // Otherwise, use the total
             if ($modifiers->successThreshold !== null) {
@@ -600,7 +600,7 @@ class DiceRoller
             } else {
                 $node->setRollResult($result->total);
             }
-            
+
             // Add individual dice values to the collection
             foreach ($result->diceValues as $value) {
                 $allDiceValues[] = $value;

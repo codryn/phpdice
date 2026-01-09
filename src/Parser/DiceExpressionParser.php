@@ -23,7 +23,7 @@ class DiceExpressionParser
 {
     /** @var array<string> Dice modifier keywords that can appear after dice notation */
     private const MODIFIER_KEYWORDS = ['advantage', 'disadvantage', 'keep', 'explode', 'reroll', 'edge', 'count', 'success', 'threshold', 'crit', 'glitch', 'auto'];
-    
+
     /** @var array<int, Token> */
     private array $tokens = [];
     private int $current = 0;
@@ -428,7 +428,7 @@ class DiceExpressionParser
         // We need to be careful not to consume tokens that belong to the parent expression
         // Only parse modifiers if we see a modifier keyword followed by something that indicates
         // we're in a function context (comma or closing parenthesis)
-        
+
         if ($this->check(Token::TYPE_KEYWORD)) {
             $keyword = (string)$this->peek()->value;
             if (in_array($keyword, self::MODIFIER_KEYWORDS, true)) {
@@ -453,7 +453,7 @@ class DiceExpressionParser
                     }
                     $lookahead++;
                 }
-                
+
                 if ($hasCommaOrRParenAhead) {
                     // We're in a function argument - parse modifiers and wrap
                     $spec = new DiceSpecification(
@@ -461,13 +461,13 @@ class DiceExpressionParser
                         sides: $diceNode->getSides(),
                         type: $diceNode->getType()
                     );
-                    
+
                     $modifiers = $this->parseModifiers($spec);
                     return new DiceExpressionNode($diceNode, $modifiers);
                 }
             }
         }
-        
+
         // No modifiers or not in function context - return plain dice node
         return $diceNode;
     }
