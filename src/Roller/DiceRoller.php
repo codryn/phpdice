@@ -589,8 +589,8 @@ class DiceRoller
                 astRoot: $node->getDiceNode()
             );
             
-            // Roll the dice expression with all modifiers
-            $result = $this->roll($tempExpression);
+            // Roll the dice expression with all modifiers, passing the AST
+            $result = $this->roll($tempExpression, $node->getDiceNode());
             
             // For success counting, use the success count as the result
             // Otherwise, use the total
@@ -632,11 +632,11 @@ class DiceRoller
     }
 
     /**
-     * Roll a math-only expression (no dice).
+     * Roll a math-only expression (no top-level dice, but may contain dice in sub-expressions).
      *
      * @param Node|null $ast AST to evaluate
      * @param DiceExpression $expression Original expression
-     * @return RollResult Result with empty dice values and computed total
+     * @return RollResult Result with dice values and computed total
      */
     private function rollMathOnly(?Node $ast, DiceExpression $expression): RollResult
     {
@@ -644,14 +644,18 @@ class DiceRoller
             throw new \PHPDice\Exception\ValidationException('Math-only expression must have an AST', 'expression');
         }
 
+        // Roll any dice nodes in the expression (e.g., inside function arguments)
+        $allDiceValues = [];
+        $this->rollDiceNode($ast, $allDiceValues);
+
         // Evaluate the AST to get the total
         $total = $ast->evaluate();
 
-        // Return result with no dice values
+        // Return result with collected dice values
         return new RollResult(
             expression: $expression,
             total: $total,
-            diceValues: []
+            diceValues: $allDiceValues
         );
     }
 

@@ -413,6 +413,9 @@ class DiceExpressionParser
      * Try to parse modifiers after a dice node. If modifiers are found,
      * wrap the dice node in a DiceExpressionNode. Otherwise, return the plain dice node.
      *
+     * This method only parses modifiers when inside a function argument context.
+     * For top-level expressions, modifiers are parsed separately by the parse() method.
+     *
      * @param DiceNode $diceNode The dice node to potentially wrap
      * @return Node Either the original DiceNode or a DiceExpressionNode with modifiers
      */
@@ -420,25 +423,49 @@ class DiceExpressionParser
     {
         // Check if the next token is a modifier keyword
         // We need to be careful not to consume tokens that belong to the parent expression
-        // Only parse modifiers if we see a modifier keyword at this point
+        // Only parse modifiers if we see a modifier keyword followed by something that indicates
+        // we're in a function context (comma or closing parenthesis)
         $modifierKeywords = ['advantage', 'disadvantage', 'keep', 'explode', 'reroll', 'edge', 'count', 'success', 'threshold', 'crit', 'glitch', 'auto'];
         
         if ($this->check(Token::TYPE_KEYWORD)) {
             $keyword = (string)$this->peek()->value;
             if (in_array($keyword, $modifierKeywords, true)) {
-                // We have modifiers - parse them and wrap in DiceExpressionNode
-                $spec = new DiceSpecification(
-                    count: $diceNode->getCount(),
-                    sides: $diceNode->getSides(),
-                    type: $diceNode->getType()
-                );
+                // Look ahead to see if there's a comma or closing paren later
+                // This indicates we're in a function argument context
+                $hasCommaOrRParenAhead = false;
+                $lookahead = $this->current + 1;
+                while ($lookahead < count($this->tokens)) {
+                    $token = $this->tokens[$lookahead];
+                    if ($token->type === Token::TYPE_COMMA || $token->type === Token::TYPE_RPAREN) {
+                        $hasCommaOrRParenAhead = true;
+                        break;
+                    }
+                    // Stop looking if we hit EOF or an operator that suggests top-level expression
+                    if ($token->type === Token::TYPE_EOF) {
+                        break;
+                    }
+                    // If we see 'dc' keyword, we're likely in a top-level expression
+                    if ($token->type === Token::TYPE_KEYWORD && $token->value === 'dc') {
+                        break;
+                    }
+                    $lookahead++;
+                }
                 
-                $modifiers = $this->parseModifiers($spec);
-                return new DiceExpressionNode($diceNode, $modifiers);
+                if ($hasCommaOrRParenAhead) {
+                    // We're in a function argument - parse modifiers and wrap
+                    $spec = new DiceSpecification(
+                        count: $diceNode->getCount(),
+                        sides: $diceNode->getSides(),
+                        type: $diceNode->getType()
+                    );
+                    
+                    $modifiers = $this->parseModifiers($spec);
+                    return new DiceExpressionNode($diceNode, $modifiers);
+                }
             }
         }
         
-        // No modifiers - return plain dice node
+        // No modifiers or not in function context - return plain dice node
         return $diceNode;
     }
 
@@ -783,7 +810,7 @@ class DiceExpressionParser
     }
 
     /**
-     * Find the first dice node in the AST.
+     * Find the first dice node in the AST that isn't already wrapped in a DiceExpressionNode.
      *
      * @param Node $node Node to search
      * @return DiceNode|null Dice node if found
@@ -794,8 +821,10 @@ class DiceExpressionParser
             return $node;
         }
 
+        // Don't look inside DiceExpressionNode - those dice already have their modifiers
+        // and should be treated as complete sub-expressions
         if ($node instanceof DiceExpressionNode) {
-            return $node->getDiceNode();
+            return null;
         }
 
         if ($node instanceof BinaryOpNode) {
@@ -807,7 +836,14 @@ class DiceExpressionParser
         }
 
         if ($node instanceof FunctionNode) {
-            return $this->findDiceNode($node->getArgument());
+            // Check all arguments for dice
+            foreach ($node->getArguments() as $argument) {
+                $found = $this->findDiceNode($argument);
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+            return null;
         }
 
         return null;
