@@ -305,13 +305,13 @@ class EdgeDiceTest extends BaseTestCaseMock
 
     /**
      * Test parsing validates correct order
-     * Acceptance: Edge should work when properly ordered with other modifiers
+     * Acceptance: Edge should work when properly ordered with other modifiers.
      */
     public function testEdgeParsingOrder(): void
     {
         // Should parse successfully with correct order: edge, keep, count
         $expression = $this->phpdice->parse('5d6 edge keep 3 highest count >=4');
-        
+
         $this->assertEquals(6, $expression->modifiers->edgeThreshold);
         $this->assertEquals('>=', $expression->modifiers->edgeOperator);
         $this->assertEquals(3, $expression->modifiers->keepHighest);
@@ -328,7 +328,7 @@ class EdgeDiceTest extends BaseTestCaseMock
 
         // With edge, expected should be higher than base dice
         $baseExpected = 3 * 3.5; // 3d6 average
-        
+
         // Edge adds dice, so minimum stays the same but maximum and expected increase
         $this->assertEquals(3, $expression->statistics->minimum); // 3 dice minimum (1+1+1)
         $this->assertGreaterThan(18, $expression->statistics->maximum); // More than 3d6 max due to edge
