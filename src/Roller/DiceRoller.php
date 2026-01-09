@@ -6,6 +6,7 @@ namespace PHPDice\Roller;
 
 use PHPDice\Model\DiceExpression;
 use PHPDice\Model\RollResult;
+use PHPDice\Model\StatisticalCalculator;
 use PHPDice\Parser\AST\BinaryOpNode;
 use PHPDice\Parser\AST\DiceExpressionNode;
 use PHPDice\Parser\AST\DiceNode;
@@ -578,10 +579,10 @@ class DiceRoller
             
             // Create a temporary DiceExpression for rolling
             // We need statistics even if we don't use them for the final result
-            $calculator = new \PHPDice\Model\StatisticalCalculator();
+            $calculator = new StatisticalCalculator();
             $stats = $calculator->calculate($spec, $modifiers, $node->getDiceNode());
             
-            $tempExpression = new \PHPDice\Model\DiceExpression(
+            $tempExpression = new DiceExpression(
                 specification: $spec,
                 modifiers: $modifiers,
                 statistics: $stats,

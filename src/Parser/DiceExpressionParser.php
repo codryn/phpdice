@@ -21,6 +21,9 @@ use PHPDice\Parser\AST\NumberNode;
  */
 class DiceExpressionParser
 {
+    /** @var array<string> Dice modifier keywords that can appear after dice notation */
+    private const MODIFIER_KEYWORDS = ['advantage', 'disadvantage', 'keep', 'explode', 'reroll', 'edge', 'count', 'success', 'threshold', 'crit', 'glitch', 'auto'];
+    
     /** @var array<int, Token> */
     private array $tokens = [];
     private int $current = 0;
@@ -425,11 +428,10 @@ class DiceExpressionParser
         // We need to be careful not to consume tokens that belong to the parent expression
         // Only parse modifiers if we see a modifier keyword followed by something that indicates
         // we're in a function context (comma or closing parenthesis)
-        $modifierKeywords = ['advantage', 'disadvantage', 'keep', 'explode', 'reroll', 'edge', 'count', 'success', 'threshold', 'crit', 'glitch', 'auto'];
         
         if ($this->check(Token::TYPE_KEYWORD)) {
             $keyword = (string)$this->peek()->value;
-            if (in_array($keyword, $modifierKeywords, true)) {
+            if (in_array($keyword, self::MODIFIER_KEYWORDS, true)) {
                 // Look ahead to see if there's a comma or closing paren later
                 // This indicates we're in a function argument context
                 $hasCommaOrRParenAhead = false;
@@ -444,7 +446,8 @@ class DiceExpressionParser
                     if ($token->type === Token::TYPE_EOF) {
                         break;
                     }
-                    // If we see 'dc' keyword, we're likely in a top-level expression
+                    // If we see 'dc' keyword, we're likely in a top-level expression with comparison
+                    // (dc = "difficulty class", used for success rolls like "1d20+5 dc >= 15")
                     if ($token->type === Token::TYPE_KEYWORD && $token->value === 'dc') {
                         break;
                     }
