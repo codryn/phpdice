@@ -192,7 +192,7 @@ class Validator
                 $coversAll = $threshold > $maxValue;
                 break;
             case '==':
-                // can never be true, dice has at least 2 distinct values
+                // Equality matches only one value, never all values (dice have at least 2 sides)
                 $coversAll = false;
                 break;
         }
@@ -241,7 +241,7 @@ class Validator
                 $coversAll = $threshold > $maxValue;
                 break;
             case '==':
-                // can never be true, dice has at least 2 distinct values
+                // Equality matches only one value, never all values (dice have at least 2 sides)
                 $coversAll = false;
                 break;
         }
