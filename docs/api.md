@@ -166,6 +166,9 @@ Contains all modifiers and mechanics applied to a roll.
 - `explosionThreshold` (int|null): Value that triggers explosion.
 - `explosionOperator` (string|null): Operator for explosions (>=, <=).
 - `explosionLimit` (int): Maximum explosions per die (default 100).
+- `edgeThreshold` (int|null): Value that triggers edge (adds additional dice).
+- `edgeOperator` (string|null): Operator for edge (>=, <=).
+- `edgeLimit` (int): Maximum edge dice per die (default 100).
 - `successThreshold` (int|null): Threshold for success counting.
 - `successOperator` (string|null): Operator for success counting (>=, >).
 - `criticalSuccess` (int|null): Threshold for critical success.
@@ -190,6 +193,7 @@ Complete result of a dice roll.
 - `isSuccess` (bool|null): Whether comparison check succeeded
 - `rerollHistory` (array|null): History of rerolls per die
 - `explosionHistory` (array|null): History of explosions per die
+- `edgeHistory` (array|null): History of edge rolls per die (additional dice added)
 
 **Example:**
 ```php

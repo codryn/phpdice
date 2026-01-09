@@ -53,7 +53,9 @@ class DiceRoller
         // Roll each die
         $rerollHistory = null;
         $explosionHistory = null;
+        $edgeHistory = null;
         $originalDiceValues = []; // Track original values before explosions for critical detection
+        $edgeTriggers = []; // Track which dice triggered edge (for deferred processing)
 
         for ($i = 0; $i < $totalDiceToRoll; $i++) {
             // Generate raw roll based on dice type
@@ -63,7 +65,7 @@ class DiceRoller
             $initialRoll = $this->convertDiceValue($rawRoll, $spec->type);
             $diceValues[] = $initialRoll;
 
-            // Handle rerolls if configured (rerolls happen first, then explosions)
+            // Handle rerolls if configured (rerolls happen first, then explosions/edge)
             if ($modifiers->rerollThreshold !== null && $modifiers->rerollOperator !== null) {
                 $rerollCount = 0;
                 $currentValue = $initialRoll;
@@ -126,6 +128,52 @@ class DiceRoller
                         'count' => $explosionCount,
                         'cumulativeTotal' => $cumulativeTotal,
                         'limitReached' => $explosionCount >= $modifiers->explosionLimit,
+                    ];
+                }
+            }
+
+            // Handle edge if configured (Shadowrun Rule of Six: add additional dice when threshold met)
+            // We defer actual edge rolling until after all original dice are rolled
+            if ($modifiers->edgeThreshold !== null && $modifiers->edgeOperator !== null) {
+                if ($this->shouldEdge($diceValues[$i], $modifiers->edgeThreshold, $modifiers->edgeOperator)) {
+                    $edgeTriggers[] = $i;
+                }
+            }
+        }
+
+        // Process edge triggers after all original dice are rolled
+        if (!empty($edgeTriggers) && $modifiers->edgeThreshold !== null && $modifiers->edgeOperator !== null) {
+            foreach ($edgeTriggers as $triggerIndex) {
+                $edgeCount = 0;
+                $currentValue = $diceValues[$triggerIndex];
+                $edgeDice = [];
+
+                // Keep rolling edge dice while threshold is met and limit not reached
+                while ($this->shouldEdge($currentValue, $modifiers->edgeThreshold, $modifiers->edgeOperator)
+                       && $edgeCount < $modifiers->edgeLimit) {
+                    // Roll a new die and add it to the dice pool
+                    $rawEdge = $this->rng->generate(1, $spec->sides);
+                    $edgeDieValue = $this->convertDiceValue($rawEdge, $spec->type);
+                    $edgeDice[] = $edgeDieValue;
+
+                    // Add the new die to the dice values array
+                    $diceValues[] = $edgeDieValue;
+                    $originalDiceValues[] = $edgeDieValue; // Track for critical detection
+
+                    // Check if the new die also triggers edge (cascading)
+                    $currentValue = $edgeDieValue;
+                    $edgeCount++;
+                }
+
+                // Track edge history if any edge dice were added
+                if ($edgeCount > 0) {
+                    if ($edgeHistory === null) {
+                        $edgeHistory = [];
+                    }
+                    $edgeHistory[$triggerIndex] = [
+                        'rolls' => $edgeDice,
+                        'count' => $edgeCount,
+                        'limitReached' => $edgeCount >= $modifiers->edgeLimit,
                     ];
                 }
             }
@@ -251,7 +299,8 @@ class DiceRoller
             isCriticalFailure: $isCriticalFailure,
             isSuccess: $isSuccess,
             rerollHistory: $rerollHistory,
-            explosionHistory: $explosionHistory
+            explosionHistory: $explosionHistory,
+            edgeHistory: $edgeHistory
         );
     }
 
@@ -284,6 +333,23 @@ class DiceRoller
      * @return bool True if should explode
      */
     private function shouldExplode(int $value, int $threshold, string $operator): bool
+    {
+        return match ($operator) {
+            '>=' => $value >= $threshold,
+            '<=' => $value <= $threshold,
+            default => false,
+        };
+    }
+
+    /**
+     * Check if a die value should trigger edge (add additional dice).
+     *
+     * @param int $value Die value
+     * @param int $threshold Edge threshold
+     * @param string $operator Comparison operator (>= or <=)
+     * @return bool True if should trigger edge
+     */
+    private function shouldEdge(int $value, int $threshold, string $operator): bool
     {
         return match ($operator) {
             '>=' => $value >= $threshold,

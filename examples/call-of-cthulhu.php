@@ -151,7 +151,7 @@ $damage = $phpdice->roll('1d10');
     } elseif ($result->total <= 22) { // Hard success
         echo "   HARD SUCCESS - Impale!\n";
         echo "   Roll again for extra damage...\n";
-        $extraDamage = $phpdice->roll($damageExpr);
+        $extraDamage = $phpdice->roll('1d10');
         echo "   Total damage: {$damage->total} + {$extraDamage->total} = " .
              ($damage->total + $extraDamage->total) . "\n";
     }

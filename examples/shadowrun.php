@@ -44,8 +44,24 @@ if ($netHits > 0) {
 }
 echo "\n";
 
-// 3. Edge - Reroll 1s (Rule of Six not modeled, using reroll)
-echo "3. Using Edge (reroll failures - modeling with reroll 1s):\n";
+// 3. Edge - Rule of Six (NEW: native edge support!)
+echo "3. Using Edge (Rule of Six - dice that show 6 add additional dice):\n";
+$result = $phpdice->roll('10d6 edge count >=5');
+echo "   Total dice rolled (including edge): " . count($result->diceValues) . "\n";
+echo "   Dice values: " . implode(', ', $result->diceValues) . "\n";
+echo "   Successes: {$result->successCount}\n";
+if ($result->edgeHistory !== null) {
+    echo "   Edge triggered on " . count($result->edgeHistory) . " dice\n";
+    $totalEdgeDice = 0;
+    foreach ($result->edgeHistory as $dieIndex => $history) {
+        $totalEdgeDice += $history['count'];
+    }
+    echo "   Total edge dice added: {$totalEdgeDice}\n";
+}
+echo "\n";
+
+// 3a. Edge - Reroll 1s (alternative approach)
+echo "3a. Using Edge with reroll (reroll 1s then use edge):\n";
 $result = $phpdice->roll('10d6 reroll ==1 count >=5');
 echo "   Final dice: " . implode(', ', $result->diceValues) . "\n";
 echo "   Successes: {$result->successCount}\n";

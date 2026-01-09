@@ -30,9 +30,14 @@ class StatisticalCalculator
             return $this->calculateSuccessCount($spec, $modifiers);
         }
 
-        // Handle explosion mechanics (must check before rerolls)
+        // Handle explosion mechanics (must check before edge and rerolls)
         if ($modifiers->explosionThreshold !== null && $modifiers->explosionOperator !== null) {
             return $this->calculateWithExplosions($spec, $modifiers, $ast);
+        }
+
+        // Handle edge mechanics (must check before rerolls)
+        if ($modifiers->edgeThreshold !== null && $modifiers->edgeOperator !== null) {
+            return $this->calculateWithEdge($spec, $modifiers, $ast);
         }
 
         // Handle reroll mechanics
@@ -352,6 +357,84 @@ class StatisticalCalculator
      * @return bool True if should explode
      */
     private function shouldExplode(int $value, int $threshold, string $operator): bool
+    {
+        return match ($operator) {
+            '>=' => $value >= $threshold,
+            '<=' => $value <= $threshold,
+            default => false,
+        };
+    }
+
+    /**
+     * Calculate statistics for dice with edge mechanics (Shadowrun Rule of Six).
+     * Edge adds additional dice rather than summing into one die.
+     *
+     * @param DiceSpecification $spec Dice specification
+     * @param RollModifiers $modifiers Roll modifiers with edge settings
+     * @param Node|null $ast Optional AST for arithmetic
+     * @return StatisticalData Statistics adjusted for edge
+     */
+    private function calculateWithEdge(DiceSpecification $spec, RollModifiers $modifiers, ?Node $ast): StatisticalData
+    {
+        $sides = $spec->sides;
+        $threshold = $modifiers->edgeThreshold;
+        $operator = $modifiers->edgeOperator;
+
+        assert($threshold !== null && $operator !== null, 'Edge threshold and operator must not be null');
+
+        // Determine which values trigger edge
+        $edgeValues = [];
+        for ($value = 1; $value <= $sides; $value++) {
+            if ($this->shouldEdge($value, $threshold, $operator)) {
+                $edgeValues[] = $value;
+            }
+        }
+
+        // Probability of edge
+        $edgeProb = count($edgeValues) / $sides;
+
+        // Expected number of additional dice per die (geometric series)
+        // E[edge_dice] = p + p^2 + p^3 + ... = p / (1 - p) where p = probability of edge
+        // But capped at edge limit
+        $avgEdgeDicePerDie = $edgeProb > 0 && $edgeProb < 1
+            ? min($modifiers->edgeLimit, $edgeProb / (1 - $edgeProb))
+            : 0;
+
+        // Expected total dice = original dice + expected edge dice
+        $expectedTotalDice = $spec->count * (1 + $avgEdgeDicePerDie);
+
+        // Average value per die
+        $avgValuePerDie = ($sides + 1) / 2;
+
+        // Minimum: no edge triggers (just original dice, all roll 1)
+        $minimum = $spec->count * 1;
+
+        // Maximum: all dice trigger edge to limit, all rolls are maximum
+        $maxEdgeDicePerDie = $modifiers->edgeLimit;
+        $maxTotalDice = $spec->count * (1 + $maxEdgeDicePerDie);
+        $maximum = $maxTotalDice * $sides;
+
+        // Expected: expected total dice * average value per die
+        $expected = $expectedTotalDice * $avgValuePerDie;
+
+        // Apply arithmetic if AST exists
+        if ($ast !== null) {
+            $edgeStats = new StatisticalData($minimum, $maximum, round($expected, 3));
+            return $this->applyAstOperations($ast, $edgeStats);
+        }
+
+        return new StatisticalData($minimum, $maximum, round($expected, 3));
+    }
+
+    /**
+     * Check if a value should trigger edge.
+     *
+     * @param int $value Die value
+     * @param int $threshold Edge threshold
+     * @param string $operator Comparison operator
+     * @return bool True if should trigger edge
+     */
+    private function shouldEdge(int $value, int $threshold, string $operator): bool
     {
         return match ($operator) {
             '>=' => $value >= $threshold,

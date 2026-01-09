@@ -401,7 +401,7 @@ class DiceExpressionParser
     /**
      * Parse modifiers like advantage, disadvantage, keep.
      *
-     * Order: explode/reroll -> keep -> count -> dc
+     * Order: explode/reroll/edge -> keep -> count -> dc
      *
      * @param DiceSpecification $spec Dice specification
      * @return RollModifiers Roll modifiers
@@ -434,7 +434,7 @@ class DiceExpressionParser
             $keepLowest = $spec->count;
         }
 
-        // STEP 1: Parse explode/reroll (must come before keep)
+        // STEP 1: Parse explode/reroll/edge (must come before keep)
         $rerollThreshold = null;
         $rerollOperator = null;
         $rerollLimit = 100; // Default limit
@@ -536,7 +536,76 @@ class DiceExpressionParser
             $this->validator->validateRerollRange($spec, $rerollThreshold, $rerollOperator);
         }
 
-        // STEP 2: Parse keep (must come after explode/reroll)
+        // Check for edge: "edge [limit] [operator threshold]"
+        $edgeThreshold = null;
+        $edgeOperator = null;
+        $edgeLimit = 100; // Default limit
+
+        if ($this->match(Token::TYPE_KEYWORD, ['edge'])) {
+            // Validate: cannot combine edge with explode or reroll
+            if ($explosionThreshold !== null) {
+                throw new \PHPDice\Exception\ValidationException(
+                    'Cannot combine edge and explode on the same dice',
+                    'modifiers'
+                );
+            }
+            if ($rerollThreshold !== null) {
+                throw new \PHPDice\Exception\ValidationException(
+                    'Cannot combine edge and reroll on the same dice',
+                    'modifiers'
+                );
+            }
+
+            // Check for optional limit number
+            if ($this->check(Token::TYPE_NUMBER)) {
+                $nextPos = $this->current + 1;
+                // Peek ahead to see if the next token after the number is a comparison operator or EOF
+                $hasComparison = ($nextPos < count($this->tokens) && $this->tokens[$nextPos]->type === Token::TYPE_COMPARISON);
+
+                if ($hasComparison) {
+                    // This number is the limit
+                    $edgeLimit = $this->consumeNumber();
+                } else {
+                    // This number might be the limit, check if we're at end or next is keyword
+                    $nextIsEnd = ($nextPos >= count($this->tokens) || $this->tokens[$nextPos]->type === Token::TYPE_EOF);
+                    $nextIsKeyword = (!$nextIsEnd && $this->tokens[$nextPos]->type === Token::TYPE_KEYWORD);
+
+                    if ($nextIsEnd || $nextIsKeyword) {
+                        // This number is the limit with no threshold
+                        $edgeLimit = $this->consumeNumber();
+                    }
+                }
+            }
+
+            // Check for optional comparison operator and threshold
+            if ($this->check(Token::TYPE_COMPARISON)) {
+                $comparison = $this->advance();
+                $edgeOperator = (string)$comparison->value;
+
+                // Validate operator (only >= and <= allowed for edge per spec)
+                if (!in_array($edgeOperator, ['>=', '<='], true)) {
+                    throw new \PHPDice\Exception\ValidationException(
+                        "Invalid edge operator '{$edgeOperator}'. Only >= and <= are supported for edge dice.",
+                        'edge'
+                    );
+                }
+
+                // Get threshold value
+                $edgeThreshold = $this->consumeNumber();
+
+                // Validate edge range doesn't cover entire die
+                $this->validator->validateEdgeRange($spec, $edgeThreshold, $edgeOperator);
+            } else {
+                // No threshold specified - default to maximum die value
+                $edgeThreshold = $spec->sides;
+                $edgeOperator = '>=';
+
+                // Validate this doesn't create infinite loop (single-sided die)
+                $this->validator->validateEdgeRange($spec, $edgeThreshold, $edgeOperator);
+            }
+        }
+
+        // STEP 2: Parse keep (must come after explode/reroll/edge)
         // Check for keep X highest/lowest
         if ($this->match(Token::TYPE_KEYWORD, ['keep'])) {
             $count = $this->consumeNumber();
@@ -659,6 +728,9 @@ class DiceExpressionParser
             rerollThreshold: $rerollThreshold,
             rerollOperator: $rerollOperator,
             rerollLimit: $rerollLimit,
+            edgeThreshold: $edgeThreshold,
+            edgeOperator: $edgeOperator,
+            edgeLimit: $edgeLimit,
             criticalSuccess: $criticalSuccess,
             criticalFailure: $criticalFailure,
             autoSuccess: $autoSuccess,

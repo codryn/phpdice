@@ -58,7 +58,7 @@ See [docs/expressions.md](docs/expressions.md) for all supported dice expression
 |--------|---------|----------|
 | **D&D 5e** | `1d20 auto 20 crit 20 +5 dc >= 15` | Auto success, criticals, modifiers, comparisons |
 | **Pathfinder** | `3d6+2` | Basic dice, modifiers |
-| **Shadowrun 5e** | `12d6 reroll ==1 >=5` | Success counting, rerolls |
+| **Shadowrun 5e** | `12d6 edge count >=5` | Success counting, edge (Rule of Six) |
 | **World of Darkness** | `10d10 >=8` | Success counting |
 | **FATE** | `4dF+2` | Fudge dice, modifiers |
 | **Savage Worlds** | `1d6 explode + 1d8 explode` | Exploding dice |
