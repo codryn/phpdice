@@ -206,6 +206,55 @@ class Validator
     }
 
     /**
+     * Validate edge range doesn't cover entire die.
+     *
+     * @param DiceSpecification $spec Dice specification
+     * @param int $threshold Edge threshold
+     * @param string $operator Edge operator
+     * @throws ValidationException If edge would always trigger
+     */
+    public function validateEdgeRange(DiceSpecification $spec, int $threshold, string $operator): void
+    {
+        $minValue = 1;
+        $maxValue = $spec->sides;
+
+        if ($threshold < 0) {
+            throw new ValidationException(
+                "Edge threshold '{$threshold}' is negative",
+                'edge'
+            );
+        }
+
+        // Check if edge condition covers all possible values
+        $coversAll = false;
+        switch ($operator) {
+            case '>':
+                $coversAll = $threshold < $minValue;
+                break;
+            case '>=':
+                $coversAll = $threshold <= $minValue;
+                break;
+            case '<=':
+                $coversAll = $threshold >= $maxValue;
+                break;
+            case '<':
+                $coversAll = $threshold > $maxValue;
+                break;
+            case '==':
+                // can never be true, dice has at least 2 distinct values
+                $coversAll = false;
+                break;
+        }
+
+        if ($coversAll) {
+            throw new ValidationException(
+                "Edge condition '{$operator} {$threshold}' would trigger on all possible die values (1-{$maxValue}), preventing termination",
+                'edge'
+            );
+        }
+    }
+
+    /**
      * Validate critical threshold is allowed and within die range (FR-035, FR-036).
      *
      * @param DiceSpecification $spec Dice specification

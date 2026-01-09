@@ -23,6 +23,7 @@ class RollResult
      * @param bool|null $isSuccess Whether comparison check succeeded (for success rolls)
      * @param array<int, array{rolls: array<int, int>, count: int, limitReached: bool}>|null $rerollHistory History of rerolls per die
      * @param array<int, array{rolls: array<int, int>, count: int, cumulativeTotal: int, limitReached: bool}>|null $explosionHistory History of explosions per die
+     * @param array<int, array{rolls: array<int, int>, count: int, limitReached: bool}>|null $edgeHistory History of edge rolls per die
      */
     public function __construct(
         public readonly DiceExpression $expression,
@@ -35,7 +36,8 @@ class RollResult
         public readonly bool $isCriticalFailure = false,
         public readonly ?bool $isSuccess = null,
         public readonly ?array $rerollHistory = null,
-        public readonly ?array $explosionHistory = null
+        public readonly ?array $explosionHistory = null,
+        public readonly ?array $edgeHistory = null
     ) {
     }
 }
