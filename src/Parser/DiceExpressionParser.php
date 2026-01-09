@@ -401,7 +401,7 @@ class DiceExpressionParser
     /**
      * Parse modifiers like advantage, disadvantage, keep.
      *
-     * Order: explode/reroll -> keep -> count -> dc
+     * Order: explode/reroll/edge -> keep -> count -> dc
      *
      * @param DiceSpecification $spec Dice specification
      * @return RollModifiers Roll modifiers
@@ -434,7 +434,7 @@ class DiceExpressionParser
             $keepLowest = $spec->count;
         }
 
-        // STEP 1: Parse explode/reroll (must come before keep)
+        // STEP 1: Parse explode/reroll/edge (must come before keep)
         $rerollThreshold = null;
         $rerollOperator = null;
         $rerollLimit = 100; // Default limit
