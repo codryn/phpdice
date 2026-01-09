@@ -66,7 +66,9 @@ Examples:
 
 ## Mathematical Functions
 
-Use `floor()`, `ceil()`, and `round()` to round results:
+Use `floor()`, `ceil()`, `round()` to round results.
+Use `abs()` for absolute value.
+Use `min()` and `max()` to get minimum/maximum of multiple expressions.
 
 ```
 floor(expression)
@@ -122,6 +124,8 @@ Examples:
 
 ```1d20 disadvantage``` - Roll two d20s, keep the lower
 
+Note: Advantage and disadvantage cannot be combined on the same roll. It can also not be combined with reroll, explode or edge mechanics.
+
 ## Keep Highest/Lowest
 
 Use keep highest/lowest mechanics:
@@ -171,6 +175,8 @@ Examples:
 
 ```6d6 reroll == 1``` - Roll six d6s, reroll any die that is exactly 1, unlimited rerolls (up to system limit to prevent infinite loops)
 
+Note: Rerolling dice cannot be combined with advantage, disadvantage, exploding, or edge dice on the same roll.
+
 ### Limit rerolls
 
 Use reroll dice mechanics with limits:
@@ -204,6 +210,8 @@ Examples:
 ```3d6 explode``` - Roll three d6s, any die that rolls a 6 explodes (rolls again), unlimited explosions (up to system limit to prevent infinite loops)
 
 ```3d6 explode >= 5``` - Roll three d6s, any die that rolls 5 or 6 explodes, unlimited explosions (up to system limit to prevent infinite loops)
+
+Note: Exploding dice cannot be combined with advantage, disadvantage, reroll, or edge dice on the same roll.
 
 ### Limit exploding dice
 
@@ -241,6 +249,8 @@ Examples:
 **Key Difference from Explode**: Edge adds new dice to the pool, while explode sums additional rolls into one die. For example:
 - `1d6 explode` rolling a 6 then 4 results in one die with value 10
 - `1d6 edge` rolling a 6 then 4 results in two dice with values [6, 4]
+
+Note: Edge dice cannot be combined with advantage, disadvantage, reroll, or explode mechanics on the same roll.
 
 ### Limit edge dice
 
@@ -385,7 +395,7 @@ Examples:
 
 When combining multiple modifiers, they must be specified in the following order:
 
-1. **advantage** or **disadvantage** or **reroll** or **explode**  (cannot combine these keywords on the same dice)
+1. **advantage** or **disadvantage** or **reroll** or **explode** or **edge** (cannot combine these keywords on the same dice)
 2. **keep** or **drop** (highest/lowest)
 3. **auto** (automatic success/failure)
 4. **crit** and/or **glitch** (critical success/failure)
@@ -394,10 +404,10 @@ When combining multiple modifiers, they must be specified in the following order
 7. **dc** (difficulty class comparison)
 
 **Important:** 
-- `explode` and `reroll` cannot be combined on the same dice roll
-- `explode` or `reroll` must come before `keep`
+- `advantage`, `disadvantage`, `explode`, `reroll`, and `edge` cannot be combined on the same dice roll.
+- `advantage`, `disadvantage`, `explode`, `reroll`, or `edge` must come before `keep`.
 - `auto` must come before `crit` and `glitch`
-- `count` must come after `explode`/`reroll` and `keep`
+- `count` must come after `advantage`/`disadvantage`/`explode`/`reroll`/`edge`/`keep`
 - `dc` must be at the end
 
 Examples of correct ordering:
@@ -410,10 +420,10 @@ Examples of correct ordering:
 
 Notes:
 - Advantage/Disadvantage shall be the first keyword to ensure correct die selection.
-- Reroll/explode must come before keep/drop to ensure all dice are considered for rerolls/explosions.
+- Reroll/explode/edge must come before keep/drop to ensure all dice are considered for rerolls/explosions/rule of 6.
 - Auto must come before crit/glitch to establish automatic success behavior first.
 - Crit/Glitch must come after auto and any rerolls to apply to the final selected die.
-- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and are normally not combined with multiple dice, reroll or explode.
+- Crit/glitch apply to natural dice result (normally on 1d20) without modifiers and are normally not combined with multiple dice, reroll, explode, or edge.
 - Keep/drop must come before count to ensure the correct dice are counted.
 - The `count` keyword must be after any reroll/explode/keep mechanics to ensure correct success counting and can only be used once per expression.
 - Modifiers (addition, subtraction, etc.) must come after all dice mechanics to apply to the final roll total / number of successes.
