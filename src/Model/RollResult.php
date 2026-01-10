@@ -24,6 +24,7 @@ class RollResult
      * @param array<int, array{rolls: array<int, int>, count: int, limitReached: bool}>|null $rerollHistory History of rerolls per die
      * @param array<int, array{rolls: array<int, int>, count: int, cumulativeTotal: int, limitReached: bool}>|null $explosionHistory History of explosions per die
      * @param array<int, array{rolls: array<int, int>, count: int, limitReached: bool}>|null $edgeHistory History of edge rolls per die
+     * @param string|null $comment Comment string with placeholders expanded
      */
     public function __construct(
         public readonly DiceExpression $expression,
@@ -37,7 +38,8 @@ class RollResult
         public readonly ?bool $isSuccess = null,
         public readonly ?array $rerollHistory = null,
         public readonly ?array $explosionHistory = null,
-        public readonly ?array $edgeHistory = null
+        public readonly ?array $edgeHistory = null,
+        public readonly ?string $comment = null
     ) {
     }
 }

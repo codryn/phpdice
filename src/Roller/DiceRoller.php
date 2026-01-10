@@ -302,7 +302,8 @@ class DiceRoller
             isSuccess: $isSuccess,
             rerollHistory: $rerollHistory,
             explosionHistory: $explosionHistory,
-            edgeHistory: $edgeHistory
+            edgeHistory: $edgeHistory,
+            comment: $expression->comment
         );
     }
 
@@ -560,7 +561,8 @@ class DiceRoller
         return new RollResult(
             expression: $expression,
             total: $total,
-            diceValues: $allDiceValues
+            diceValues: $allDiceValues,
+            comment: $expression->comment
         );
     }
 
@@ -656,7 +658,8 @@ class DiceRoller
         return new RollResult(
             expression: $expression,
             total: $total,
-            diceValues: $allDiceValues
+            diceValues: $allDiceValues,
+            comment: $expression->comment
         );
     }
 
