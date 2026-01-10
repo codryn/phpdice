@@ -11,6 +11,7 @@ use PHPDice\Parser\AST\BinaryOpNode;
 use PHPDice\Parser\AST\DiceExpressionNode;
 use PHPDice\Parser\AST\DiceNode;
 use PHPDice\Parser\AST\FunctionNode;
+use PHPDice\Parser\AST\GroupNode;
 use PHPDice\Parser\AST\Node;
 
 /**
@@ -290,6 +291,12 @@ class DiceRoller
             }
         }
 
+        // Handle groups if present in AST
+        $groups = null;
+        if ($ast !== null) {
+            $groups = $this->extractAndEvaluateGroups($ast, $expression, $diceValues);
+        }
+
         return new RollResult(
             expression: $expression,
             total: $total,
@@ -303,7 +310,8 @@ class DiceRoller
             rerollHistory: $rerollHistory,
             explosionHistory: $explosionHistory,
             edgeHistory: $edgeHistory,
-            comment: $expression->comment
+            comment: $expression->comment,
+            groups: $groups
         );
     }
 
@@ -496,6 +504,9 @@ class DiceRoller
         } elseif ($node instanceof DiceExpressionNode) {
             // DiceExpressionNode will be rolled separately, don't set here
             return;
+        } elseif ($node instanceof GroupNode) {
+            // Set results on the group's expression
+            $this->setDiceResults($node->getExpression(), $result);
         } elseif ($node instanceof BinaryOpNode) {
             $this->setDiceResults($node->getLeft(), $result);
             $this->setDiceResults($node->getRight(), $result);
@@ -538,6 +549,9 @@ class DiceRoller
             foreach ($node->getArguments() as $argument) {
                 $this->countDiceNodes($argument, $count);
             }
+        } elseif ($node instanceof GroupNode) {
+            // Count dice inside the group
+            $this->countDiceNodes($node->getExpression(), $count);
         }
     }
 
@@ -558,11 +572,15 @@ class DiceRoller
         // Evaluate the AST to get the total
         $total = (int) $ast->evaluate();
 
+        // Handle groups if present
+        $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
+
         return new RollResult(
             expression: $expression,
             total: $total,
             diceValues: $allDiceValues,
-            comment: $expression->comment
+            comment: $expression->comment,
+            groups: $groups
         );
     }
 
@@ -626,6 +644,9 @@ class DiceRoller
             // Process left and right children
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof GroupNode) {
+            // Roll dice inside the group
+            $this->rollDiceNode($node->getExpression(), $allDiceValues);
         } elseif ($node instanceof FunctionNode) {
             // Roll dice in all arguments
             foreach ($node->getArguments() as $argument) {
@@ -654,13 +675,86 @@ class DiceRoller
         // Evaluate the AST to get the total
         $total = $ast->evaluate();
 
+        // Handle groups if present
+        $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
+
         // Return result with collected dice values
         return new RollResult(
             expression: $expression,
             total: $total,
             diceValues: $allDiceValues,
-            comment: $expression->comment
+            comment: $expression->comment,
+            groups: $groups
         );
+    }
+
+    /**
+     * Extract and evaluate all groups from the AST.
+     *
+     * @param Node $ast The full AST
+     * @param DiceExpression $expression Original expression
+     * @param array<int> $diceValues Already rolled dice values
+     * @return array<RollResult>|null Array of group results or null if no groups
+     */
+    private function extractAndEvaluateGroups(Node $ast, DiceExpression $expression, array $diceValues): ?array
+    {
+        $groups = [];
+        $this->findGroups($ast, $groups);
+
+        if (empty($groups)) {
+            return null;
+        }
+
+        $results = [];
+        $diceOffset = 0;
+
+        foreach ($groups as $groupNode) {
+            /** @var GroupNode $groupNode */
+            $groupExpression = $groupNode->getExpression();
+            $groupComment = $groupNode->getComment();
+
+            // Count how many dice this group needs
+            $diceCount = 0;
+            $this->countDiceNodes($groupExpression, $diceCount);
+
+            // Extract the dice values for this group
+            $groupDiceValues = array_slice($diceValues, $diceOffset, $diceCount);
+            $diceOffset += $diceCount;
+
+            // Evaluate the group expression to get its total
+            // Note: dice have already been rolled and their results set in the nodes
+            $groupTotal = $groupExpression->evaluate();
+
+            // Create a RollResult for this group
+            $results[] = new RollResult(
+                expression: $expression,
+                total: $groupTotal,
+                diceValues: $groupDiceValues,
+                comment: $groupComment
+            );
+        }
+
+        return $results;
+    }
+
+    /**
+     * Find all GroupNodes in the AST.
+     *
+     * @param Node $node Node to traverse
+     * @param array<GroupNode> $groups Array to collect groups
+     */
+    private function findGroups(Node $node, array &$groups): void
+    {
+        if ($node instanceof GroupNode) {
+            $groups[] = $node;
+        } elseif ($node instanceof BinaryOpNode) {
+            $this->findGroups($node->getLeft(), $groups);
+            $this->findGroups($node->getRight(), $groups);
+        } elseif ($node instanceof FunctionNode) {
+            foreach ($node->getArguments() as $argument) {
+                $this->findGroups($argument, $groups);
+            }
+        }
     }
 
 }

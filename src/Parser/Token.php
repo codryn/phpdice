@@ -15,6 +15,8 @@ class Token
     public const TYPE_OPERATOR = 'OPERATOR';
     public const TYPE_LPAREN = 'LPAREN';
     public const TYPE_RPAREN = 'RPAREN';
+    public const TYPE_LBRACE = 'LBRACE';
+    public const TYPE_RBRACE = 'RBRACE';
     public const TYPE_KEYWORD = 'KEYWORD';
     public const TYPE_FUNCTION = 'FUNCTION';
     public const TYPE_COMMA = 'COMMA';
