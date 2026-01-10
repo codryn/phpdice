@@ -158,6 +158,20 @@ class DiceExpressionParser
         // Ensure all tokens are consumed
         if (!$this->isAtEnd()) {
             $remaining = $this->peek();
+            // Check if it's a duplicate tag section
+            if ($remaining->type === Token::TYPE_TAGS) {
+                throw new ParseException(
+                    'Multiple tag sections are not allowed. Use a single tag section with comma-separated tags: [tag1, tag2, ...]',
+                    $remaining->position
+                );
+            }
+            // Check if DC keyword comes after tags (wrong order)
+            if ($remaining->type === Token::TYPE_KEYWORD && $remaining->value === 'dc' && $tags !== null) {
+                throw new ParseException(
+                    'Tags must come after DC comparison. Correct order: expression dc >= N [tags] # comment',
+                    $remaining->position
+                );
+            }
             // Check if it's a duplicate modifier keyword
             if ($remaining->type === Token::TYPE_KEYWORD) {
                 throw new \PHPDice\Exception\ValidationException(
@@ -1078,6 +1092,14 @@ class DiceExpressionParser
         $tags = null;
         if ($this->match(Token::TYPE_TAGS)) {
             $tags = $this->parseTags((string)$this->previous()->value);
+        }
+
+        // Check for duplicate tag section before parsing comment
+        if ($this->check(Token::TYPE_TAGS)) {
+            throw new ParseException(
+                'Multiple tag sections are not allowed in a group. Use a single tag section with comma-separated tags: [tag1, tag2, ...]',
+                $this->peek()->position
+            );
         }
 
         // Parse optional comment

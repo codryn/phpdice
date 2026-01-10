@@ -342,4 +342,28 @@ final class RollTagsTest extends BaseTestCase
         $this->assertNotNull($expr->tags);
         $this->assertCount(0, $expr->tags);
     }
+
+    /**
+     * Test multiple tag sections throw error.
+     */
+    public function testMultipleTagSectionsThrowError(): void
+    {
+        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectExceptionMessage('Multiple tag sections are not allowed');
+
+        $expression = '1d20 [fire] [magic]';
+        $this->phpdice->parse($expression);
+    }
+
+    /**
+     * Test multiple tag sections in group throw error.
+     */
+    public function testMultipleTagSectionsInGroupThrowError(): void
+    {
+        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectExceptionMessage('Multiple tag sections are not allowed in a group');
+
+        $expression = '{1d6 [fire] [magic]}';
+        $this->phpdice->parse($expression);
+    }
 }

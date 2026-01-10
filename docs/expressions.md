@@ -342,6 +342,83 @@ Notes:
 - Placeholders in comments are expanded to their numeric values
 - The comment is available in both the parsed `DiceExpression` and the `RollResult`
 
+## Roll Tags
+
+Add metadata tags to your rolls using square brackets `[tag1, tag2, ...]`. Tags are useful for categorizing rolls by damage type, condition, or other attributes. Tags are case-insensitive and normalized to lowercase, and can contain letters (a-z), numbers (0-9), dots (.), hyphens (-), and underscores (_).
+
+```
+expression [tag1, tag2, ...]
+expression [tag1, tag2, ...] # comment
+```
+
+### Tags on Main Expression
+
+Tags can be placed at the end of the main expression (after DC checks if present, before comments):
+
+```
+1d6+2 [magic, piercing] # roll damage
+```
+
+Examples:
+
+```1d6+2 [MAGIC, piercing, Silver]``` - Roll with tags, normalized to: `[magic, piercing, silver]`
+
+```1d20+5 dc >= 15 [saving-throw] # wisdom save``` - Tags after DC check, before comment
+
+```2d6 [fire, magic-damage, dmg.type]``` - Tags with various allowed characters
+
+### Tags on Groups
+
+Tags can also be placed on individual roll groups. Group tags are isolated and appear only in their respective group results, not in the main roll result:
+
+```
+{1d6+6 [Piercing]} + {2d6 [Fire, magic]}
+```
+
+In this example:
+- Main roll result has no tags (or keeps its own tags if specified separately)
+- First group result has tags: `[piercing]`
+- Second group result has tags: `[fire, magic]`
+
+### Main Expression and Group Tags Together
+
+Both the main expression and groups can have their own independent tags:
+
+```
+{1d6 [piercing]} + {2d6 [fire]} [slashing, magic] # total damage
+```
+
+Result:
+- Main roll result tags: `[slashing, magic]`
+- First group tags: `[piercing]`
+- Second group tags: `[fire]`
+
+### Use in code:
+
+```php
+// Roll with tags
+$expression = '1d6+2 [magic, piercing] # spell damage';
+$result = $phpdice->roll($expression);
+echo implode(', ', $result->tags); // "magic, piercing"
+
+// Groups with tags
+$expression = '{1d6 [piercing]} + {2d6 [fire]} # mixed damage';
+$result = $phpdice->roll($expression);
+echo implode(', ', $result->groups[0]->tags); // "piercing"
+echo implode(', ', $result->groups[1]->tags); // "fire"
+```
+
+### Tag Rules and Restrictions:
+
+- Tags are placed in square brackets `[...]` with comma-separated values
+- Tags are case-insensitive and normalized to lowercase
+- Allowed characters: a-z, 0-9, dot (.), hyphen (-), underscore (_)
+- Tags appear after DC checks and before comments in the expression order
+- **Only one tag section is allowed** per expression or group (multiple `[...]` sections will cause an error)
+- Group tags are isolated to their respective groups and do not appear in the main result
+- Main expression can have its own tags independently of group tags
+- Empty tag sections `[]` are valid and result in an empty tags array
+
 ## Success Rolls (DC Checks)
 
 Use 'dc' keyword before comparison operators for DC checks:
@@ -439,23 +516,29 @@ When combining multiple modifiers, they must be specified in the following order
 5. **count** (success counting)
 6. **modifiers** (addition, subtraction, etc.)
 7. **dc** (difficulty class comparison)
-8. **comment** (descriptive text starting with #)
+8. **tags** (metadata tags in square brackets [...])
+9. **comment** (descriptive text starting with #)
 
 **Important:** 
 - `advantage`, `disadvantage`, `explode`, `reroll`, and `edge` cannot be combined on the same dice roll.
 - `advantage`, `disadvantage`, `explode`, `reroll`, or `edge` must come before `keep`.
 - `auto` must come before `crit` and `glitch`
 - `count` must come after `advantage`/`disadvantage`/`explode`/`reroll`/`edge`/`keep`
-- `dc` must come before any comment
+- `dc` must come before tags and comments
+- **Tags** `[...]` must come after `dc` and before comments
+- **Only one tag section is allowed** per expression or group
 - `#` comment must be at the very end of the expression
 
 Examples of correct ordering:
 - `4d6 explode keep 3 highest` - ✓ Correct
 - `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
 - `1d20 auto 20 crit 19 glitch 1 dc >= 15` - ✓ Correct
-- `1d20 + 5 dc >= 15 # Saving throw` - ✓ Correct (comment at end)
+- `1d20 + 5 dc >= 15 [saving-throw] # Saving throw` - ✓ Correct (tags after dc, comment at end)
+- `1d6 [fire, magic] # damage` - ✓ Correct (tags before comment)
 - `4d6 keep 3 highest explode` - ✗ Incorrect (keep before explode)
 - `4d6 explode reroll <=1` - ✗ Incorrect (both explode and reroll)
+- `1d20 [tag1] [tag2]` - ✗ Incorrect (multiple tag sections)
+- `1d20 [fire] dc >= 15` - ✗ Incorrect (tags before dc)
 - `1d20 crit 19 auto 20` - ✗ Incorrect (crit before auto)
 - `1d20 # Comment dc >= 15` - ✗ Incorrect (comment before dc)
 
@@ -468,5 +551,6 @@ Notes:
 - Keep/drop must come before count to ensure the correct dice are counted.
 - The `count` keyword must be after any reroll/explode/keep mechanics to ensure correct success counting and can only be used once per expression.
 - Modifiers (addition, subtraction, etc.) must come after all dice mechanics to apply to the final roll total / number of successes.
-- The `dc` keyword must come before any comment to ensure correct DC checking with the roll total or number of successes and all modifiers.
+- The `dc` keyword must come before tags and comments to ensure correct DC checking with the roll total or number of successes and all modifiers.
+- Tags `[...]` must come after `dc` and before comments. Only one tag section is allowed per expression or group.
 - Comments (starting with `#`) must be the very last element in the expression.
