@@ -1025,7 +1025,7 @@ class DiceExpressionParser
             },
             $comment
         );
-        
+
         return $result ?? $comment;
     }
 }
