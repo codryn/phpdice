@@ -178,9 +178,9 @@ class LexerTest extends BaseTestCase
     public function testInvalidCharacter(): void
     {
         $this->expectException(\PHPDice\Exception\ParseException::class);
-        $this->expectExceptionMessage("Unexpected character '#'");
+        $this->expectExceptionMessage("Unexpected character '@'");
 
-        $lexer = new Lexer('3#6');
+        $lexer = new Lexer('3@6');
         $lexer->tokenize();
     }
 
