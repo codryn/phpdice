@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Roll Comments**: Users can now add descriptive comments to dice rolls using the `#` character. Comments support placeholder expansion and are available in both `DiceExpression` and `RollResult` objects. Examples: `1d20 + 5 # Attack roll`, `1d20 + $str$ # Strength check (+$str$)`
 - **Auto Success Mechanic**: New `auto N` keyword for automatic success/failure regardless of DC. This enables D&D/Pathfinder behavior where natural 20 is always a success. Example: `1d20 auto 20 crit 19 glitch 1 + 1 dc >= 25`
 
 ### Changed
