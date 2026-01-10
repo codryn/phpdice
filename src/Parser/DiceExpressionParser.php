@@ -1060,13 +1060,6 @@ class DiceExpressionParser
         $expr = $this->parseExpression();
 
         // Check if there's an empty expression
-        if ($expr === null) {
-            throw new ParseException(
-                'Groups must contain a non-empty expression',
-                $this->getCurrentPosition()
-            );
-        }
-
         // Parse optional comment
         $comment = null;
         if ($this->match(Token::TYPE_COMMENT)) {
