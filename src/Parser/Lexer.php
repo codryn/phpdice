@@ -87,6 +87,19 @@ class Lexer
                 continue;
             }
 
+            // Braces (for groups)
+            if ($char === '{') {
+                $tokens[] = new Token(Token::TYPE_LBRACE, '{', $this->position);
+                $this->position++;
+                continue;
+            }
+
+            if ($char === '}') {
+                $tokens[] = new Token(Token::TYPE_RBRACE, '}', $this->position);
+                $this->position++;
+                continue;
+            }
+
             // Comma (for function arguments)
             if ($char === ',') {
                 $tokens[] = new Token(Token::TYPE_COMMA, ',', $this->position);
@@ -247,7 +260,7 @@ class Lexer
     }
 
     /**
-     * Read a comment (# followed by text until end of input).
+     * Read a comment (# followed by text until end of input or closing brace).
      *
      * @return Token Comment token
      */
@@ -256,9 +269,19 @@ class Lexer
         $start = $this->position;
         $this->position++; // Skip opening #
 
-        // Read everything until end of input as the comment
-        $comment = substr($this->input, $this->position);
-        $this->position = $this->length; // Move to end of input
+        // Read until end of input or closing brace
+        $comment = '';
+        while ($this->position < $this->length) {
+            $char = $this->input[$this->position];
+            
+            // Stop at closing brace (for group comments)
+            if ($char === '}') {
+                break;
+            }
+            
+            $comment .= $char;
+            $this->position++;
+        }
 
         // Trim leading and trailing whitespace from comment
         $comment = trim($comment);

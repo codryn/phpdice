@@ -13,6 +13,7 @@ use PHPDice\Parser\AST\BinaryOpNode;
 use PHPDice\Parser\AST\DiceExpressionNode;
 use PHPDice\Parser\AST\DiceNode;
 use PHPDice\Parser\AST\FunctionNode;
+use PHPDice\Parser\AST\GroupNode;
 use PHPDice\Parser\AST\Node;
 use PHPDice\Parser\AST\NumberNode;
 
@@ -32,6 +33,8 @@ class DiceExpressionParser
     private array $variables = [];
     /** @var array<string, int> Track which variables were actually used */
     private array $usedVariables = [];
+    /** @var int Group nesting depth (0 = not in group, 1 = in group) */
+    private int $groupDepth = 0;
 
     public function __construct(
         private readonly Validator $validator = new Validator(),
@@ -52,6 +55,7 @@ class DiceExpressionParser
         // Store variables for placeholder substitution
         $this->variables = $variables;
         $this->usedVariables = [];
+        $this->groupDepth = 0; // Reset group depth for each parse
 
         // Tokenize
         $lexer = new Lexer($expression);
@@ -323,6 +327,11 @@ class DiceExpressionParser
             $expr = $this->parseExpression();
             $this->consume(Token::TYPE_RPAREN, 'Expected closing parenthesis');
             return $expr;
+        }
+
+        // Grouped expression { expression # comment }
+        if ($this->match(Token::TYPE_LBRACE)) {
+            return $this->parseGroup();
         }
 
         // Dice notation (XdY) - Check for modifiers and wrap in DiceExpressionNode if present
@@ -1027,5 +1036,48 @@ class DiceExpressionParser
         );
 
         return $result ?? $comment;
+    }
+
+    /**
+     * Parse a group expression { expression # comment }.
+     *
+     * @return GroupNode Group node
+     * @throws ParseException If group is nested or empty
+     */
+    private function parseGroup(): GroupNode
+    {
+        // Check for nested groups
+        if ($this->groupDepth > 0) {
+            throw new ParseException(
+                'Groups cannot be nested',
+                $this->getCurrentPosition()
+            );
+        }
+
+        $this->groupDepth++;
+
+        // Parse the expression inside the group
+        $expr = $this->parseExpression();
+
+        // Check if there's an empty expression
+        if ($expr === null) {
+            throw new ParseException(
+                'Groups must contain a non-empty expression',
+                $this->getCurrentPosition()
+            );
+        }
+
+        // Parse optional comment
+        $comment = null;
+        if ($this->match(Token::TYPE_COMMENT)) {
+            $comment = $this->expandPlaceholdersInComment((string)$this->previous()->value);
+        }
+
+        // Expect closing brace
+        $this->consume(Token::TYPE_RBRACE, 'Expected closing brace }');
+
+        $this->groupDepth--;
+
+        return new GroupNode($expr, $comment);
     }
 }
