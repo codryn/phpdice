@@ -297,22 +297,8 @@ class DiceRoller
             $groups = $this->extractAndEvaluateGroups($ast, $expression, $diceValues);
         }
 
-        // Tags should only be in main result if there are no groups with tags
+        // Main expression keeps its own tags (don't add group tags to main)
         $tags = $expression->tags;
-        if ($groups !== null) {
-            // Check if any group has tags
-            $hasGroupTags = false;
-            foreach ($groups as $group) {
-                if ($group->tags !== null && !empty($group->tags)) {
-                    $hasGroupTags = true;
-                    break;
-                }
-            }
-            // If groups have tags, don't include tags in main result
-            if ($hasGroupTags) {
-                $tags = null;
-            }
-        }
 
         return new RollResult(
             expression: $expression,
@@ -593,22 +579,8 @@ class DiceRoller
         // Handle groups if present
         $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
 
-        // Tags should only be in main result if there are no groups with tags
+        // Main expression keeps its own tags (don't add group tags to main)
         $tags = $expression->tags;
-        if ($groups !== null) {
-            // Check if any group has tags
-            $hasGroupTags = false;
-            foreach ($groups as $group) {
-                if ($group->tags !== null && !empty($group->tags)) {
-                    $hasGroupTags = true;
-                    break;
-                }
-            }
-            // If groups have tags, don't include tags in main result
-            if ($hasGroupTags) {
-                $tags = null;
-            }
-        }
 
         return new RollResult(
             expression: $expression,
@@ -714,22 +686,8 @@ class DiceRoller
         // Handle groups if present
         $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
 
-        // Tags should only be in main result if there are no groups with tags
+        // Main expression keeps its own tags (don't add group tags to main)
         $tags = $expression->tags;
-        if ($groups !== null) {
-            // Check if any group has tags
-            $hasGroupTags = false;
-            foreach ($groups as $group) {
-                if ($group->tags !== null && !empty($group->tags)) {
-                    $hasGroupTags = true;
-                    break;
-                }
-            }
-            // If groups have tags, don't include tags in main result
-            if ($hasGroupTags) {
-                $tags = null;
-            }
-        }
 
         // Return result with collected dice values
         return new RollResult(

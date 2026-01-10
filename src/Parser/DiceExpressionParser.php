@@ -101,12 +101,6 @@ class DiceExpressionParser
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
         }
 
-        // Parse tags if present (must come before DC and comment)
-        $tags = null;
-        if ($this->match(Token::TYPE_TAGS)) {
-            $tags = $this->parseTags((string)$this->previous()->value);
-        }
-
         // Parse comparison operator and threshold for success rolls (US8)
         // Requires 'dc' keyword before comparison (e.g., "1d20+5 dc >= 15")
         $comparisonOperator = null;
@@ -147,6 +141,12 @@ class DiceExpressionParser
                     $this->getCurrentPosition()
                 );
             }
+        }
+
+        // Parse tags if present (must come after DC and before comment)
+        $tags = null;
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
         }
 
         // Parse comment if present (must come after all other tokens)

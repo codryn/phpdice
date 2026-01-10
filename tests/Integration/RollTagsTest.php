@@ -165,14 +165,14 @@ final class RollTagsTest extends BaseTestCase
     }
 
     /**
-     * Test main result has no tags when groups have tags.
+     * Test main result has no tags when only groups have tags.
      */
-    public function testMainResultHasNoTagsWhenGroupsHaveTags(): void
+    public function testMainResultHasNoTagsWhenOnlyGroupsHaveTags(): void
     {
         $expression = '{1d6+6 [Piercing]} + {2d6 [Fire,magic]} # roll damage';
         $result = $this->phpdice->roll($expression);
 
-        // Main result should not have tags when groups have tags
+        // Main result should not have tags (no tags on main expression)
         $this->assertNull($result->tags);
         
         // But comment should still be in main result
@@ -183,6 +183,27 @@ final class RollTagsTest extends BaseTestCase
         $this->assertCount(2, $result->groups);
         $this->assertNotNull($result->groups[0]->tags);
         $this->assertNotNull($result->groups[1]->tags);
+    }
+
+    /**
+     * Test main result keeps its own tags when groups also have tags.
+     */
+    public function testMainResultKeepsTagsWhenGroupsAlsoHaveTags(): void
+    {
+        $expression = '{1d6 [Piercing]} + {2d6 [Fire]} [slashing, magic] # total damage';
+        $result = $this->phpdice->roll($expression);
+
+        // Main result should keep its own tags
+        $this->assertNotNull($result->tags);
+        $this->assertCount(2, $result->tags);
+        $this->assertSame('slashing', $result->tags[0]);
+        $this->assertSame('magic', $result->tags[1]);
+        
+        // Groups should keep their own tags
+        $this->assertNotNull($result->groups);
+        $this->assertCount(2, $result->groups);
+        $this->assertSame('piercing', $result->groups[0]->tags[0]);
+        $this->assertSame('fire', $result->groups[1]->tags[0]);
     }
 
     /**
@@ -243,7 +264,7 @@ final class RollTagsTest extends BaseTestCase
      */
     public function testTagsWithDCComparison(): void
     {
-        $expression = '1d20 + 5 [saving-throw] dc >= 15 # wisdom save';
+        $expression = '1d20 + 5 dc >= 15 [saving-throw] # wisdom save';
         $result = $this->phpdice->roll($expression);
 
         $this->assertNotNull($result->tags);
