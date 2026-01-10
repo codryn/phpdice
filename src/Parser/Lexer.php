@@ -107,16 +107,9 @@ class Lexer
                 continue;
             }
 
-            // Brackets (for tags)
+            // Brackets (for tags) - read entire tag content
             if ($char === '[') {
-                $tokens[] = new Token(Token::TYPE_LBRACKET, '[', $this->position);
-                $this->position++;
-                continue;
-            }
-
-            if ($char === ']') {
-                $tokens[] = new Token(Token::TYPE_RBRACKET, ']', $this->position);
-                $this->position++;
+                $tokens[] = $this->readTags();
                 continue;
             }
 
@@ -300,6 +293,37 @@ class Lexer
         $comment = trim($comment);
 
         return new Token(Token::TYPE_COMMENT, $comment, $start);
+    }
+
+    /**
+     * Read tags [ tag1, tag2, tag3 ].
+     * Reads the entire content between brackets as a single string.
+     *
+     * @return Token Tags token
+     * @throws ParseException If tags are not closed
+     */
+    private function readTags(): Token
+    {
+        $start = $this->position;
+        $this->position++; // Skip opening [
+
+        // Read until closing bracket
+        $content = '';
+        while ($this->position < $this->length) {
+            $char = $this->input[$this->position];
+
+            // Found closing bracket
+            if ($char === ']') {
+                $this->position++; // Consume ]
+                return new Token(Token::TYPE_TAGS, $content, $start);
+            }
+
+            $content .= $char;
+            $this->position++;
+        }
+
+        // Reached end of input without finding closing bracket
+        throw new ParseException('Unclosed tag: missing closing ]', $start);
     }
 
     /**

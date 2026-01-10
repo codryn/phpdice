@@ -101,6 +101,12 @@ class DiceExpressionParser
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
         }
 
+        // Parse tags if present (must come before DC and comment)
+        $tags = null;
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
+        }
+
         // Parse comparison operator and threshold for success rolls (US8)
         // Requires 'dc' keyword before comparison (e.g., "1d20+5 dc >= 15")
         $comparisonOperator = null;
@@ -141,12 +147,6 @@ class DiceExpressionParser
                     $this->getCurrentPosition()
                 );
             }
-        }
-
-        // Parse tags if present (must come before comment)
-        $tags = null;
-        if ($this->match(Token::TYPE_LBRACKET)) {
-            $tags = $this->parseTags();
         }
 
         // Parse comment if present (must come after all other tokens)
@@ -242,8 +242,8 @@ class DiceExpressionParser
 
         // Parse tags if present (must come before comment)
         $tags = null;
-        if ($this->match(Token::TYPE_LBRACKET)) {
-            $tags = $this->parseTags();
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
         }
 
         // Parse comment if present (must come after all other tokens)
@@ -1076,8 +1076,8 @@ class DiceExpressionParser
         // Check if there's an empty expression
         // Parse optional tags
         $tags = null;
-        if ($this->match(Token::TYPE_LBRACKET)) {
-            $tags = $this->parseTags();
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
         }
 
         // Parse optional comment
@@ -1095,67 +1095,30 @@ class DiceExpressionParser
     }
 
     /**
-     * Parse tags [ tag1, tag2, tag3 ].
+     * Parse tags from tag content string.
      * Tags are case-insensitive and can contain a-z, 0-9, ., -, _
      * Returns lowercase normalized tag array.
      *
+     * @param string $content Raw tag content (e.g., "tag1, tag2, tag3")
      * @return array<string> Array of tags
      * @throws ParseException If tag syntax is invalid
      */
-    private function parseTags(): array
+    private function parseTags(string $content): array
     {
+        if (trim($content) === '') {
+            return [];
+        }
+
+        // Split by comma
+        $rawTags = explode(',', $content);
         $tags = [];
-        $tagContent = '';
-        $start = $this->previous()->position;
 
-        // Read until closing bracket
-        while (!$this->check(Token::TYPE_RBRACKET)) {
-            if ($this->isAtEnd()) {
-                throw new ParseException(
-                    'Unclosed tag: missing closing ]',
-                    $start
-                );
-            }
-
-            $token = $this->advance();
-
-            // Collect token values to form tag content
-            if ($token->type === Token::TYPE_KEYWORD || $token->type === Token::TYPE_NUMBER) {
-                $tagContent .= (string)$token->value;
-            } elseif ($token->type === Token::TYPE_COMMA) {
-                // Process the accumulated tag
-                if ($tagContent !== '') {
-                    $tags[] = $this->normalizeTag($tagContent);
-                    $tagContent = '';
-                }
-            } elseif ($token->type === Token::TYPE_OPERATOR) {
-                // Allow - in tags
-                if ($token->value === '-') {
-                    $tagContent .= '-';
-                } else {
-                    throw new ParseException(
-                        "Invalid character '{$token->value}' in tag",
-                        $token->position
-                    );
-                }
-            } elseif ($token->type === Token::TYPE_DICE && $token->value === 'd') {
-                // Allow 'd' in tags (it's parsed as DICE token)
-                $tagContent .= 'd';
-            } else {
-                throw new ParseException(
-                    "Invalid token in tag: {$token->type}",
-                    $token->position
-                );
+        foreach ($rawTags as $rawTag) {
+            $tag = trim($rawTag);
+            if ($tag !== '') {
+                $tags[] = $this->normalizeTag($tag);
             }
         }
-
-        // Process the last tag
-        if ($tagContent !== '') {
-            $tags[] = $this->normalizeTag($tagContent);
-        }
-
-        // Consume closing bracket
-        $this->consume(Token::TYPE_RBRACKET, 'Expected closing bracket ]');
 
         return $tags;
     }
