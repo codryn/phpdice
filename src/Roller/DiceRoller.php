@@ -700,31 +700,31 @@ class DiceRoller
     {
         $groups = [];
         $this->findGroups($ast, $groups);
-        
+
         if (empty($groups)) {
             return null;
         }
 
         $results = [];
         $diceOffset = 0;
-        
+
         foreach ($groups as $groupNode) {
             /** @var GroupNode $groupNode */
             $groupExpression = $groupNode->getExpression();
             $groupComment = $groupNode->getComment();
-            
+
             // Count how many dice this group needs
             $diceCount = 0;
             $this->countDiceNodes($groupExpression, $diceCount);
-            
+
             // Extract the dice values for this group
             $groupDiceValues = array_slice($diceValues, $diceOffset, $diceCount);
             $diceOffset += $diceCount;
-            
+
             // Evaluate the group expression to get its total
             // Note: dice have already been rolled and their results set in the nodes
             $groupTotal = $groupExpression->evaluate();
-            
+
             // Create a RollResult for this group
             $results[] = new RollResult(
                 expression: $expression,
@@ -733,7 +733,7 @@ class DiceRoller
                 comment: $groupComment
             );
         }
-        
+
         return $results;
     }
 

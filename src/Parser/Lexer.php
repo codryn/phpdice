@@ -273,12 +273,12 @@ class Lexer
         $comment = '';
         while ($this->position < $this->length) {
             $char = $this->input[$this->position];
-            
+
             // Stop at closing brace (for group comments)
             if ($char === '}') {
                 break;
             }
-            
+
             $comment .= $char;
             $this->position++;
         }

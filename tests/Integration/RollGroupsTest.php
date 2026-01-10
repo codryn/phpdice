@@ -200,11 +200,11 @@ final class RollGroupsTest extends BaseTestCase
         $result = $this->phpdice->roll($expression);
 
         $this->assertNotNull($result->groups);
-        
+
         // Group 1 should be between 7 and 12 (1d6+6)
         $this->assertGreaterThanOrEqual(7, $result->groups[0]->total);
         $this->assertLessThanOrEqual(12, $result->groups[0]->total);
-        
+
         // Group 2 should be between 2 and 12 (2d6)
         $this->assertGreaterThanOrEqual(2, $result->groups[1]->total);
         $this->assertLessThanOrEqual(12, $result->groups[1]->total);
