@@ -1013,7 +1013,7 @@ class DiceExpressionParser
     private function expandPlaceholdersInComment(string $comment): string
     {
         // Replace all $variable$ placeholders with their resolved values
-        return preg_replace_callback(
+        $result = preg_replace_callback(
             '/\$([a-zA-Z0-9_.]+)\$/',
             function ($matches) {
                 $variableName = $matches[1];
@@ -1025,5 +1025,7 @@ class DiceExpressionParser
             },
             $comment
         );
+        
+        return $result ?? $comment;
     }
 }
