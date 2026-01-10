@@ -9,6 +9,11 @@ namespace PHPDice\Parser\AST;
  */
 class GroupNode extends Node
 {
+    /**
+     * @param Node $expression
+     * @param string|null $comment
+     * @param array<string>|null $tags
+     */
     public function __construct(
         private readonly Node $expression,
         private readonly ?string $comment = null,
@@ -31,6 +36,9 @@ class GroupNode extends Node
         return $this->comment;
     }
 
+    /**
+     * @return array<string>|null
+     */
     public function getTags(): ?array
     {
         return $this->tags;
