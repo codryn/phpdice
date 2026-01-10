@@ -572,11 +572,15 @@ class DiceRoller
         // Evaluate the AST to get the total
         $total = (int) $ast->evaluate();
 
+        // Handle groups if present
+        $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
+
         return new RollResult(
             expression: $expression,
             total: $total,
             diceValues: $allDiceValues,
-            comment: $expression->comment
+            comment: $expression->comment,
+            groups: $groups
         );
     }
 
@@ -640,6 +644,9 @@ class DiceRoller
             // Process left and right children
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof GroupNode) {
+            // Roll dice inside the group
+            $this->rollDiceNode($node->getExpression(), $allDiceValues);
         } elseif ($node instanceof FunctionNode) {
             // Roll dice in all arguments
             foreach ($node->getArguments() as $argument) {
@@ -668,12 +675,16 @@ class DiceRoller
         // Evaluate the AST to get the total
         $total = $ast->evaluate();
 
+        // Handle groups if present
+        $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
+
         // Return result with collected dice values
         return new RollResult(
             expression: $expression,
             total: $total,
             diceValues: $allDiceValues,
-            comment: $expression->comment
+            comment: $expression->comment,
+            groups: $groups
         );
     }
 
@@ -710,13 +721,8 @@ class DiceRoller
             $groupDiceValues = array_slice($diceValues, $diceOffset, $diceCount);
             $diceOffset += $diceCount;
             
-            // Calculate the sum of group dice
-            $diceSum = array_sum($groupDiceValues);
-            
-            // Set the dice results on the group expression
-            $this->setDiceResults($groupExpression, $diceSum);
-            
             // Evaluate the group expression to get its total
+            // Note: dice have already been rolled and their results set in the nodes
             $groupTotal = $groupExpression->evaluate();
             
             // Create a RollResult for this group
