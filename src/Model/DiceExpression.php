@@ -22,6 +22,7 @@ class DiceExpression
      * @param string|null $comparisonOperator Operator for success rolls (>=, <=, etc.)
      * @param int|null $comparisonThreshold Target number for comparisons
      * @param string|null $comment Comment string (if provided)
+     * @param array<string>|null $tags Array of tags (lowercase)
      */
     public function __construct(
         public readonly ?DiceSpecification $specification,
@@ -31,7 +32,8 @@ class DiceExpression
         public readonly ?Node $astRoot = null,
         public readonly ?string $comparisonOperator = null,
         public readonly ?int $comparisonThreshold = null,
-        public readonly ?string $comment = null
+        public readonly ?string $comment = null,
+        public readonly ?array $tags = null
     ) {
     }
 

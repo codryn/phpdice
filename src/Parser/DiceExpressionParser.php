@@ -143,6 +143,12 @@ class DiceExpressionParser
             }
         }
 
+        // Parse tags if present (must come before comment)
+        $tags = null;
+        if ($this->match(Token::TYPE_LBRACKET)) {
+            $tags = $this->parseTags();
+        }
+
         // Parse comment if present (must come after all other tokens)
         $comment = null;
         if ($this->match(Token::TYPE_COMMENT)) {
@@ -198,7 +204,8 @@ class DiceExpressionParser
             astRoot: $this->astRoot,
             comparisonOperator: $comparisonOperator,
             comparisonThreshold: $comparisonThreshold,
-            comment: $comment
+            comment: $comment,
+            tags: $tags
         );
     }
 
@@ -231,6 +238,12 @@ class DiceExpressionParser
                 );
             }
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
+        }
+
+        // Parse tags if present (must come before comment)
+        $tags = null;
+        if ($this->match(Token::TYPE_LBRACKET)) {
+            $tags = $this->parseTags();
         }
 
         // Parse comment if present (must come after all other tokens)
@@ -270,7 +283,8 @@ class DiceExpressionParser
             astRoot: $this->astRoot,
             comparisonOperator: null,
             comparisonThreshold: null,
-            comment: $comment
+            comment: $comment,
+            tags: $tags
         );
     }
 
@@ -1039,7 +1053,7 @@ class DiceExpressionParser
     }
 
     /**
-     * Parse a group expression { expression # comment }.
+     * Parse a group expression { expression [tag1, tag2] # comment }.
      *
      * @return GroupNode Group node
      * @throws ParseException If group is nested or empty
@@ -1060,6 +1074,12 @@ class DiceExpressionParser
         $expr = $this->parseExpression();
 
         // Check if there's an empty expression
+        // Parse optional tags
+        $tags = null;
+        if ($this->match(Token::TYPE_LBRACKET)) {
+            $tags = $this->parseTags();
+        }
+
         // Parse optional comment
         $comment = null;
         if ($this->match(Token::TYPE_COMMENT)) {
@@ -1071,6 +1091,95 @@ class DiceExpressionParser
 
         $this->groupDepth--;
 
-        return new GroupNode($expr, $comment);
+        return new GroupNode($expr, $comment, $tags);
+    }
+
+    /**
+     * Parse tags [ tag1, tag2, tag3 ].
+     * Tags are case-insensitive and can contain a-z, 0-9, ., -, _
+     * Returns lowercase normalized tag array.
+     *
+     * @return array<string> Array of tags
+     * @throws ParseException If tag syntax is invalid
+     */
+    private function parseTags(): array
+    {
+        $tags = [];
+        $tagContent = '';
+        $start = $this->previous()->position;
+
+        // Read until closing bracket
+        while (!$this->check(Token::TYPE_RBRACKET)) {
+            if ($this->isAtEnd()) {
+                throw new ParseException(
+                    'Unclosed tag: missing closing ]',
+                    $start
+                );
+            }
+
+            $token = $this->advance();
+
+            // Collect token values to form tag content
+            if ($token->type === Token::TYPE_KEYWORD || $token->type === Token::TYPE_NUMBER) {
+                $tagContent .= (string)$token->value;
+            } elseif ($token->type === Token::TYPE_COMMA) {
+                // Process the accumulated tag
+                if ($tagContent !== '') {
+                    $tags[] = $this->normalizeTag($tagContent);
+                    $tagContent = '';
+                }
+            } elseif ($token->type === Token::TYPE_OPERATOR) {
+                // Allow - in tags
+                if ($token->value === '-') {
+                    $tagContent .= '-';
+                } else {
+                    throw new ParseException(
+                        "Invalid character '{$token->value}' in tag",
+                        $token->position
+                    );
+                }
+            } elseif ($token->type === Token::TYPE_DICE && $token->value === 'd') {
+                // Allow 'd' in tags (it's parsed as DICE token)
+                $tagContent .= 'd';
+            } else {
+                throw new ParseException(
+                    "Invalid token in tag: {$token->type}",
+                    $token->position
+                );
+            }
+        }
+
+        // Process the last tag
+        if ($tagContent !== '') {
+            $tags[] = $this->normalizeTag($tagContent);
+        }
+
+        // Consume closing bracket
+        $this->consume(Token::TYPE_RBRACKET, 'Expected closing bracket ]');
+
+        return $tags;
+    }
+
+    /**
+     * Normalize a tag to lowercase and validate characters.
+     *
+     * @param string $tag Raw tag string
+     * @return string Normalized tag
+     * @throws ParseException If tag contains invalid characters
+     */
+    private function normalizeTag(string $tag): string
+    {
+        $tag = trim($tag);
+        $tag = strtolower($tag);
+
+        // Validate: only a-z, 0-9, ., -, _
+        if (!preg_match('/^[a-z0-9._-]+$/', $tag)) {
+            throw new ParseException(
+                "Invalid tag '{$tag}': tags can only contain a-z, 0-9, ., -, _",
+                $this->getCurrentPosition()
+            );
+        }
+
+        return $tag;
     }
 }

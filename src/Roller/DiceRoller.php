@@ -297,6 +297,23 @@ class DiceRoller
             $groups = $this->extractAndEvaluateGroups($ast, $expression, $diceValues);
         }
 
+        // Tags should only be in main result if there are no groups with tags
+        $tags = $expression->tags;
+        if ($groups !== null) {
+            // Check if any group has tags
+            $hasGroupTags = false;
+            foreach ($groups as $group) {
+                if ($group->tags !== null && !empty($group->tags)) {
+                    $hasGroupTags = true;
+                    break;
+                }
+            }
+            // If groups have tags, don't include tags in main result
+            if ($hasGroupTags) {
+                $tags = null;
+            }
+        }
+
         return new RollResult(
             expression: $expression,
             total: $total,
@@ -311,7 +328,8 @@ class DiceRoller
             explosionHistory: $explosionHistory,
             edgeHistory: $edgeHistory,
             comment: $expression->comment,
-            groups: $groups
+            groups: $groups,
+            tags: $tags
         );
     }
 
@@ -575,12 +593,30 @@ class DiceRoller
         // Handle groups if present
         $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
 
+        // Tags should only be in main result if there are no groups with tags
+        $tags = $expression->tags;
+        if ($groups !== null) {
+            // Check if any group has tags
+            $hasGroupTags = false;
+            foreach ($groups as $group) {
+                if ($group->tags !== null && !empty($group->tags)) {
+                    $hasGroupTags = true;
+                    break;
+                }
+            }
+            // If groups have tags, don't include tags in main result
+            if ($hasGroupTags) {
+                $tags = null;
+            }
+        }
+
         return new RollResult(
             expression: $expression,
             total: $total,
             diceValues: $allDiceValues,
             comment: $expression->comment,
-            groups: $groups
+            groups: $groups,
+            tags: $tags
         );
     }
 
@@ -678,13 +714,31 @@ class DiceRoller
         // Handle groups if present
         $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
 
+        // Tags should only be in main result if there are no groups with tags
+        $tags = $expression->tags;
+        if ($groups !== null) {
+            // Check if any group has tags
+            $hasGroupTags = false;
+            foreach ($groups as $group) {
+                if ($group->tags !== null && !empty($group->tags)) {
+                    $hasGroupTags = true;
+                    break;
+                }
+            }
+            // If groups have tags, don't include tags in main result
+            if ($hasGroupTags) {
+                $tags = null;
+            }
+        }
+
         // Return result with collected dice values
         return new RollResult(
             expression: $expression,
             total: $total,
             diceValues: $allDiceValues,
             comment: $expression->comment,
-            groups: $groups
+            groups: $groups,
+            tags: $tags
         );
     }
 
@@ -712,6 +766,7 @@ class DiceRoller
             /** @var GroupNode $groupNode */
             $groupExpression = $groupNode->getExpression();
             $groupComment = $groupNode->getComment();
+            $groupTags = $groupNode->getTags();
 
             // Count how many dice this group needs
             $diceCount = 0;
@@ -730,7 +785,8 @@ class DiceRoller
                 expression: $expression,
                 total: $groupTotal,
                 diceValues: $groupDiceValues,
-                comment: $groupComment
+                comment: $groupComment,
+                tags: $groupTags
             );
         }
 

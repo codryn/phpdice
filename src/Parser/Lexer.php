@@ -107,6 +107,19 @@ class Lexer
                 continue;
             }
 
+            // Brackets (for tags)
+            if ($char === '[') {
+                $tokens[] = new Token(Token::TYPE_LBRACKET, '[', $this->position);
+                $this->position++;
+                continue;
+            }
+
+            if ($char === ']') {
+                $tokens[] = new Token(Token::TYPE_RBRACKET, ']', $this->position);
+                $this->position++;
+                continue;
+            }
+
             // Comment (# followed by everything until end of input)
             if ($char === '#') {
                 $tokens[] = $this->readComment();
