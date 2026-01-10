@@ -21,6 +21,7 @@ class Token
     public const TYPE_PERCENT = 'PERCENT';
     public const TYPE_PLACEHOLDER = 'PLACEHOLDER';
     public const TYPE_COMPARISON = 'COMPARISON';
+    public const TYPE_COMMENT = 'COMMENT';
 
     /**
      * Create a new token.

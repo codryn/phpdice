@@ -139,6 +139,12 @@ class DiceExpressionParser
             }
         }
 
+        // Parse comment if present (must come after all other tokens)
+        $comment = null;
+        if ($this->match(Token::TYPE_COMMENT)) {
+            $comment = $this->expandPlaceholdersInComment((string)$this->previous()->value);
+        }
+
         // Ensure all tokens are consumed
         if (!$this->isAtEnd()) {
             $remaining = $this->peek();
@@ -187,7 +193,8 @@ class DiceExpressionParser
             originalExpression: $expression,
             astRoot: $this->astRoot,
             comparisonOperator: $comparisonOperator,
-            comparisonThreshold: $comparisonThreshold
+            comparisonThreshold: $comparisonThreshold,
+            comment: $comment
         );
     }
 
@@ -222,6 +229,12 @@ class DiceExpressionParser
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
         }
 
+        // Parse comment if present (must come after all other tokens)
+        $comment = null;
+        if ($this->match(Token::TYPE_COMMENT)) {
+            $comment = $this->expandPlaceholdersInComment((string)$this->previous()->value);
+        }
+
         // Ensure all tokens are consumed
         if (!$this->isAtEnd()) {
             $remaining = $this->peek();
@@ -252,7 +265,8 @@ class DiceExpressionParser
             originalExpression: $expression,
             astRoot: $this->astRoot,
             comparisonOperator: null,
-            comparisonThreshold: null
+            comparisonThreshold: null,
+            comment: $comment
         );
     }
 
@@ -988,5 +1002,28 @@ class DiceExpressionParser
     private function getCurrentPosition(): int
     {
         return $this->peek()->position ?? 0;
+    }
+
+    /**
+     * Expand placeholders in a comment string to their numeric values.
+     *
+     * @param string $comment Comment string with possible placeholders
+     * @return string Comment with placeholders expanded
+     */
+    private function expandPlaceholdersInComment(string $comment): string
+    {
+        // Replace all $variable$ placeholders with their resolved values
+        return preg_replace_callback(
+            '/\$([a-zA-Z0-9_.]+)\$/',
+            function ($matches) {
+                $variableName = $matches[1];
+                if (array_key_exists($variableName, $this->variables)) {
+                    return (string)$this->variables[$variableName];
+                }
+                // If variable not found, leave placeholder as-is
+                return $matches[0];
+            },
+            $comment
+        );
     }
 }

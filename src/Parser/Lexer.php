@@ -94,6 +94,12 @@ class Lexer
                 continue;
             }
 
+            // Comment (# followed by everything until end of input)
+            if ($char === '#') {
+                $tokens[] = $this->readComment();
+                continue;
+            }
+
             // Unknown character
             throw new ParseException("Unexpected character '{$char}'", $this->position);
         }
@@ -238,6 +244,26 @@ class Lexer
 
         // Reached end of input without finding closing $
         throw new ParseException('Unclosed placeholder: missing closing $', $start);
+    }
+
+    /**
+     * Read a comment (# followed by text until end of input).
+     *
+     * @return Token Comment token
+     */
+    private function readComment(): Token
+    {
+        $start = $this->position;
+        $this->position++; // Skip opening #
+
+        // Read everything until end of input as the comment
+        $comment = substr($this->input, $this->position);
+        $this->position = $this->length; // Move to end of input
+
+        // Trim leading and trailing whitespace from comment
+        $comment = trim($comment);
+
+        return new Token(Token::TYPE_COMMENT, $comment, $start);
     }
 
     /**
