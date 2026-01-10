@@ -16,7 +16,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * @covers \PHPDice\Roller\DiceRoller
  */
 #[CoversClass(PHPDice::class)]
-class RollCommentsTest extends BaseTestCase
+final class RollCommentsTest extends BaseTestCase
 {
     /**
      * Test parsing expression with basic comment.

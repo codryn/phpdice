@@ -10,6 +10,7 @@ General rules:
 - Mathematical functions supported: `floor()`, `ceil()`, `round(), abs(), min(), max()`.
 - Arethmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
 - Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `edge`, `crit`, `glitch`, `dc`.
+- Comments can be added at the end of expressions using the `#` character.
 
 ## Basic Dice Notation
 Roll X dice with Y sides:
@@ -305,6 +306,42 @@ $result = $phpdice->roll($expression, $values);
 echo $result->total; // d20 + 3 + 2
 ```
 
+## Roll Comments
+
+Add descriptive comments to your rolls using the `#` character. Comments are placed at the end of the expression and can include placeholders that will be expanded to their numeric values.
+
+```
+expression # comment text
+```
+
+Examples:
+
+```1d20 + 5 # Roll for initiative``` - Basic comment
+
+```1d20 + $ini$ # Roll for initiative (bonus $ini$)!``` - Comment with placeholder expansion
+
+```1d20 + 15 # Attack codryn/phpdice#1``` - Comment with GitHub issue reference (subsequent `#` characters are part of the comment)
+
+```1d20 + 5 # Attack codryn/phpdice#2 (-5 Penalty)``` - Comment with multiple details
+
+### Use in code:
+```php
+// Roll with comment
+$expression = '1d20 + $str$ # Strength check (+$str$)';
+$values = ['str' => 4];
+$result = $phpdice->roll($expression, $values);
+echo $result->comment; // "Strength check (+4)"
+echo $result->total; // d20 + 4
+```
+
+Notes:
+
+- Comments are separated from the expression by the `#` character
+- Leading and trailing whitespace is trimmed from the comment
+- Any subsequent `#` characters are part of the comment string
+- Placeholders in comments are expanded to their numeric values
+- The comment is available in both the parsed `DiceExpression` and the `RollResult`
+
 ## Success Rolls (DC Checks)
 
 Use 'dc' keyword before comparison operators for DC checks:
@@ -402,21 +439,25 @@ When combining multiple modifiers, they must be specified in the following order
 5. **count** (success counting)
 6. **modifiers** (addition, subtraction, etc.)
 7. **dc** (difficulty class comparison)
+8. **comment** (descriptive text starting with #)
 
 **Important:** 
 - `advantage`, `disadvantage`, `explode`, `reroll`, and `edge` cannot be combined on the same dice roll.
 - `advantage`, `disadvantage`, `explode`, `reroll`, or `edge` must come before `keep`.
 - `auto` must come before `crit` and `glitch`
 - `count` must come after `advantage`/`disadvantage`/`explode`/`reroll`/`edge`/`keep`
-- `dc` must be at the end
+- `dc` must come before any comment
+- `#` comment must be at the very end of the expression
 
 Examples of correct ordering:
 - `4d6 explode keep 3 highest` - ✓ Correct
 - `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
 - `1d20 auto 20 crit 19 glitch 1 dc >= 15` - ✓ Correct
+- `1d20 + 5 dc >= 15 # Saving throw` - ✓ Correct (comment at end)
 - `4d6 keep 3 highest explode` - ✗ Incorrect (keep before explode)
 - `4d6 explode reroll <=1` - ✗ Incorrect (both explode and reroll)
 - `1d20 crit 19 auto 20` - ✗ Incorrect (crit before auto)
+- `1d20 # Comment dc >= 15` - ✗ Incorrect (comment before dc)
 
 Notes:
 - Advantage/Disadvantage shall be the first keyword to ensure correct die selection.
@@ -427,4 +468,5 @@ Notes:
 - Keep/drop must come before count to ensure the correct dice are counted.
 - The `count` keyword must be after any reroll/explode/keep mechanics to ensure correct success counting and can only be used once per expression.
 - Modifiers (addition, subtraction, etc.) must come after all dice mechanics to apply to the final roll total / number of successes.
-- The `dc` keyword must be the last keyword in the expression to ensure correct DC checking with the roll total or number of successes and all modifiers.
+- The `dc` keyword must come before any comment to ensure correct DC checking with the roll total or number of successes and all modifiers.
+- Comments (starting with `#`) must be the very last element in the expression.
