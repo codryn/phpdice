@@ -27,6 +27,8 @@ class Token
     public const TYPE_PLACEHOLDER = 'PLACEHOLDER';
     public const TYPE_COMPARISON = 'COMPARISON';
     public const TYPE_COMMENT = 'COMMENT';
+    public const TYPE_COLON = 'COLON';
+    public const TYPE_PIPE = 'PIPE';
 
     /**
      * Create a new token.

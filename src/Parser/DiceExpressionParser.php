@@ -10,6 +10,8 @@ use Codryn\PHPDice\Model\DiceSpecification;
 use Codryn\PHPDice\Model\RollModifiers;
 use Codryn\PHPDice\Model\StatisticalCalculator;
 use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\ComparisonNode;
+use Codryn\PHPDice\Parser\AST\ConditionalNode;
 use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
@@ -59,11 +61,11 @@ class DiceExpressionParser
 
         // Tokenize
         $lexer = new Lexer($expression);
-        $this->tokens = $lexer->tokenize();
+        $this->tokens = array_values($lexer->tokenize());
         $this->current = 0;
 
         // Parse initial expression to get base AST
-        $this->astRoot = $this->parseTerm(); // Start with term to get just the dice
+        $this->astRoot = $this->parseConditional(); // Start with conditional to support if-then-else
 
         // Extract dice specification from AST
         $diceNode = $this->findDiceNode($this->astRoot);
@@ -97,7 +99,7 @@ class DiceExpressionParser
         // At this point, current token might be +, -, *, /, or EOF
         while ($this->match(Token::TYPE_OPERATOR, ['+', '-'])) {
             $operator = $this->previous()->value;
-            $right = $this->parseTerm();
+            $right = $this->parseConditional(); // Support conditionals in dice expressions
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
         }
 
@@ -242,9 +244,10 @@ class DiceExpressionParser
     private function createMathOnlyExpression(string $expression): DiceExpression
     {
         // Continue parsing the rest of the expression (arithmetic operators)
+        // astRoot already contains the parsed conditional/comparison/expression
         while ($this->match(Token::TYPE_OPERATOR, ['+', '-'])) {
             $operator = $this->previous()->value;
-            $right = $this->parseTerm();
+            $right = $this->parseConditional(); // Support conditionals in math expressions
             if ($this->astRoot === null) {
                 throw new ParseException(
                     'Invalid expression: missing left operand',
@@ -303,6 +306,69 @@ class DiceExpressionParser
     }
 
     /**
+     * Parse a conditional expression (if condition: trueBranch | falseBranch).
+     * This is the highest precedence level.
+     *
+     * @return Node Conditional or comparison node
+     */
+    private function parseConditional(): Node
+    {
+        // Check for 'if' keyword
+        if ($this->match(Token::TYPE_KEYWORD, ['if'])) {
+            // Parse the condition (comparison expression)
+            $condition = $this->parseComparison();
+
+            // Expect colon
+            if (!$this->match(Token::TYPE_COLON)) {
+                throw new ParseException(
+                    "Expected ':' after if condition",
+                    $this->getCurrentPosition()
+                );
+            }
+
+            // Parse true branch
+            $trueBranch = $this->parseComparison();
+
+            // Expect pipe
+            if (!$this->match(Token::TYPE_PIPE)) {
+                throw new ParseException(
+                    "Expected '|' to separate true and false branches in if expression",
+                    $this->getCurrentPosition()
+                );
+            }
+
+            // Parse false branch
+            $falseBranch = $this->parseComparison();
+
+            return new ConditionalNode($condition, $trueBranch, $falseBranch);
+        }
+
+        // Not a conditional, parse as comparison
+        return $this->parseComparison();
+    }
+
+    /**
+     * Parse a comparison expression (left > right, left >= right, etc.).
+     *
+     * @return Node Comparison or expression node
+     */
+    private function parseComparison(): Node
+    {
+        $node = $this->parseExpression();
+
+        // Check for comparison operators
+        if ($this->check(Token::TYPE_COMPARISON)) {
+            // Peek ahead to see if this is part of a conditional or a standalone comparison
+            // We need to handle comparisons in conditionals, not DC checks
+            $operator = (string)$this->advance()->value;
+            $right = $this->parseExpression();
+            return new ComparisonNode($node, $operator, $right);
+        }
+
+        return $node;
+    }
+
+    /**
      * Parse an expression (handles +, -).
      *
      * @return Node Expression node
@@ -352,7 +418,7 @@ class DiceExpressionParser
 
         // Parenthesized expression
         if ($this->match(Token::TYPE_LPAREN)) {
-            $expr = $this->parseExpression();
+            $expr = $this->parseConditional(); // Support conditionals in parentheses
             $this->consume(Token::TYPE_RPAREN, 'Expected closing parenthesis');
             return $expr;
         }

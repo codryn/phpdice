@@ -1,6 +1,9 @@
 # PHP Dice
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net/)
+[![PHP Version](https://img.shields.io/badge/PHP-8.1--8.5-blue.svg)](https://www.php.net/)
+[![PHPStan Level 10](https://img.shields.io/badge/PHPStan-level%2010-brightgreen.svg)](https://phpstan.org/)
+[![CI](https://github.com/codryn/phpdice/workflows/CI/badge.svg)](https://github.com/codryn/phpdice/actions)
+[![Latest Stable Version](https://poser.pugx.org/codryn/phpdice/v/stable)](https://packagist.org/packages/codryn/phpdice)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > PHP library for parsing and rolling dice expressions for tabletop RPG systems.

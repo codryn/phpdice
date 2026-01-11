@@ -8,6 +8,8 @@ use Codryn\PHPDice\Model\DiceExpression;
 use Codryn\PHPDice\Model\RollResult;
 use Codryn\PHPDice\Model\StatisticalCalculator;
 use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\ComparisonNode;
+use Codryn\PHPDice\Parser\AST\ConditionalNode;
 use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
@@ -441,15 +443,24 @@ class DiceRoller
         arsort($indexed);
 
         // Take top N
-        $keptIndices = array_slice(array_keys($indexed), 0, $count, true);
-        $discardedIndices = array_slice(array_keys($indexed), $count, null, true);
+        $sortedIndices = array_keys($indexed);
 
+        $keptList = [];
+        $discardedList = [];
         $keptValues = [];
-        foreach ($keptIndices as $index) {
-            $keptValues[] = $diceValues[$index];
+
+        $i = 0;
+        foreach ($sortedIndices as $index) {
+            if ($i < $count) {
+                $keptList[] = $index;
+                $keptValues[] = $diceValues[$index];
+            } else {
+                $discardedList[] = $index;
+            }
+            $i++;
         }
 
-        return [$keptValues, array_values($keptIndices), array_values($discardedIndices)];
+        return [$keptValues, $keptList, $discardedList];
     }
 
     /**
@@ -471,15 +482,24 @@ class DiceRoller
         asort($indexed);
 
         // Take bottom N
-        $keptIndices = array_slice(array_keys($indexed), 0, $count, true);
-        $discardedIndices = array_slice(array_keys($indexed), $count, null, true);
+        $sortedIndices = array_keys($indexed);
 
+        $keptList = [];
+        $discardedList = [];
         $keptValues = [];
-        foreach ($keptIndices as $index) {
-            $keptValues[] = $diceValues[$index];
+
+        $i = 0;
+        foreach ($sortedIndices as $index) {
+            if ($i < $count) {
+                $keptList[] = $index;
+                $keptValues[] = $diceValues[$index];
+            } else {
+                $discardedList[] = $index;
+            }
+            $i++;
         }
 
-        return [$keptValues, array_values($keptIndices), array_values($discardedIndices)];
+        return [$keptValues, $keptList, $discardedList];
     }
 
     /**
@@ -551,6 +571,14 @@ class DiceRoller
         } elseif ($node instanceof BinaryOpNode) {
             $this->countDiceNodes($node->getLeft(), $count);
             $this->countDiceNodes($node->getRight(), $count);
+        } elseif ($node instanceof ComparisonNode) {
+            $this->countDiceNodes($node->getLeft(), $count);
+            $this->countDiceNodes($node->getRight(), $count);
+        } elseif ($node instanceof ConditionalNode) {
+            // Count dice in all branches (we'll only roll one, but we need to know if there are dice)
+            $this->countDiceNodes($node->getCondition(), $count);
+            $this->countDiceNodes($node->getTrueBranch(), $count);
+            $this->countDiceNodes($node->getFalseBranch(), $count);
         } elseif ($node instanceof FunctionNode) {
             // Count dice in all arguments
             foreach ($node->getArguments() as $argument) {
@@ -655,6 +683,23 @@ class DiceRoller
             // Process left and right children
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof ComparisonNode) {
+            // Roll both sides of the comparison
+            $this->rollDiceNode($node->getLeft(), $allDiceValues);
+            $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof ConditionalNode) {
+            // Roll the condition first
+            $this->rollDiceNode($node->getCondition(), $allDiceValues);
+
+            // Evaluate condition to determine which branch to roll
+            $conditionValue = $node->getCondition()->evaluate();
+
+            // Roll the appropriate branch
+            if ($conditionValue != 0) {
+                $this->rollDiceNode($node->getTrueBranch(), $allDiceValues);
+            } else {
+                $this->rollDiceNode($node->getFalseBranch(), $allDiceValues);
+            }
         } elseif ($node instanceof GroupNode) {
             // Roll dice inside the group
             $this->rollDiceNode($node->getExpression(), $allDiceValues);

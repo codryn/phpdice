@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Codryn\PHPDice\Tests\Integration;
 
-use Codryn\PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Exception\ValidationException;
 
 /**
  * Integration tests for User Story 5a: Success Counting.
@@ -233,8 +233,8 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testInvalidOperatorThrowsException(): void
     {
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Unexpected character');
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid success operator');
 
         $this->phpdice->parse('5d6 count != 3');
     }

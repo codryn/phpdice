@@ -119,6 +119,31 @@ class Lexer
                 continue;
             }
 
+            // Colon (for conditionals)
+            if ($char === ':') {
+                $tokens[] = new Token(Token::TYPE_COLON, ':', $this->position);
+                $this->position++;
+                continue;
+            }
+
+            // Pipe (for conditional branches)
+            if ($char === '|') {
+                $tokens[] = new Token(Token::TYPE_PIPE, '|', $this->position);
+                $this->position++;
+                continue;
+            }
+
+            // Exclamation mark (for != operator)
+            if ($char === '!') {
+                if ($this->position + 1 < $this->length && $this->input[$this->position + 1] === '=') {
+                    $tokens[] = new Token(Token::TYPE_COMPARISON, '!=', $this->position);
+                    $this->position += 2;
+                    continue;
+                }
+                // Standalone ! is not supported
+                throw new ParseException("Unexpected character '!'", $this->position);
+            }
+
             // Unknown character
             throw new ParseException("Unexpected character '{$char}'", $this->position);
         }
@@ -217,8 +242,8 @@ class Lexer
             return new Token(Token::TYPE_FUNCTION, $lower, $start);
         }
 
-        // Check for advantage/disadvantage/success/reroll/explode/edge/critical/dc keywords
-        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'edge', 'crit', 'glitch', 'dc', 'count', 'auto', 'even', 'odd'];
+        // Check for advantage/disadvantage/success/reroll/explode/edge/critical/dc/if keywords
+        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'edge', 'crit', 'glitch', 'dc', 'count', 'auto', 'even', 'odd', 'if'];
         if (in_array($lower, $keywords, true)) {
             return new Token(Token::TYPE_KEYWORD, $lower, $start);
         }

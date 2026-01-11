@@ -96,6 +96,42 @@ Examples:
 
 ```max(2d10, 3d6, 2d8)``` - Min/max functions can take multiple arguments
 
+## Boolean Algebra (Conditional Expressions)
+
+Roll expressions can model decisions using conditional expressions.
+
+A boolean expression contains a condition and true/false branches in the following format:
+```
+if condition: trueBranch | falseBranch
+```
+
+The condition is a comparison expression using one of the comparison operators: `<`, `<=`, `>`, `>=`, `==`, `!=`.
+
+The condition can compare any two expressions, including:
+- Math expressions (`if 5 > 3: ...`)
+- Placeholders (`if $crit$ > 0: ...`)
+- Complete dice rolls (`if 1d6 > 3: ...`)
+
+The final result of the roll will be the branch used (true or false).
+
+Examples:
+
+```if $crit$ > 0: 2d6+5 | 1d6+2``` - If `$crit$` is greater than 0, roll 2d6+5; otherwise roll 1d6+2
+
+```1d20 + (if $rank$ >= 10: 4 | 2)``` - Roll skill check with variable feat bonus: 1d20 +4 if rank >= 10, otherwise 1d20 +2
+
+```if 1d6 > 3: 1d20 + 5 | 1d12 - 1``` - Roll 1d6; on 4-6 roll 1d20+5, on 1-3 roll 1d12-1
+
+```if $value$ == 5: 100 | 0``` - Return 100 if value equals 5, otherwise 0
+
+```if $status$ != 0: 2d6 | 1d4``` - Roll 2d6 if status is not zero, otherwise roll 1d4
+
+Notes:
+- The condition must evaluate to a comparison expression that results in true (1) or false (0)
+- Only the branch corresponding to the condition result is evaluated (lazy evaluation)
+- Conditionals can be nested and combined with other expressions
+- The `if` expression follows standard operator precedence and can be used in parentheses
+
 ## Math only expressions
 
 You can use mathematical expressions without dice rolls:
@@ -522,17 +558,19 @@ Examples:
 
 When combining multiple modifiers, they must be specified in the following order:
 
-1. **advantage** or **disadvantage** or **reroll** or **explode** or **edge** (cannot combine these keywords on the same dice)
-2. **keep** or **drop** (highest/lowest)
-3. **auto** (automatic success/failure)
-4. **crit** and/or **glitch** (critical success/failure)
-5. **count** (success counting)
-6. **modifiers** (addition, subtraction, etc.)
-7. **dc** (difficulty class comparison)
-8. **tags** (metadata tags in square brackets [...])
-9. **comment** (descriptive text starting with #)
+1. **if** (conditional expression - can wrap entire expressions)
+2. **advantage** or **disadvantage** or **reroll** or **explode** or **edge** (cannot combine these keywords on the same dice)
+3. **keep** or **drop** (highest/lowest)
+4. **auto** (automatic success/failure)
+5. **crit** and/or **glitch** (critical success/failure)
+6. **count** (success counting)
+7. **modifiers** (addition, subtraction, etc.)
+8. **dc** (difficulty class comparison)
+9. **tags** (metadata tags in square brackets [...])
+10. **comment** (descriptive text starting with #)
 
 **Important:** 
+- `if` expressions can wrap entire expressions or be used in sub-expressions with parentheses
 - `advantage`, `disadvantage`, `explode`, `reroll`, and `edge` cannot be combined on the same dice roll.
 - `advantage`, `disadvantage`, `explode`, `reroll`, or `edge` must come before `keep`.
 - `auto` must come before `crit` and `glitch`
@@ -543,10 +581,13 @@ When combining multiple modifiers, they must be specified in the following order
 - `#` comment must be at the very end of the expression
 
 Examples of correct ordering:
+- `if $crit$ > 0: 2d6+5 | 1d6+2` - ✓ Correct (conditional wrapping dice rolls)
+- `1d20 + (if $rank$ >= 10: 4 | 2)` - ✓ Correct (conditional in arithmetic)
 - `4d6 explode keep 3 highest` - ✓ Correct
 - `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
 - `1d20 auto 20 crit 19 glitch 1 dc >= 15` - ✓ Correct
 - `1d20 + 5 dc >= 15 [saving-throw] # Saving throw` - ✓ Correct (tags after dc, comment at end)
+- `if 1d6 > 3: 1d20 + 5 | 1d12 - 1` - ✓ Correct (dice in condition and branches)
 - `1d6 [fire, magic] # damage` - ✓ Correct (tags before comment)
 - `4d6 keep 3 highest explode` - ✗ Incorrect (keep before explode)
 - `4d6 explode reroll <=1` - ✗ Incorrect (both explode and reroll)
@@ -556,6 +597,7 @@ Examples of correct ordering:
 - `1d20 # Comment dc >= 15` - ✗ Incorrect (comment before dc)
 
 Notes:
+- Conditional expressions (`if`) have the highest precedence and can wrap entire expressions or be nested.
 - Advantage/Disadvantage shall be the first keyword to ensure correct die selection.
 - Reroll/explode/edge must come before keep/drop to ensure all dice are considered for rerolls/explosions/rule of 6.
 - Auto must come before crit/glitch to establish automatic success behavior first.
