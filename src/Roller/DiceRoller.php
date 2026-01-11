@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Roller;
+namespace Codryn\PHPDice\Roller;
 
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\RollResult;
-use PHPDice\Model\StatisticalCalculator;
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\DiceExpressionNode;
-use PHPDice\Parser\AST\DiceNode;
-use PHPDice\Parser\AST\FunctionNode;
-use PHPDice\Parser\AST\GroupNode;
-use PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\RollResult;
+use Codryn\PHPDice\Model\StatisticalCalculator;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
+use Codryn\PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\Node;
 
 /**
  * Rolls dice based on parsed expressions.

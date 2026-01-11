@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Exception\ValidationException;
 
 /**
  * Integration tests for critical success and critical failure detection (US9).
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Parser\Lexer
- * @covers \PHPDice\Parser\Validator
- * @covers \PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Parser\Lexer
+ * @covers \Codryn\PHPDice\Parser\Validator
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
  */
 final class CriticalTest extends BaseTestCaseMock
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
 /**
  * Represents a token in the dice expression.

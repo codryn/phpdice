@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Roller;
+namespace Codryn\PHPDice\Tests\Unit\Roller;
 
-use PHPDice\Roller\RandomNumberGenerator;
+use Codryn\PHPDice\Roller\RandomNumberGenerator;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for RandomNumberGenerator.
  *
- * @covers \PHPDice\Roller\RandomNumberGenerator
+ * @covers \Codryn\PHPDice\Roller\RandomNumberGenerator
  */
 class RandomNumberGeneratorTest extends TestCase
 {

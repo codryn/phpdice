@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
-use PHPDice\Exception\ParseException;
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\RollModifiers;
-use PHPDice\Model\StatisticalCalculator;
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\DiceExpressionNode;
-use PHPDice\Parser\AST\DiceNode;
-use PHPDice\Parser\AST\FunctionNode;
-use PHPDice\Parser\AST\GroupNode;
-use PHPDice\Parser\AST\Node;
-use PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Model\StatisticalCalculator;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
+use Codryn\PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\NumberNode;
 
 /**
  * Parses dice expressions into structured DiceExpression objects.

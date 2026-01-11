@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Exception\ValidationException;
 
 /**
  * Integration tests for Shadowrun Edge (Rule of Six) mechanic.
@@ -13,11 +13,11 @@ use PHPDice\Exception\ValidationException;
  * trigger additional dice to be added to the pool (not summed).
  * This is different from explode (which sums) and reroll (which replaces).
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Roller\DiceRoller
- * @covers \PHPDice\Model\DiceExpression
- * @covers \PHPDice\Model\RollResult
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\Model\DiceExpression
+ * @covers \Codryn\PHPDice\Model\RollResult
  */
 class EdgeDiceTest extends BaseTestCaseMock
 {

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Parser;
+namespace Codryn\PHPDice\Tests\Unit\Parser;
 
-use PHPDice\Parser\Lexer;
-use PHPDice\Parser\Token;
-use PHPDice\Tests\Unit\BaseTestCase;
+use Codryn\PHPDice\Parser\Lexer;
+use Codryn\PHPDice\Parser\Token;
+use Codryn\PHPDice\Tests\Unit\BaseTestCase;
 
 /**
  * Unit tests for Lexer.
  *
- * @covers \PHPDice\Parser\Lexer
- * @covers \PHPDice\Parser\Token
+ * @covers \Codryn\PHPDice\Parser\Lexer
+ * @covers \Codryn\PHPDice\Parser\Token
  */
 class LexerTest extends BaseTestCase
 {

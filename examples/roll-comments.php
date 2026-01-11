@@ -9,7 +9,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use PHPDice\PHPDice;
+use Codryn\PHPDice\PHPDice;
 
 $dice = new PHPDice();
 

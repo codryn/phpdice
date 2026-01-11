@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
 /**
  * Integration tests for counting even/odd rolls.
  *
  * Tests dice pool mechanics where dice are counted if they are even or odd.
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Roller\DiceRoller
- * @covers \PHPDice\Model\DiceExpression
- * @covers \PHPDice\Model\RollResult
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\Model\DiceExpression
+ * @covers \Codryn\PHPDice\Model\RollResult
  */
 class EvenOddCountingTest extends BaseTestCase
 {

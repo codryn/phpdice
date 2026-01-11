@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Exception;
+namespace Codryn\PHPDice\Exception;
 
 use Exception;
 

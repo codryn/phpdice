@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Model;
+namespace Codryn\PHPDice\Tests\Unit\Model;
 
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\DiceType;
-use PHPDice\Model\RollModifiers;
-use PHPDice\Model\StatisticalData;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\DiceType;
+use Codryn\PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Model\StatisticalData;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for DiceExpression.
  *
- * @covers \PHPDice\Model\DiceExpression
+ * @covers \Codryn\PHPDice\Model\DiceExpression
  */
 class DiceExpressionTest extends TestCase
 {

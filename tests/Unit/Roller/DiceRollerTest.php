@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Roller;
+namespace Codryn\PHPDice\Tests\Unit\Roller;
 
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\RollModifiers;
-use PHPDice\Model\StatisticalData;
-use PHPDice\Roller\DiceRoller;
-use PHPDice\Roller\RandomNumberGenerator;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Model\StatisticalData;
+use Codryn\PHPDice\Roller\DiceRoller;
+use Codryn\PHPDice\Roller\RandomNumberGenerator;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for DiceRoller with mocked RNG
  * Tests edge cases: lowest/highest rolls, rerolls, explosions, keep mechanics.
  *
- * @covers \PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
  */
 class DiceRollerTest extends TestCase
 {

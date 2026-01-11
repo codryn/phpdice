@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\PHPDice;
-use PHPDice\Roller\RandomNumberGenerator;
+use Codryn\PHPDice\PHPDice;
+use Codryn\PHPDice\Roller\RandomNumberGenerator;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 

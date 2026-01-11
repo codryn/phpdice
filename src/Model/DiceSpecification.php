@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
 /**
  * Represents the basic dice pool specification (e.g., 3d6).

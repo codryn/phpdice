@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser\AST;
+namespace Codryn\PHPDice\Parser\AST;
 
 /**
  * Base class for AST nodes.

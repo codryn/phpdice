@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Model;
+namespace Codryn\PHPDice\Tests\Unit\Model;
 
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\DiceType;
-use PHPDice\Model\RollModifiers;
-use PHPDice\Model\StatisticalCalculator;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\DiceType;
+use Codryn\PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Model\StatisticalCalculator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -16,10 +16,10 @@ use PHPUnit\Framework\TestCase;
  * Tests that statistical calculations are correct for all dice types
  * and mechanics without parsing expressions.
  *
- * @covers \PHPDice\Model\StatisticalCalculator
- * @covers \PHPDice\Model\StatisticalData
- * @covers \PHPDice\Model\DiceSpecification
- * @covers \PHPDice\Model\RollModifiers
+ * @covers \Codryn\PHPDice\Model\StatisticalCalculator
+ * @covers \Codryn\PHPDice\Model\StatisticalData
+ * @covers \Codryn\PHPDice\Model\DiceSpecification
+ * @covers \Codryn\PHPDice\Model\RollModifiers
  */
 class StatisticalCalculatorTest extends TestCase
 {

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Exception;
+namespace Codryn\PHPDice\Tests\Unit\Exception;
 
-use PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Exception\ParseException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for ParseException.
  *
- * @covers \PHPDice\Exception\ParseException
+ * @covers \Codryn\PHPDice\Exception\ParseException
  */
 class ParseExceptionTest extends TestCase
 {

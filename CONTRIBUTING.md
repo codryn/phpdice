@@ -172,7 +172,7 @@ PHPDice strictly adheres to:
 
    declare(strict_types=1);  // REQUIRED
 
-   namespace PHPDice\Model;
+   namespace Codryn\PHPDice\Model;
 
    // GOOD: Full type declarations
    public function roll(string $expression, array $variables = []): RollResult
@@ -266,10 +266,10 @@ tests/
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Parser;
+namespace Codryn\PHPDice\Tests\Unit\Parser;
 
 use PHPUnit\Framework\TestCase;
-use PHPDice\Parser\DiceExpressionParser;
+use Codryn\PHPDice\Parser\DiceExpressionParser;
 
 final class DiceExpressionParserTest extends TestCase
 {

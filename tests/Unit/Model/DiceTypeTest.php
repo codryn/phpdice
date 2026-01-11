@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Model;
+namespace Codryn\PHPDice\Tests\Unit\Model;
 
-use PHPDice\Model\DiceType;
+use Codryn\PHPDice\Model\DiceType;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for DiceType enum.
  *
- * @covers \PHPDice\Model\DiceType
+ * @covers \Codryn\PHPDice\Model\DiceType
  */
 class DiceTypeTest extends TestCase
 {

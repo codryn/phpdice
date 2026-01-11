@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser\AST;
+namespace Codryn\PHPDice\Parser\AST;
 
-use PHPDice\Model\DiceType;
+use Codryn\PHPDice\Model\DiceType;
 
 /**
  * Represents a dice roll node in the AST.

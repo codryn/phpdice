@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Model;
+namespace Codryn\PHPDice\Tests\Unit\Model;
 
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\DiceType;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\DiceType;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for DiceSpecification.
  *
- * @covers \PHPDice\Model\DiceSpecification
+ * @covers \Codryn\PHPDice\Model\DiceSpecification
  */
 class DiceSpecificationTest extends TestCase
 {

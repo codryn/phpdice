@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
 /**
  * Represents the complete result of a dice roll.

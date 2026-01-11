@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
-use PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\Node;
 
 /**
  * Represents a fully parsed and validated dice expression ready for rolling.

@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ValidationException;
-use PHPDice\PHPDice;
-use PHPDice\Roller\RandomNumberGenerator;
+use Codryn\PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\PHPDice;
+use Codryn\PHPDice\Roller\RandomNumberGenerator;
 
 /**
  * Integration tests for reroll mechanics (US5).
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
  */
 class RerollTest extends BaseTestCaseMock
 {

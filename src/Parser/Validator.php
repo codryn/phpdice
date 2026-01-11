@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
-use PHPDice\Exception\ValidationException;
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\RollModifiers;
 
 /**
  * Validates dice expressions and their components.

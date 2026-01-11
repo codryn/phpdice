@@ -35,7 +35,7 @@ composer require codryn/phpdice
 <?php
 require 'vendor/autoload.php';
 
-use PHPDice\PHPDice;
+use Codryn\PHPDice\PHPDice;
 
 // Create instance
 $dice = new PHPDice();

@@ -20,12 +20,12 @@
     },
     "autoload": {
         "psr-4": {
-            "PHPDice\\": "src/"
+            "Codryn\\PHPDice\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PHPDice\\Tests\\": "tests/"
+            "Codryn\\PHPDice\\Tests\\": "tests/"
         }
     },
     "scripts": {

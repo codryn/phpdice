@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PHPDice;
+namespace Codryn\PHPDice;
 
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\RollResult;
-use PHPDice\Parser\DiceExpressionParser;
-use PHPDice\Roller\DiceRoller;
-use PHPDice\Roller\RandomNumberGenerator;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\RollResult;
+use Codryn\PHPDice\Parser\DiceExpressionParser;
+use Codryn\PHPDice\Roller\DiceRoller;
+use Codryn\PHPDice\Roller\RandomNumberGenerator;
 
 /**
  * Main facade for PHPDice library.
