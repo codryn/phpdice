@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
 
@@ -25,7 +23,7 @@ jobs:
       with:
         php-version: ${{ matrix.php-version }}
         coverage: xdebug
-        extensions: mbstring, xml, ctype, json
+        extensions: ctype
         tools: composer:v2
       
     - name: Validate composer.json

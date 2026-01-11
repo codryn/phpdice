@@ -286,7 +286,7 @@ All tasks include:
 1. **Parser complexity**: Start with simple recursive descent; refactor if needed
 2. **Statistical accuracy**: Unit tests with known probability values; 3 decimal precision verification
 3. **Performance**: Benchmark early in P1; optimize if targets missed
-4. **Compatibility**: CI pipeline tests PHP 8.1, 8.2, 8.3
+4. **Compatibility**: CI pipeline tests PHP 8.1, 8.2, 8.3, 8.4, 8.5
 
 ---
 
