@@ -195,6 +195,11 @@ class Lexer
             return new Token(Token::TYPE_DICE, 'dF', $start);
         }
 
+        // Check for dC or C (coin flip dice)
+        if ($lower === 'dc' || $lower === 'c') {
+            return new Token(Token::TYPE_DICE, 'C', $start);
+        }
+
         // Check if it's 'd' for dice notation (might be d%)
         if ($lower === 'd') {
             // Check for d% (percentile dice)

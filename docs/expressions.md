@@ -4,7 +4,7 @@ The PHPDice library supports a wide range of dice expressions commonly used in t
 
 General rules:
 - Dice expressions can include basic dice rolls, arithmetic operations, functions, and special mechanics.
-- Supported dice types: standard (d4, d6, d8, d10, d12, d20, d%), FATE dice (dF).
+- Supported dice types: standard (d4, d6, d8, d10, d12, d20, d%), FATE dice (dF), coin flip dice (C).
 - Expressions can contain space characters for readability.
 - Parentheses can be used to group sub-expressions.
 - Mathematical functions supported: `floor()`, `ceil()`, `round(), abs(), min(), max()`.
@@ -280,6 +280,7 @@ Use special dice types:
 ```
 XdF
 d%
+XC
 ```
 
 Examples:
@@ -287,6 +288,12 @@ Examples:
 ```2dF``` - Roll two FATE dice (values -1, 0, +1)
 
 ```d%``` - Roll one percentile die (1-100)
+
+```1C``` - Roll one coin flip (values 0 or 1, representing tails/heads)
+
+```3C``` - Roll three coin flips (total 0 to 3)
+
+**Note**: Coin dice work exactly as `1C` equivalent to `1d2` but return 0 or 1 instead of 1 or 2. The interpretation of heads vs tails is done by the caller.
 
 ## Placeholders/Variables
 
