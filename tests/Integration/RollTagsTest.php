@@ -132,7 +132,7 @@ final class RollTagsTest extends BaseTestCase
 
         $this->assertNotNull($result->groups);
         $this->assertCount(1, $result->groups);
-        
+
         $group = $result->groups[0];
         $this->assertNotNull($group->tags);
         $this->assertCount(1, $group->tags);
@@ -149,13 +149,13 @@ final class RollTagsTest extends BaseTestCase
 
         $this->assertNotNull($result->groups);
         $this->assertCount(2, $result->groups);
-        
+
         // First group
         $group1 = $result->groups[0];
         $this->assertNotNull($group1->tags);
         $this->assertCount(1, $group1->tags);
         $this->assertSame('piercing', $group1->tags[0]);
-        
+
         // Second group
         $group2 = $result->groups[1];
         $this->assertNotNull($group2->tags);
@@ -174,10 +174,10 @@ final class RollTagsTest extends BaseTestCase
 
         // Main result should not have tags (no tags on main expression)
         $this->assertNull($result->tags);
-        
+
         // But comment should still be in main result
         $this->assertSame('roll damage', $result->comment);
-        
+
         // Groups should have tags
         $this->assertNotNull($result->groups);
         $this->assertCount(2, $result->groups);
@@ -198,7 +198,7 @@ final class RollTagsTest extends BaseTestCase
         $this->assertCount(2, $result->tags);
         $this->assertSame('slashing', $result->tags[0]);
         $this->assertSame('magic', $result->tags[1]);
-        
+
         // Groups should keep their own tags
         $this->assertNotNull($result->groups);
         $this->assertCount(2, $result->groups);
@@ -216,7 +216,7 @@ final class RollTagsTest extends BaseTestCase
 
         $this->assertNotNull($result->groups);
         $this->assertCount(1, $result->groups);
-        
+
         $group = $result->groups[0];
         $this->assertNotNull($group->tags);
         $this->assertSame('piercing', $group->tags[0]);
