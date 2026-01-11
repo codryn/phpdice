@@ -493,6 +493,7 @@ class DiceRoller
     {
         return match ($type) {
             \PHPDice\Model\DiceType::FUDGE => $rawValue - 2, // Convert 1,2,3 to -1,0,+1
+            \PHPDice\Model\DiceType::COIN => $rawValue - 1, // Convert 1,2 to 0,1
             \PHPDice\Model\DiceType::STANDARD, \PHPDice\Model\DiceType::PERCENTILE => $rawValue,
         };
     }

@@ -376,6 +376,9 @@ class DiceExpressionParser
             } elseif ($diceValue === 'd%') {
                 // Percentile dice: count is specified, sides is always 100
                 $diceNode = new DiceNode($count, 100, \PHPDice\Model\DiceType::PERCENTILE);
+            } elseif ($diceValue === 'C') {
+                // Coin dice: count is specified, sides is always 2 (representing 0, 1)
+                $diceNode = new DiceNode($count, 2, \PHPDice\Model\DiceType::COIN);
             } else {
                 // Standard dice: get the sides
                 $sides = $this->consumeNumber();
@@ -398,6 +401,9 @@ class DiceExpressionParser
             } elseif ($diceValue === 'dF') {
                 $this->advance(); // Consume dF
                 $diceNode = new DiceNode(1, 3, \PHPDice\Model\DiceType::FUDGE);
+            } elseif ($diceValue === 'C') {
+                $this->advance(); // Consume C
+                $diceNode = new DiceNode(1, 2, \PHPDice\Model\DiceType::COIN);
             }
 
             // Check if modifiers follow (for use in function arguments)

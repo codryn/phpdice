@@ -122,6 +122,11 @@ class StatisticalCalculator
             $minValue = -1;
             $maxValue = 1;
             $totalValues = 3;
+        } elseif ($spec->type === DiceType::COIN) {
+            // Coin dice have values: 0, 1
+            $minValue = 0;
+            $maxValue = 1;
+            $totalValues = 2;
         } else {
             // Standard and percentile dice: 1 to sides
             $minValue = 1;
@@ -185,6 +190,24 @@ class StatisticalCalculator
 
             // Variance for fudge dice: E[X^2] - E[X]^2 = ((-1)^2 + 0^2 + 1^2)/3 - 0 = 2/3
             $variancePerDie = 2.0 / 3.0;
+            $variance = $spec->count * $variancePerDie;
+            $standardDeviation = sqrt($variance);
+
+            return new StatisticalData($minimum, $maximum, round($expected, 3), round($variance, 3), round($standardDeviation, 3));
+        }
+
+        // Handle coin dice (C) - values are 0, 1
+        if ($spec->type === DiceType::COIN) {
+            $minPerDie = 0;
+            $maxPerDie = 1;
+            $expectedPerDie = 0.5; // Equal probability of 0, 1
+
+            $minimum = $spec->count * $minPerDie;
+            $maximum = $spec->count * $maxPerDie;
+            $expected = $spec->count * $expectedPerDie;
+
+            // Variance for coin flip: E[X^2] - E[X]^2 = (0^2 + 1^2)/2 - 0.5^2 = 0.5 - 0.25 = 0.25
+            $variancePerDie = 0.25;
             $variance = $spec->count * $variancePerDie;
             $standardDeviation = sqrt($variance);
 
@@ -610,6 +633,12 @@ class StatisticalCalculator
                 $maxPerDie = 1;
                 $expectedPerDie = 0;
                 $variancePerDie = 2.0 / 3.0;
+            } elseif ($node->getType() === DiceType::COIN) {
+                // Coin dice have values: 0, 1
+                $minPerDie = 0;
+                $maxPerDie = 1;
+                $expectedPerDie = 0.5;
+                $variancePerDie = 0.25; // (0^2 + 1^2)/2 - 0.5^2 = 0.5 - 0.25 = 0.25
             } else {
                 // Standard and percentile dice
                 $minPerDie = 1;
