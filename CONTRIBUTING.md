@@ -28,7 +28,7 @@ This project follows a simple code of conduct:
 
 ### Prerequisites
 
-- **PHP 8.0+** (strict requirement)
+- **PHP 8.1+** (strict requirement)
 - **Composer** for dependency management
 - **Git** for version control
 - Recommended: PHPStorm or VS Code with PHP extensions

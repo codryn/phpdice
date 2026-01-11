@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PHPDice Facade**: Simple, intuitive API - `$dice->roll("3d6+5")`
 - **Immutable Data Models**: Thread-safe, predictable behavior
 - **Rich Result Objects**: Complete roll information with history tracking
-- **Type Safety**: Full PHP 8.0+ type declarations with strict mode
+- **Type Safety**: Full PHP 8.1+ type declarations with strict mode
 - **Comprehensive Error Handling**: Clear, actionable error messages
 - **Zero Dependencies**: No external packages required (except dev dependencies)
 
@@ -108,7 +108,7 @@ This release officially supports mechanics from:
 
 ### Technical Details
 
-- **Minimum PHP Version**: 8.0.0
+- **Minimum PHP Version**: 8.1
 - **Architecture**: Clean separation of parsing, rolling, and statistics
 - **Performance**: Optimized for repeated rolls with cached parsing
 - **Security**: Cryptographically secure RNG, input validation, infinite loop protection

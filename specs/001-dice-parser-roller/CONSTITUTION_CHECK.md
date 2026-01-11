@@ -18,7 +18,7 @@ This document validates that the PHPDice library meets all 8 constitution princi
 - ✅ Valid `composer.json` with complete metadata
   - Package name: `marcowuelser/phpdice`
   - Description: "A comprehensive PHP library for parsing and rolling dice expressions"
-  - PHP version: `^8.0`
+  - PHP version: `^8.1`
   - PSR-4 autoloading: `"PHPDice\\": "src/"`
 - ✅ Semantic versioning: v1.0.0 planned
 - ✅ All dependencies properly declared (dev-only: phpunit, phpstan, php-cs-fixer)
