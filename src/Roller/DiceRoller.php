@@ -297,6 +297,9 @@ class DiceRoller
             $groups = $this->extractAndEvaluateGroups($ast, $expression, $diceValues);
         }
 
+        // Main expression keeps its own tags (don't add group tags to main)
+        $tags = $expression->tags;
+
         return new RollResult(
             expression: $expression,
             total: $total,
@@ -311,7 +314,8 @@ class DiceRoller
             explosionHistory: $explosionHistory,
             edgeHistory: $edgeHistory,
             comment: $expression->comment,
-            groups: $groups
+            groups: $groups,
+            tags: $tags
         );
     }
 
@@ -575,12 +579,16 @@ class DiceRoller
         // Handle groups if present
         $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
 
+        // Main expression keeps its own tags (don't add group tags to main)
+        $tags = $expression->tags;
+
         return new RollResult(
             expression: $expression,
             total: $total,
             diceValues: $allDiceValues,
             comment: $expression->comment,
-            groups: $groups
+            groups: $groups,
+            tags: $tags
         );
     }
 
@@ -678,13 +686,17 @@ class DiceRoller
         // Handle groups if present
         $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
 
+        // Main expression keeps its own tags (don't add group tags to main)
+        $tags = $expression->tags;
+
         // Return result with collected dice values
         return new RollResult(
             expression: $expression,
             total: $total,
             diceValues: $allDiceValues,
             comment: $expression->comment,
-            groups: $groups
+            groups: $groups,
+            tags: $tags
         );
     }
 
@@ -712,6 +724,7 @@ class DiceRoller
             /** @var GroupNode $groupNode */
             $groupExpression = $groupNode->getExpression();
             $groupComment = $groupNode->getComment();
+            $groupTags = $groupNode->getTags();
 
             // Count how many dice this group needs
             $diceCount = 0;
@@ -730,7 +743,8 @@ class DiceRoller
                 expression: $expression,
                 total: $groupTotal,
                 diceValues: $groupDiceValues,
-                comment: $groupComment
+                comment: $groupComment,
+                tags: $groupTags
             );
         }
 

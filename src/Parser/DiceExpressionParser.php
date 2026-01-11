@@ -143,6 +143,12 @@ class DiceExpressionParser
             }
         }
 
+        // Parse tags if present (must come after DC and before comment)
+        $tags = null;
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
+        }
+
         // Parse comment if present (must come after all other tokens)
         $comment = null;
         if ($this->match(Token::TYPE_COMMENT)) {
@@ -152,6 +158,20 @@ class DiceExpressionParser
         // Ensure all tokens are consumed
         if (!$this->isAtEnd()) {
             $remaining = $this->peek();
+            // Check if it's a duplicate tag section
+            if ($remaining->type === Token::TYPE_TAGS) {
+                throw new ParseException(
+                    'Multiple tag sections are not allowed. Use a single tag section with comma-separated tags: [tag1, tag2, ...]',
+                    $remaining->position
+                );
+            }
+            // Check if DC keyword comes after tags (wrong order)
+            if ($remaining->type === Token::TYPE_KEYWORD && $remaining->value === 'dc' && $tags !== null) {
+                throw new ParseException(
+                    'Tags must come after DC comparison. Correct order: expression dc >= N [tags] # comment',
+                    $remaining->position
+                );
+            }
             // Check if it's a duplicate modifier keyword
             if ($remaining->type === Token::TYPE_KEYWORD) {
                 throw new \PHPDice\Exception\ValidationException(
@@ -198,7 +218,8 @@ class DiceExpressionParser
             astRoot: $this->astRoot,
             comparisonOperator: $comparisonOperator,
             comparisonThreshold: $comparisonThreshold,
-            comment: $comment
+            comment: $comment,
+            tags: $tags
         );
     }
 
@@ -231,6 +252,12 @@ class DiceExpressionParser
                 );
             }
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
+        }
+
+        // Parse tags if present (must come before comment)
+        $tags = null;
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
         }
 
         // Parse comment if present (must come after all other tokens)
@@ -270,7 +297,8 @@ class DiceExpressionParser
             astRoot: $this->astRoot,
             comparisonOperator: null,
             comparisonThreshold: null,
-            comment: $comment
+            comment: $comment,
+            tags: $tags
         );
     }
 
@@ -1039,7 +1067,7 @@ class DiceExpressionParser
     }
 
     /**
-     * Parse a group expression { expression # comment }.
+     * Parse a group expression { expression [tag1, tag2] # comment }.
      *
      * @return GroupNode Group node
      * @throws ParseException If group is nested or empty
@@ -1060,6 +1088,20 @@ class DiceExpressionParser
         $expr = $this->parseExpression();
 
         // Check if there's an empty expression
+        // Parse optional tags
+        $tags = null;
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
+        }
+
+        // Check for duplicate tag section before parsing comment
+        if ($this->check(Token::TYPE_TAGS)) {
+            throw new ParseException(
+                'Multiple tag sections are not allowed in a group. Use a single tag section with comma-separated tags: [tag1, tag2, ...]',
+                $this->peek()->position
+            );
+        }
+
         // Parse optional comment
         $comment = null;
         if ($this->match(Token::TYPE_COMMENT)) {
@@ -1071,6 +1113,58 @@ class DiceExpressionParser
 
         $this->groupDepth--;
 
-        return new GroupNode($expr, $comment);
+        return new GroupNode($expr, $comment, $tags);
+    }
+
+    /**
+     * Parse tags from tag content string.
+     * Tags are case-insensitive and can contain a-z, 0-9, ., -, _
+     * Returns lowercase normalized tag array.
+     *
+     * @param string $content Raw tag content (e.g., "tag1, tag2, tag3")
+     * @return array<string> Array of tags
+     * @throws ParseException If tag syntax is invalid
+     */
+    private function parseTags(string $content): array
+    {
+        if (trim($content) === '') {
+            return [];
+        }
+
+        // Split by comma
+        $rawTags = explode(',', $content);
+        $tags = [];
+
+        foreach ($rawTags as $rawTag) {
+            $tag = trim($rawTag);
+            if ($tag !== '') {
+                $tags[] = $this->normalizeTag($tag);
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
+     * Normalize a tag to lowercase and validate characters.
+     *
+     * @param string $tag Raw tag string
+     * @return string Normalized tag
+     * @throws ParseException If tag contains invalid characters
+     */
+    private function normalizeTag(string $tag): string
+    {
+        $tag = trim($tag);
+        $tag = strtolower($tag);
+
+        // Validate: only a-z, 0-9, ., -, _
+        if (!preg_match('/^[a-z0-9._-]+$/', $tag)) {
+            throw new ParseException(
+                "Invalid tag '{$tag}': tags can only contain a-z, 0-9, ., -, _",
+                $this->getCurrentPosition()
+            );
+        }
+
+        return $tag;
     }
 }
