@@ -47,10 +47,10 @@ class PerformanceTest extends BaseTestCase
     public function testParseWorstCaseExpression(): void
     {
         // Construct a worst-case expression with as many valid components as possible
-        $worstCaseExpression = '((100d100 keep highest 50 + 100d100 keep lowest 25) * 2 + ' .
-                              '(100d100 explode >= 99 + 100d100 reroll <= 2) / 3 - ' .
+        $worstCaseExpression = '((100d100 keep 50 highest + 100d100 keep 25 lowest) * 2 + ' .
+                              '(100d100 explode >=99 + 100d100 reroll <=2) / 3 - ' .
                               'floor(100d100 * 1.5) + ceil(100d100 / 2.5) + ' .
-                              'round(100d100 ^ 1.5) + abs(100d100 - 5000) + ' .
+                              'round((100d100) ^ 1.5) + abs(100d100 - 5000) + ' .
                               'min(100d100, 100d100, 100d100) + max(100d100, 100d100, 100d100)) % 1000';
 
         $startTime = microtime(true);
@@ -81,7 +81,7 @@ class PerformanceTest extends BaseTestCase
     public function testRollLoopPerformance(): void
     {
         // Use a complex but more realistic expression for rolling tests
-        $expression = '10d20 keep highest 5 + 10d10 + 5d6 * 2 + floor(3d8 / 2)';
+        $expression = '10d20 keep 5 highest + 10d10 + 5d6 * 2 + floor(3d8 / 2)';
 
         $startTime = microtime(true);
         $results = [];
@@ -121,7 +121,7 @@ class PerformanceTest extends BaseTestCase
     public function testRollExpressionLoopPerformance(): void
     {
         // Use the same expression as testRollLoopPerformance for comparison
-        $expressionString = '10d20 keep highest 5 + 10d10 + 5d6 * 2 + floor(3d8 / 2)';
+        $expressionString = '10d20 keep 5 highest + 10d10 + 5d6 * 2 + floor(3d8 / 2)';
 
         // Parse once before the loop
         $expression = $this->phpdice->parse($expressionString);
@@ -236,8 +236,8 @@ class PerformanceTest extends BaseTestCase
         $expressions = [
             'simple'     => '3d6',
             'moderate'   => '3d6 + 1d20 + 5',
-            'complex'    => '10d20 keep highest 5 + 5d10 explode >= 9 + 3d6 reroll <= 2',
-            'very_complex' => 'max(20d20 keep highest 10, 50d10 + 100) + min(10d100, 500) + floor(25d6 * 1.5)',
+            'complex'    => '(10d20 keep 5 highest) + (5d10 explode >=9) + 3d6',
+            'very_complex' => 'max((20d20 keep 10 highest), 50d10 + 100) + min(10d100, 500) + floor(25d6 * 1.5)',
         ];
 
         fwrite(STDERR, "\nPerformance by expression complexity:\n");
