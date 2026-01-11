@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Performance tests for dice rolling operations.
- * 
+ *
  * These tests measure performance characteristics of parsing and rolling
  * complex dice expressions. They are designed to ensure the library meets
  * its performance goals stated in the documentation (Parse <100ms, Roll <50ms).
@@ -34,7 +34,7 @@ class PerformanceTest extends BaseTestCase
 
     /**
      * Test parsing a worst-case expression with maximum dice and complex math.
-     * 
+     *
      * This test creates the most complex valid expression with:
      * - Maximum dice count (100)
      * - Maximum sides (100)
@@ -74,7 +74,7 @@ class PerformanceTest extends BaseTestCase
 
     /**
      * Test rolling a worst-case expression multiple times in a loop using roll().
-     * 
+     *
      * This measures the performance of parsing + rolling the expression on each iteration.
      * Each call to roll() includes both parsing and rolling overhead.
      */
@@ -114,7 +114,7 @@ class PerformanceTest extends BaseTestCase
 
     /**
      * Test rolling a pre-parsed expression multiple times using rollExpression().
-     * 
+     *
      * This measures the performance of rolling only (no parsing overhead).
      * The expression is parsed once before the loop, then rolled multiple times.
      */
@@ -168,7 +168,7 @@ class PerformanceTest extends BaseTestCase
 
     /**
      * Test comparison between roll() and rollExpression() performance.
-     * 
+     *
      * This test demonstrates the performance benefit of pre-parsing expressions
      * when rolling the same expression multiple times.
      */
@@ -227,7 +227,7 @@ class PerformanceTest extends BaseTestCase
 
     /**
      * Test performance with various expression complexities.
-     * 
+     *
      * This test measures performance across different expression types
      * to validate consistent performance characteristics.
      */
@@ -273,7 +273,7 @@ class PerformanceTest extends BaseTestCase
 
     /**
      * Test performance with maximum dice count.
-     * 
+     *
      * Tests rolling the maximum allowed number of dice (100) to ensure
      * performance remains acceptable at the upper limit.
      */
@@ -302,7 +302,7 @@ class PerformanceTest extends BaseTestCase
             $parseTime,
             sprintf('Parse time %.2fms exceeds limit %dms', $parseTime, self::MAX_PARSE_TIME_MS)
         );
-        
+
         $this->assertLessThan(
             self::MAX_ROLL_TIME_MS,
             $rollTime,
