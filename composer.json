@@ -16,16 +16,16 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
         "phpstan/phpstan": "^1.10",
-        "phpunit/phpunit": "^10.0"
+        "phpunit/phpunit": "*"
     },
     "autoload": {
         "psr-4": {
-            "PHPDice\\": "src/"
+            "Codryn\\PHPDice\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PHPDice\\Tests\\": "tests/"
+            "Codryn\\PHPDice\\Tests\\": "tests/"
         }
     },
     "scripts": {

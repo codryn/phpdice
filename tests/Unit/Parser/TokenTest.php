@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Parser;
+namespace Codryn\PHPDice\Tests\Unit\Parser;
 
-use PHPDice\Parser\Token;
+use Codryn\PHPDice\Parser\Token;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for Token.
  *
- * @covers \PHPDice\Parser\Token
+ * @covers \Codryn\PHPDice\Parser\Token
  */
 class TokenTest extends TestCase
 {

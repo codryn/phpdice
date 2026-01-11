@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ValidationException;
-use PHPDice\PHPDice;
-use PHPDice\Roller\RandomNumberGenerator;
+use Codryn\PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\PHPDice;
+use Codryn\PHPDice\Roller\RandomNumberGenerator;
 
 /**
  * Integration tests for reroll mechanics (US5).
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
  */
 class RerollTest extends BaseTestCaseMock
 {
@@ -150,7 +150,7 @@ class RerollTest extends BaseTestCaseMock
         // Test < : reroll if value < 3, so reroll 1,2
         // Rolls: 2 (reroll) -> 4, 3, 5, 6
         $this->mockRng = $this->createMock(RandomNumberGenerator::class);
-        $this->phpdice = new \PHPDice\PHPDice($this->mockRng);
+        $this->phpdice = new \Codryn\PHPDice\PHPDice($this->mockRng);
         $this->mockRng->expects($this->exactly(5))
             ->method('generate')
             ->willReturnOnConsecutiveCalls(2, 4, 3, 5, 6);
@@ -163,7 +163,7 @@ class RerollTest extends BaseTestCaseMock
         // Test >= : reroll if value >= 5, so reroll 5,6
         // Rolls: 6 (reroll) -> 3, 4, 2, 1
         $this->mockRng = $this->createMock(RandomNumberGenerator::class);
-        $this->phpdice = new \PHPDice\PHPDice($this->mockRng);
+        $this->phpdice = new \Codryn\PHPDice\PHPDice($this->mockRng);
         $this->mockRng->expects($this->exactly(5))
             ->method('generate')
             ->willReturnOnConsecutiveCalls(6, 3, 4, 2, 1);
@@ -176,7 +176,7 @@ class RerollTest extends BaseTestCaseMock
         // Test > : reroll if value > 4, so reroll 5,6
         // Rolls: 5 (reroll) -> 3, 4, 2, 1
         $this->mockRng = $this->createMock(RandomNumberGenerator::class);
-        $this->phpdice = new \PHPDice\PHPDice($this->mockRng);
+        $this->phpdice = new \Codryn\PHPDice\PHPDice($this->mockRng);
         $this->mockRng->expects($this->exactly(5))
             ->method('generate')
             ->willReturnOnConsecutiveCalls(5, 3, 4, 2, 1);

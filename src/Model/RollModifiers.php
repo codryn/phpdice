@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
 /**
  * Contains all modifiers and special mechanics for a dice roll.

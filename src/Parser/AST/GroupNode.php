@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser\AST;
+namespace Codryn\PHPDice\Parser\AST;
 
 /**
  * Represents a grouped expression { expression # comment [tag1, tag2] }.

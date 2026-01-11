@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Roller;
+namespace Codryn\PHPDice\Roller;
 
 /**
  * Random number generator abstraction using PHP's random_int().

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Model;
+namespace Codryn\PHPDice\Tests\Unit\Model;
 
-use PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Model\RollModifiers;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for RollModifiers.
  *
- * @covers \PHPDice\Model\RollModifiers
+ * @covers \Codryn\PHPDice\Model\RollModifiers
  */
 class RollModifiersTest extends TestCase
 {

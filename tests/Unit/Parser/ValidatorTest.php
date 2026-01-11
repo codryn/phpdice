@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Parser;
+namespace Codryn\PHPDice\Tests\Unit\Parser;
 
-use PHPDice\Exception\ValidationException;
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\DiceType;
-use PHPDice\Parser\Validator;
-use PHPDice\Tests\Unit\BaseTestCase;
+use Codryn\PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\DiceType;
+use Codryn\PHPDice\Parser\Validator;
+use Codryn\PHPDice\Tests\Unit\BaseTestCase;
 
 /**
  * Unit tests for Validator.
  *
- * @covers \PHPDice\Parser\Validator
+ * @covers \Codryn\PHPDice\Parser\Validator
  */
 class ValidatorTest extends BaseTestCase
 {

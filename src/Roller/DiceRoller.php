@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Roller;
+namespace Codryn\PHPDice\Roller;
 
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\RollResult;
-use PHPDice\Model\StatisticalCalculator;
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\DiceExpressionNode;
-use PHPDice\Parser\AST\DiceNode;
-use PHPDice\Parser\AST\FunctionNode;
-use PHPDice\Parser\AST\GroupNode;
-use PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\RollResult;
+use Codryn\PHPDice\Model\StatisticalCalculator;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
+use Codryn\PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\Node;
 
 /**
  * Rolls dice based on parsed expressions.
@@ -486,15 +486,15 @@ class DiceRoller
      * Convert dice value based on dice type.
      *
      * @param int $rawValue Raw dice value (1 to sides)
-     * @param \PHPDice\Model\DiceType $type Dice type
+     * @param \Codryn\PHPDice\Model\DiceType $type Dice type
      * @return int Converted value
      */
-    private function convertDiceValue(int $rawValue, \PHPDice\Model\DiceType $type): int
+    private function convertDiceValue(int $rawValue, \Codryn\PHPDice\Model\DiceType $type): int
     {
         return match ($type) {
-            \PHPDice\Model\DiceType::FUDGE => $rawValue - 2, // Convert 1,2,3 to -1,0,+1
-            \PHPDice\Model\DiceType::COIN => $rawValue - 1, // Convert 1,2 to 0,1
-            \PHPDice\Model\DiceType::STANDARD, \PHPDice\Model\DiceType::PERCENTILE => $rawValue,
+            \Codryn\PHPDice\Model\DiceType::FUDGE => $rawValue - 2, // Convert 1,2,3 to -1,0,+1
+            \Codryn\PHPDice\Model\DiceType::COIN => $rawValue - 1, // Convert 1,2 to 0,1
+            \Codryn\PHPDice\Model\DiceType::STANDARD, \Codryn\PHPDice\Model\DiceType::PERCENTILE => $rawValue,
         };
     }
 
@@ -676,7 +676,7 @@ class DiceRoller
     private function rollMathOnly(?Node $ast, DiceExpression $expression): RollResult
     {
         if ($ast === null) {
-            throw new \PHPDice\Exception\ValidationException('Math-only expression must have an AST', 'expression');
+            throw new \Codryn\PHPDice\Exception\ValidationException('Math-only expression must have an AST', 'expression');
         }
 
         // Roll any dice nodes in the expression (e.g., inside function arguments)

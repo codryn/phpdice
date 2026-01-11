@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Parser\AST;
+namespace Codryn\PHPDice\Tests\Unit\Parser\AST;
 
-use PHPDice\Exception\ValidationException;
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\NumberNode;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for BinaryOpNode.
  *
- * @covers \PHPDice\Parser\AST\BinaryOpNode
- * @covers \PHPDice\Parser\AST\Node
+ * @covers \Codryn\PHPDice\Parser\AST\BinaryOpNode
+ * @covers \Codryn\PHPDice\Parser\AST\Node
  */
 class BinaryOpNodeTest extends TestCase
 {

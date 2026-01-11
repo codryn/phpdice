@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\PHPDice;
+use Codryn\PHPDice\PHPDice;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
@@ -288,7 +288,7 @@ class ModifiersTest extends BaseTestCaseMock
      */
     public function testDivisionByZero(): void
     {
-        $this->expectException(\PHPDice\Exception\ValidationException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Division by zero');
 
         // This will fail when we try to roll and evaluate
@@ -301,7 +301,7 @@ class ModifiersTest extends BaseTestCaseMock
      */
     public function testModuloByZero(): void
     {
-        $this->expectException(\PHPDice\Exception\ValidationException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Modulo by zero');
 
         // This will fail when we try to roll and evaluate

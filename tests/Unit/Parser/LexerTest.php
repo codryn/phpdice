@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Parser;
+namespace Codryn\PHPDice\Tests\Unit\Parser;
 
-use PHPDice\Parser\Lexer;
-use PHPDice\Parser\Token;
-use PHPDice\Tests\Unit\BaseTestCase;
+use Codryn\PHPDice\Parser\Lexer;
+use Codryn\PHPDice\Parser\Token;
+use Codryn\PHPDice\Tests\Unit\BaseTestCase;
 
 /**
  * Unit tests for Lexer.
  *
- * @covers \PHPDice\Parser\Lexer
- * @covers \PHPDice\Parser\Token
+ * @covers \Codryn\PHPDice\Parser\Lexer
+ * @covers \Codryn\PHPDice\Parser\Token
  */
 class LexerTest extends BaseTestCase
 {
@@ -177,7 +177,7 @@ class LexerTest extends BaseTestCase
      */
     public function testInvalidCharacter(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage("Unexpected character '@'");
 
         $lexer = new Lexer('3@6');
@@ -241,7 +241,7 @@ class LexerTest extends BaseTestCase
     {
         // A decimal point followed by a non-digit should leave the decimal point
         // to be handled as an unexpected character
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage("Unexpected character '.'");
 
         $lexer = new Lexer('5.d6');

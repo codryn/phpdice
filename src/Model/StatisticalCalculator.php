@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\DiceNode;
-use PHPDice\Parser\AST\FunctionNode;
-use PHPDice\Parser\AST\Node;
-use PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\NumberNode;
 
 /**
  * Calculates statistical properties of dice expressions.

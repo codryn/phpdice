@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Exception;
+namespace Codryn\PHPDice\Tests\Unit\Exception;
 
-use PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Exception\ValidationException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for ValidationException.
  *
- * @covers \PHPDice\Exception\ValidationException
+ * @covers \Codryn\PHPDice\Exception\ValidationException
  */
 class ValidationExceptionTest extends TestCase
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser\AST;
+namespace Codryn\PHPDice\Parser\AST;
 
-use PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Exception\ValidationException;
 
 /**
  * Represents a binary operation (e.g., addition, multiplication).

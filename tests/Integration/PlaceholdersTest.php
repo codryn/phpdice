@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Exception\ParseException;
 
 /**
  * Integration tests for placeholder variable support (US7).
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Parser\Lexer
- * @covers \PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Parser\Lexer
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
  */
 final class PlaceholdersTest extends BaseTestCase
 {

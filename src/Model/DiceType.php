@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
 /**
  * Enum representing different types of dice.

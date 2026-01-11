@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
-use PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Exception\ParseException;
 
 /**
  * Tokenizes dice expressions into a stream of tokens.

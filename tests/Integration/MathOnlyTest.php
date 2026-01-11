@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\PHPDice;
+use Codryn\PHPDice\PHPDice;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
@@ -172,7 +172,7 @@ class MathOnlyTest extends BaseTestCaseMock
      */
     public function testEmptyStringThrowsError(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->phpdice->roll('');
     }
 
@@ -181,7 +181,7 @@ class MathOnlyTest extends BaseTestCaseMock
      */
     public function testWhitespaceOnlyThrowsError(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->phpdice->roll('   ');
     }
 

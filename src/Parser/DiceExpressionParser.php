@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
-use PHPDice\Exception\ParseException;
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\RollModifiers;
-use PHPDice\Model\StatisticalCalculator;
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\DiceExpressionNode;
-use PHPDice\Parser\AST\DiceNode;
-use PHPDice\Parser\AST\FunctionNode;
-use PHPDice\Parser\AST\GroupNode;
-use PHPDice\Parser\AST\Node;
-use PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Model\StatisticalCalculator;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
+use Codryn\PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\NumberNode;
 
 /**
  * Parses dice expressions into structured DiceExpression objects.
@@ -174,7 +174,7 @@ class DiceExpressionParser
             }
             // Check if it's a duplicate modifier keyword
             if ($remaining->type === Token::TYPE_KEYWORD) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     'Modifier conflict: cannot specify multiple or conflicting keep modifiers',
                     'modifiers'
                 );
@@ -372,13 +372,13 @@ class DiceExpressionParser
             $diceNode = null;
             if ($diceValue === 'dF') {
                 // Fudge dice: count is specified, sides is always 3 (representing -1, 0, +1)
-                $diceNode = new DiceNode($count, 3, \PHPDice\Model\DiceType::FUDGE);
+                $diceNode = new DiceNode($count, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
             } elseif ($diceValue === 'd%') {
                 // Percentile dice: count is specified, sides is always 100
-                $diceNode = new DiceNode($count, 100, \PHPDice\Model\DiceType::PERCENTILE);
+                $diceNode = new DiceNode($count, 100, \Codryn\PHPDice\Model\DiceType::PERCENTILE);
             } elseif ($diceValue === 'C') {
                 // Coin dice: count is specified, sides is always 2 (representing 0, 1)
-                $diceNode = new DiceNode($count, 2, \PHPDice\Model\DiceType::COIN);
+                $diceNode = new DiceNode($count, 2, \Codryn\PHPDice\Model\DiceType::COIN);
             } else {
                 // Standard dice: get the sides
                 $sides = $this->consumeNumber();
@@ -397,13 +397,13 @@ class DiceExpressionParser
             $diceNode = null;
             if ($diceValue === 'd%') {
                 $this->advance(); // Consume d%
-                $diceNode = new DiceNode(1, 100, \PHPDice\Model\DiceType::PERCENTILE);
+                $diceNode = new DiceNode(1, 100, \Codryn\PHPDice\Model\DiceType::PERCENTILE);
             } elseif ($diceValue === 'dF') {
                 $this->advance(); // Consume dF
-                $diceNode = new DiceNode(1, 3, \PHPDice\Model\DiceType::FUDGE);
+                $diceNode = new DiceNode(1, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
             } elseif ($diceValue === 'C') {
                 $this->advance(); // Consume C
-                $diceNode = new DiceNode(1, 2, \PHPDice\Model\DiceType::COIN);
+                $diceNode = new DiceNode(1, 2, \Codryn\PHPDice\Model\DiceType::COIN);
             }
 
             // Check if modifiers follow (for use in function arguments)
@@ -555,7 +555,7 @@ class DiceExpressionParser
         // Check for disadvantage keyword
         if ($this->match(Token::TYPE_KEYWORD, ['disadvantage'])) {
             if ($advantageCount !== null) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     'Cannot have both advantage and disadvantage',
                     'modifiers'
                 );
@@ -603,7 +603,7 @@ class DiceExpressionParser
 
                 // Validate operator (only >= and <= allowed for explosions per spec)
                 if (!in_array($explosionOperator, ['>=', '<='], true)) {
-                    throw new \PHPDice\Exception\ValidationException(
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
                         "Invalid explosion operator '{$explosionOperator}'. Only >= and <= are supported for exploding dice.",
                         'explode'
                     );
@@ -628,7 +628,7 @@ class DiceExpressionParser
         if ($this->match(Token::TYPE_KEYWORD, ['reroll'])) {
             // Validate: cannot combine explode and reroll on same dice
             if ($explosionThreshold !== null) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     'Cannot combine explode and reroll on the same dice',
                     'modifiers'
                 );
@@ -654,7 +654,7 @@ class DiceExpressionParser
 
             // Validate operator (all comparison operators allowed for reroll)
             if (!in_array($rerollOperator, ['<=', '<', '>=', '>', '=='], true)) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     "Invalid reroll operator '{$rerollOperator}'",
                     'reroll'
                 );
@@ -675,13 +675,13 @@ class DiceExpressionParser
         if ($this->match(Token::TYPE_KEYWORD, ['edge'])) {
             // Validate: cannot combine edge with explode or reroll
             if ($explosionThreshold !== null) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     'Cannot combine edge and explode on the same dice',
                     'modifiers'
                 );
             }
             if ($rerollThreshold !== null) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     'Cannot combine edge and reroll on the same dice',
                     'modifiers'
                 );
@@ -715,7 +715,7 @@ class DiceExpressionParser
 
                 // Validate operator (only >= and <= allowed for edge per spec)
                 if (!in_array($edgeOperator, ['>=', '<='], true)) {
-                    throw new \PHPDice\Exception\ValidationException(
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
                         "Invalid edge operator '{$edgeOperator}'. Only >= and <= are supported for edge dice.",
                         'edge'
                     );
@@ -743,7 +743,7 @@ class DiceExpressionParser
 
             if ($this->match(Token::TYPE_KEYWORD, ['highest'])) {
                 if ($keepHighest !== null || $keepLowest !== null) {
-                    throw new \PHPDice\Exception\ValidationException(
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
                         'Cannot specify keep multiple times',
                         'modifiers'
                     );
@@ -751,7 +751,7 @@ class DiceExpressionParser
                 $keepHighest = $count;
             } elseif ($this->match(Token::TYPE_KEYWORD, ['lowest'])) {
                 if ($keepHighest !== null || $keepLowest !== null) {
-                    throw new \PHPDice\Exception\ValidationException(
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
                         'Cannot specify keep multiple times',
                         'modifiers'
                     );
@@ -769,13 +769,13 @@ class DiceExpressionParser
 
             // Validate keep count doesn't exceed total dice
             if ($keepHighest !== null && $keepHighest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     "Cannot keep {$keepHighest} dice when only rolling {$totalDiceToRoll}",
                     'keep'
                 );
             }
             if ($keepLowest !== null && $keepLowest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     "Cannot keep {$keepLowest} dice when only rolling {$totalDiceToRoll}",
                     'keep'
                 );
@@ -798,7 +798,7 @@ class DiceExpressionParser
 
                 // Allow all comparison operators for success counting
                 if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
-                    throw new \PHPDice\Exception\ValidationException(
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
                         "Invalid success operator '{$operator}'. " .
                         'Only >=, >, <=, <, and == are supported for success counting.',
                         'success'

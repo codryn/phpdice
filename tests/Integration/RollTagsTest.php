@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\PHPDice;
+use Codryn\PHPDice\PHPDice;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Integration tests for roll tags feature.
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Parser\Lexer
- * @covers \PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Parser\Lexer
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
  */
 #[CoversClass(PHPDice::class)]
 final class RollTagsTest extends BaseTestCase
@@ -348,7 +348,7 @@ final class RollTagsTest extends BaseTestCase
      */
     public function testMultipleTagSectionsThrowError(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage('Multiple tag sections are not allowed');
 
         $expression = '1d20 [fire] [magic]';
@@ -360,7 +360,7 @@ final class RollTagsTest extends BaseTestCase
      */
     public function testMultipleTagSectionsInGroupThrowError(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage('Multiple tag sections are not allowed in a group');
 
         $expression = '{1d6 [fire] [magic]}';
