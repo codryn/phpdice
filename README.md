@@ -63,6 +63,7 @@ See [docs/expressions.md](docs/expressions.md) for all supported dice expression
 | **FATE** | `4dF+2` | Fudge dice, modifiers |
 | **Savage Worlds** | `1d6 explode + 1d8 explode` | Exploding dice |
 | **Call of Cthulhu** | `d%` | Percentile dice |
+| **Even/Odd Counting** | `6d6 count even` or `12d4 count odd` | Count even or odd results |
 
 ## API Overview
 

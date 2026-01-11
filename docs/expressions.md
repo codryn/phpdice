@@ -149,6 +149,8 @@ Use the 'count' keyword with comparison operators to count successes:
 ```
 XdY count >= N
 XdY count > N
+XdY count even
+XdY count odd
 ```
 
 Examples:
@@ -156,6 +158,10 @@ Examples:
 ```5d6 count >= 4``` - Roll five d6s, count how many are 4 or higher
 
 ```10d10 count > 7``` - Roll ten d10s, count how many are greater than 7
+
+```6d6 count even``` - Roll six d6s, count how many are even (2, 4, 6)
+
+```12d4 count odd``` - Roll twelve d4s, count how many are odd (1, 3)
 
 **Note**: The `count` keyword is **required** to distinguish success counting from DC checks (e.g., `1d20+5 dc >= 15`), rerolls and explosions.
 
