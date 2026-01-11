@@ -18,6 +18,7 @@ use Codryn\PHPDice\Parser\AST\FunctionNode;
 use Codryn\PHPDice\Parser\AST\GroupNode;
 use Codryn\PHPDice\Parser\AST\Node;
 use Codryn\PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
 
 /**
  * Parses dice expressions into structured DiceExpression objects.
@@ -343,8 +344,143 @@ class DiceExpressionParser
             return new ConditionalNode($condition, $trueBranch, $falseBranch);
         }
 
+        // Check for 'switch' keyword
+        if ($this->match(Token::TYPE_KEYWORD, ['switch'])) {
+            return $this->parseSwitchCase();
+        }
+
         // Not a conditional, parse as comparison
         return $this->parseComparison();
+    }
+
+    /**
+     * Parse a switch-case expression.
+     *
+     * @return Node SwitchCase node
+     */
+    private function parseSwitchCase(): Node
+    {
+        // Parse the switch expression
+        $switchExpression = $this->parseComparison();
+
+        // Parse cases
+        $cases = [];
+        $defaultExpression = null;
+        $hasDefault = false;
+
+        // Expect at least one case or default
+        while ($this->match(Token::TYPE_KEYWORD, ['case', 'default'])) {
+            $keyword = (string)$this->previous()->value;
+
+            if ($keyword === 'case') {
+                // Parse case range (e.g., "1", "2-5")
+                $range = $this->parseCaseRange();
+
+                // Expect colon
+                if (!$this->match(Token::TYPE_COLON)) {
+                    throw new ParseException(
+                        "Expected ':' after case range",
+                        $this->getCurrentPosition()
+                    );
+                }
+
+                // Parse case expression
+                $caseExpression = $this->parseComparison();
+
+                $cases[] = [
+                    'range' => $range,
+                    'expression' => $caseExpression,
+                ];
+            } elseif ($keyword === 'default') {
+                if ($hasDefault) {
+                    throw new ParseException(
+                        'Multiple default cases are not allowed in switch expression',
+                        $this->getCurrentPosition()
+                    );
+                }
+
+                // Expect colon
+                if (!$this->match(Token::TYPE_COLON)) {
+                    throw new ParseException(
+                        "Expected ':' after default",
+                        $this->getCurrentPosition()
+                    );
+                }
+
+                // Parse default expression
+                $defaultExpression = $this->parseComparison();
+                $hasDefault = true;
+            }
+
+            // Check for pipe to continue with more cases
+            if (!$this->match(Token::TYPE_PIPE)) {
+                // No more cases
+                break;
+            }
+        }
+
+        // Validate that we have at least one case
+        if (empty($cases)) {
+            throw new ParseException(
+                'Switch expression must have at least one case',
+                $this->getCurrentPosition()
+            );
+        }
+
+        // If no default is provided, validate that cases cover all possible values
+        // This validation will be done at evaluation time since we need to know the
+        // possible values from the switch expression
+        if (!$hasDefault) {
+            // For now, we'll let the SwitchCaseNode handle this validation
+            // by checking if a value is not covered and throwing an error
+        }
+
+        return new SwitchCaseNode($switchExpression, $cases, $defaultExpression);
+    }
+
+    /**
+     * Parse a case range (e.g., "1", "2-5", "10", "-1", "-5--1").
+     *
+     * @return array<int> Array of values in the range
+     */
+    private function parseCaseRange(): array
+    {
+        // Handle negative numbers at the start
+        $isNegative = false;
+        if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+            $isNegative = true;
+        }
+
+        $start = $this->consumeNumber();
+        if ($isNegative) {
+            $start = -$start;
+        }
+
+        // Check for range operator (-)
+        if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+            // Check if this is a negative end value or a range operator
+            // If the next token is also a minus, it's a negative number (e.g., 1--5)
+            // @phpstan-ignore if.alwaysTrue (this can be false for positive ranges like 1-5)
+            if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+                $end = -$this->consumeNumber();
+            } else {
+                $end = $this->consumeNumber();
+            }
+
+            // Validate range
+            if ($start > $end) {
+                throw new ParseException(
+                    "Invalid range: start ({$start}) must be less than or equal to end ({$end})",
+                    $this->getCurrentPosition()
+                );
+            }
+
+            // Generate range
+            return range($start, $end);
+        }
+
+        // Single value
+        return [$start];
     }
 
     /**
@@ -411,6 +547,18 @@ class DiceExpressionParser
      */
     private function parseFactor(): Node
     {
+        // Unary minus (negative numbers)
+        if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+            $right = $this->parseFactor();
+            // Create a binary operation: 0 - right
+            return new BinaryOpNode(new NumberNode(0), '-', $right);
+        }
+
+        // Unary plus (optional, for completeness)
+        if ($this->match(Token::TYPE_OPERATOR, ['+'])) {
+            return $this->parseFactor();
+        }
+
         // Function call
         if ($this->match(Token::TYPE_FUNCTION)) {
             return $this->parseFunction();
@@ -435,7 +583,6 @@ class DiceExpressionParser
             $diceValue = (string)$diceToken->value;
 
             // Check for special dice types
-            $diceNode = null;
             if ($diceValue === 'dF') {
                 // Fudge dice: count is specified, sides is always 3 (representing -1, 0, +1)
                 $diceNode = new DiceNode($count, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
@@ -460,20 +607,21 @@ class DiceExpressionParser
             $diceToken = $this->peek();
             $diceValue = (string)$diceToken->value;
 
-            $diceNode = null;
             if ($diceValue === 'd%') {
                 $this->advance(); // Consume d%
                 $diceNode = new DiceNode(1, 100, \Codryn\PHPDice\Model\DiceType::PERCENTILE);
-            } elseif ($diceValue === 'dF') {
-                $this->advance(); // Consume dF
-                $diceNode = new DiceNode(1, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
-            } elseif ($diceValue === 'C') {
-                $this->advance(); // Consume C
-                $diceNode = new DiceNode(1, 2, \Codryn\PHPDice\Model\DiceType::COIN);
+                return $this->tryParseModifiersForDiceNode($diceNode);
             }
 
-            // Check if modifiers follow (for use in function arguments)
-            if ($diceNode !== null) {
+            if ($diceValue === 'dF') {
+                $this->advance(); // Consume dF
+                $diceNode = new DiceNode(1, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
+                return $this->tryParseModifiersForDiceNode($diceNode);
+            }
+
+            if ($diceValue === 'C') {
+                $this->advance(); // Consume C
+                $diceNode = new DiceNode(1, 2, \Codryn\PHPDice\Model\DiceType::COIN);
                 return $this->tryParseModifiersForDiceNode($diceNode);
             }
         }
