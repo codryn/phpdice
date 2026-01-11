@@ -172,7 +172,7 @@ class MathOnlyTest extends BaseTestCaseMock
      */
     public function testEmptyStringThrowsError(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->phpdice->roll('');
     }
 
@@ -181,7 +181,7 @@ class MathOnlyTest extends BaseTestCaseMock
      */
     public function testWhitespaceOnlyThrowsError(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->phpdice->roll('   ');
     }
 

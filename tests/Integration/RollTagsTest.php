@@ -348,7 +348,7 @@ final class RollTagsTest extends BaseTestCase
      */
     public function testMultipleTagSectionsThrowError(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage('Multiple tag sections are not allowed');
 
         $expression = '1d20 [fire] [magic]';
@@ -360,7 +360,7 @@ final class RollTagsTest extends BaseTestCase
      */
     public function testMultipleTagSectionsInGroupThrowError(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage('Multiple tag sections are not allowed in a group');
 
         $expression = '{1d6 [fire] [magic]}';

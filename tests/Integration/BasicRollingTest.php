@@ -107,7 +107,7 @@ class BasicRollingTest extends BaseTestCaseMock
      */
     public function testInvalidExpressionMissingCount(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->phpdice->parse('d6');
     }
 
@@ -116,7 +116,7 @@ class BasicRollingTest extends BaseTestCaseMock
      */
     public function testInvalidExpressionMissingSides(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->phpdice->parse('3d');
     }
 
@@ -125,7 +125,7 @@ class BasicRollingTest extends BaseTestCaseMock
      */
     public function testInvalidExpressionNonNumeric(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->phpdice->parse('abc');
     }
 
@@ -134,7 +134,7 @@ class BasicRollingTest extends BaseTestCaseMock
      */
     public function testZeroDiceCount(): void
     {
-        $this->expectException(\PHPDice\Exception\ValidationException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Dice count must be at least 1');
         $this->phpdice->parse('0d6');
     }
@@ -144,7 +144,7 @@ class BasicRollingTest extends BaseTestCaseMock
      */
     public function testSingleSidedDie(): void
     {
-        $this->expectException(\PHPDice\Exception\ValidationException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Dice must have at least 2 sides');
         $this->phpdice->parse('3d1');
     }
@@ -154,7 +154,7 @@ class BasicRollingTest extends BaseTestCaseMock
      */
     public function testTooManyDice(): void
     {
-        $this->expectException(\PHPDice\Exception\ValidationException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Cannot roll more than 100 dice');
         $this->phpdice->parse('101d6');
     }
@@ -164,7 +164,7 @@ class BasicRollingTest extends BaseTestCaseMock
      */
     public function testTooManySides(): void
     {
-        $this->expectException(\PHPDice\Exception\ValidationException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('Dice cannot have more than 100 sides');
         $this->phpdice->parse('3d101');
     }

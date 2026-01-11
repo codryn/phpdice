@@ -845,7 +845,7 @@ final class CriticalTest extends BaseTestCaseMock
      */
     public function testAutoSuccessValidation(): void
     {
-        $this->expectException(\PHPDice\Exception\ValidationException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ValidationException::class);
         $this->expectExceptionMessage('threshold 25 is outside die range (1-20)');
 
         $this->phpdice->parse('1d20 auto 25');

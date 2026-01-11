@@ -97,7 +97,7 @@ final class RollGroupsTest extends BaseTestCase
      */
     public function testNestedGroupsThrowException(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage('Groups cannot be nested');
 
         $expression = '{ 1d6 + { 2d6 } }';
@@ -109,7 +109,7 @@ final class RollGroupsTest extends BaseTestCase
      */
     public function testEmptyGroupThrowsException(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
 
         $expression = '{ }';
         $this->phpdice->parse($expression);

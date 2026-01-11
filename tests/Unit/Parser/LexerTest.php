@@ -177,7 +177,7 @@ class LexerTest extends BaseTestCase
      */
     public function testInvalidCharacter(): void
     {
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage("Unexpected character '@'");
 
         $lexer = new Lexer('3@6');
@@ -241,7 +241,7 @@ class LexerTest extends BaseTestCase
     {
         // A decimal point followed by a non-digit should leave the decimal point
         // to be handled as an unexpected character
-        $this->expectException(\PHPDice\Exception\ParseException::class);
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
         $this->expectExceptionMessage("Unexpected character '.'");
 
         $lexer = new Lexer('5.d6');
