@@ -45,7 +45,10 @@ jobs:
       
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-suggest
-      
+
+    - name: Make scripts executable
+      run: chmod +x scripts/run-examples.sh && chmod +x scripts/verify-strict-types.sh
+
     - name: Run PHPUnit tests
       run: composer test
     
@@ -80,6 +83,9 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-suggest
     
+    - name: Make scripts executable
+      run: chmod +x scripts/verify-strict-types.sh
+
     - name: Check code style (PSR-12)
       run: composer cs-check
     
