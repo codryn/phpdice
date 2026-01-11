@@ -220,4 +220,17 @@ class SwitchCaseTest extends BaseTestCaseMock
             $this->assertEquals($expected, $result->total, "Failed for arg {$arg}");
         }
     }
+
+    /**
+     * Test switch without default - should throw exception when no case matches.
+     */
+    public function testSwitchWithoutDefaultThrowsExceptionWhenNoMatch(): void
+    {
+        $expression = 'switch $arg$ case 1: 42 | case 2: 23';
+
+        $this->expectException(\Codryn\PHPDice\Exception\ParseException::class);
+        $this->expectExceptionMessage('Switch expression value 5 does not match any case and no default case is provided');
+
+        $this->phpdice->roll($expression, ['arg' => 5]);
+    }
 }

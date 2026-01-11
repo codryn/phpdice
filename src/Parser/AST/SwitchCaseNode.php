@@ -40,9 +40,11 @@ class SwitchCaseNode extends Node
             return $this->defaultExpression->evaluate();
         }
 
-        // This should never happen if validation is correct
-        // But just in case, return the switch value itself
-        return $switchValue;
+        // No case matched and no default provided
+        throw new \Codryn\PHPDice\Exception\ParseException(
+            "Switch expression value {$switchValue} does not match any case and no default case is provided",
+            0
+        );
     }
 
     public function getSwitchExpression(): Node
