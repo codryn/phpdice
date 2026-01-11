@@ -32,15 +32,20 @@
         "test": "phpunit",
         "test-coverage": "phpunit --coverage-clover=coverage.xml",
         "test-coverage-html": "phpunit --coverage-html coverage/html",
-        "phpstan": "phpstan analyse",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",
+        "analyse": "phpstan analyse -c phpstan.neon",
+        "fix-line-endings": "./scripts/fix-line-endings.sh",
+        "run-examples": "./scripts/run-examples.sh",
+        "verify-strict-types": "./scripts/verify-strict-types.sh",
         "ci": [
-            "@test-coverage",
-            "@phpstan",
-            "@cs-check"
-        ],
-        "fix-line-endings": "./scripts/fix-line-endings.sh"
+            "@fix-line-endings",
+            "@test-coverage-html",
+            "@cs-check",
+            "@analyse",
+            "@verify-strict-types",
+            "@run-examples"
+        ]
     },
     "config": {
         "sort-packages": true,
