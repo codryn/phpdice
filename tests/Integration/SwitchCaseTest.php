@@ -233,4 +233,52 @@ class SwitchCaseTest extends BaseTestCaseMock
 
         $this->phpdice->roll($expression, ['arg' => 5]);
     }
+
+    /**
+     * Test switch with negative values.
+     */
+    public function testSwitchWithNegativeValues(): void
+    {
+        $expression = 'switch $x$ case -2: 10 | case -1: 20 | case 0: 30 | case 1: 40';
+
+        $result = $this->phpdice->roll($expression, ['x' => -2]);
+        $this->assertEquals(10, $result->total);
+
+        $result = $this->phpdice->roll($expression, ['x' => -1]);
+        $this->assertEquals(20, $result->total);
+
+        $result = $this->phpdice->roll($expression, ['x' => 0]);
+        $this->assertEquals(30, $result->total);
+
+        $result = $this->phpdice->roll($expression, ['x' => 1]);
+        $this->assertEquals(40, $result->total);
+    }
+
+    /**
+     * Test switch with negative range.
+     */
+    public function testSwitchWithNegativeRange(): void
+    {
+        $expression = 'switch $x$ case -5--1: 10 | case 0-5: 20';
+
+        // Test values in negative range
+        $result = $this->phpdice->roll($expression, ['x' => -5]);
+        $this->assertEquals(10, $result->total);
+
+        $result = $this->phpdice->roll($expression, ['x' => -3]);
+        $this->assertEquals(10, $result->total);
+
+        $result = $this->phpdice->roll($expression, ['x' => -1]);
+        $this->assertEquals(10, $result->total);
+
+        // Test values in positive range
+        $result = $this->phpdice->roll($expression, ['x' => 0]);
+        $this->assertEquals(20, $result->total);
+
+        $result = $this->phpdice->roll($expression, ['x' => 3]);
+        $this->assertEquals(20, $result->total);
+
+        $result = $this->phpdice->roll($expression, ['x' => 5]);
+        $this->assertEquals(20, $result->total);
+    }
 }

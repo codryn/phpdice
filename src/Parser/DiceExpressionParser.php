@@ -439,17 +439,36 @@ class DiceExpressionParser
     }
 
     /**
-     * Parse a case range (e.g., "1", "2-5", "10").
+     * Parse a case range (e.g., "1", "2-5", "10", "-1", "-5--1").
      *
      * @return array<int> Array of values in the range
      */
     private function parseCaseRange(): array
     {
+        // Handle negative numbers at the start
+        $isNegative = false;
+        if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+            $isNegative = true;
+        }
+
         $start = $this->consumeNumber();
+        if ($isNegative) {
+            $start = -$start;
+        }
 
         // Check for range operator (-)
         if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+            // Check if this is a negative end value or a range operator
+            // If the next token is also a minus, it's a negative number
+            $endIsNegative = false;
+            if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+                $endIsNegative = true;
+            }
+
             $end = $this->consumeNumber();
+            if ($endIsNegative) {
+                $end = -$end;
+            }
 
             // Validate range
             if ($start > $end) {
