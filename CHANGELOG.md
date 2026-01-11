@@ -7,17 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Roll Comments**: Users can now add descriptive comments to dice rolls using the `#` character. Comments support placeholder expansion and are available in both `DiceExpression` and `RollResult` objects. Examples: `1d20 + 5 # Attack roll`, `1d20 + $str$ # Strength check (+$str$)`
-- **Auto Success Mechanic**: New `auto N` keyword for automatic success/failure regardless of DC. This enables D&D/Pathfinder behavior where natural 20 is always a success. Example: `1d20 auto 20 crit 19 glitch 1 + 1 dc >= 25`
-
-### Changed
-- **BREAKING**: Natural max roll (e.g., 20 on d20) no longer automatically succeeds without the `auto` keyword. This makes the behavior explicit and allows for rolls without automatic success mechanics. To maintain D&D 5e behavior, use `1d20 auto 20 crit 20` instead of just `1d20 crit 20`.
-
 ### Planned
 - Performance optimizations for large dice pools
-- Additional game system presets
-- Web-based dice roller demo
+
+## [0.3.0] - 2026-01-11
+
+### Added
+- **Roll Comments**: Users can now add descriptive comments to dice rolls using the `#` character. Comments support placeholder expansion and are available in both `DiceExpression` and `RollResult` objects. Examples: `1d20 + 5 # Attack roll`, `1d20 + $str$ # Strength check (+$str$)` (#46)
+- **Auto Success Mechanic**: New `auto N` keyword for automatic success/failure regardless of DC. This enables D&D/Pathfinder behavior where natural 20 is always a success. Example: `1d20 auto 20 crit 19 glitch 1 + 1 dc >= 25` (#39)
+- **Roll Groups**: Support for multiple independent dice expressions in a single roll using the `;` separator. Each group is evaluated separately with its own result. Example: `1d20+5; 2d6+3; 1d4` for D&D attack, damage, and bonus damage (#50)
+- **Roll Tags**: Ability to tag dice expressions with custom labels using `[tag]` syntax for categorization and filtering. Example: `1d20+5 [attack]; 2d6 [damage]` (#54)
+- **Count Even/Odd**: New `count even` and `count odd` modifiers to count dice showing even or odd numbers. Useful for specialized game mechanics. Example: `6d6 count even` (#57)
+- **Dice in Function Arguments**: Dice expressions can now be used inside mathematical function arguments. Example: `max(1d6, 2d4)`, `min(3d6, 10)` (#43)
+- **Shadowrun Edge Mechanic**: New `edge` keyword for Shadowrun-style edge mechanics where 6s are rerolled and added to the pool. Example: `6d6 edge >=5` (#41)
+
+### Changed
+- **BREAKING**: Natural max roll (e.g., 20 on d20) no longer automatically succeeds without the `auto` keyword. This makes the behavior explicit and allows for rolls without automatic success mechanics. To maintain D&D 5e behavior, use `1d20 auto 20 crit 20` instead of just `1d20 crit 20`
+- Improved CI/CD pipeline configuration and alignment with other package projects (#57)
+
+### Fixed
+- PHPStan null reference errors in even/odd counting logic
+- Tag parsing order to handle all special characters correctly
+- Group evaluation consistency across multiple code paths
+- Sporadic test failures in edge feature implementation
 
 ## [0.2.1] - 2026-01-07
 
@@ -143,6 +155,8 @@ N/A - Initial release
 
 ## Version History
 
+- **0.3.0** (2026-01-11): Roll comments, auto success, roll groups, tags, even/odd counting, edge mechanics
+- **0.2.1** (2026-01-07): Math mode, decimal numbers, exponentiation, modulo, comparison fixes
 - **0.2.0** (2024-01-06): Initial test release with initial game system support
 - **0.1.0-dev** (2025-12-02): Development version
 
@@ -155,6 +169,8 @@ N/A - Initial release
 
 ---
 
-[unreleased]: https://github.com/codryn/phpdice/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/codryn/phpdice/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/codryn/phpdice/releases/tag/v0.3.0
+[0.2.1]: https://github.com/codryn/phpdice/releases/tag/v0.2.1
 [0.2.0]: https://github.com/codryn/phpdice/releases/tag/v0.2.0
 [0.1.0-dev]: https://github.com/codryn/phpdice/releases/tag/v0.1.0-dev

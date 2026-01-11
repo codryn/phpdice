@@ -794,7 +794,7 @@ class DiceExpressionParser
                 if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
                     throw new \PHPDice\Exception\ValidationException(
                         "Invalid success operator '{$operator}'. " .
-                        "Only >=, >, <=, <, and == are supported for success counting.",
+                        'Only >=, >, <=, <, and == are supported for success counting.',
                         'success'
                     );
                 }
