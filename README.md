@@ -25,6 +25,7 @@
 ## Requirements
 
 - PHP 8.1 or higher
+- ctype extension enabled
 
 ## Installation
 
