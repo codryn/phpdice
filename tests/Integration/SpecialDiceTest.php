@@ -315,7 +315,9 @@ class SpecialDiceTest extends BaseTestCase
         $result = $this->phpdice->roll('1C');
 
         $this->assertCount(1, $result->diceValues);
-        $this->assertContains($result->total, [0, 1], 'Coin flip must be 0 or 1');
+        $this->assertGreaterThanOrEqual(0, $result->total);
+        $this->assertLessThanOrEqual(1, $result->total);
+        $this->assertTrue(in_array($result->total, [0, 1]), 'Coin flip must be 0 or 1');
     }
 
     /**
@@ -326,7 +328,9 @@ class SpecialDiceTest extends BaseTestCase
         $result = $this->phpdice->roll('C');
 
         $this->assertCount(1, $result->diceValues);
-        $this->assertContains($result->total, [0, 1], 'Coin flip must be 0 or 1');
+        $this->assertGreaterThanOrEqual(0, $result->total);
+        $this->assertLessThanOrEqual(1, $result->total);
+        $this->assertTrue(in_array($result->total, [0, 1]), 'Coin flip must be 0 or 1');
     }
 
     /**
@@ -340,7 +344,9 @@ class SpecialDiceTest extends BaseTestCase
 
         // Each coin should be 0 or 1
         foreach ($result->diceValues as $value) {
-            $this->assertContains($value, [0, 1], 'Each coin flip must be 0 or 1');
+            $this->assertGreaterThanOrEqual(0, $value);
+            $this->assertLessThanOrEqual(1, $value);
+            $this->assertTrue(in_array($value, [0, 1]), 'Each coin flip must be 0 or 1');
         }
 
         // Total should be between 0 and 5
