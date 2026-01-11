@@ -26,7 +26,7 @@ class StatisticalCalculator
     public function calculate(DiceSpecification $spec, RollModifiers $modifiers, ?Node $ast = null): StatisticalData
     {
         // Handle success counting mode
-        if ($modifiers->successThreshold !== null && $modifiers->successOperator !== null) {
+        if ($modifiers->successOperator !== null) {
             return $this->calculateSuccessCount($spec, $modifiers);
         }
 
@@ -133,11 +133,13 @@ class StatisticalCalculator
         $successValues = 0;
         for ($value = $minValue; $value <= $maxValue; $value++) {
             $matches = match ($operator) {
-                '>=' => $value >= $threshold,
-                '>' => $value > $threshold,
-                '<=' => $value <= $threshold,
-                '<' => $value < $threshold,
-                '==' => $value === $threshold,
+                'even' => $value % 2 === 0,
+                'odd' => $value % 2 !== 0,
+                '>=' => $threshold !== null && $value >= $threshold,
+                '>' => $threshold !== null && $value > $threshold,
+                '<=' => $threshold !== null && $value <= $threshold,
+                '<' => $threshold !== null && $value < $threshold,
+                '==' => $threshold !== null && $value === $threshold,
                 default => false,
             };
             if ($matches) {

@@ -1,18 +1,23 @@
-# PHPDice
+# PHP Dice
 
-A comprehensive PHP library for parsing and rolling dice expressions for tabletop RPG systems.
+[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+> PHP library for parsing and rolling dice expressions for tabletop RPG systems.
+
+**PHP Dice** is a powerful and flexible library that allows developers to parse and roll complex dice expressions used in various tabletop role-playing games (RPGs). It supports a wide range of dice mechanics, including advantage/disadvantage, success counting, rerolls, exploding dice, critical hits, and more.
 
 ## Features
 
-- **Universal Dice Notation**: Support for all major RPG systems (D&D 5e, Pathfinder, Shadowrun, World of Darkness, FATE, Savage Worlds, etc.)
-- **Advanced Mechanics**: Advantage/disadvantage, success counting, rerolls, exploding dice, critical detection, DC comparisons
-- **Statistical Analysis**: Pre-calculated min/max/expected values for any expression
-- **Placeholder Variables**: Character sheet integration with `$variable$` syntax
-- **Complex Arithmetic**: Full expression evaluation with operator precedence and parentheses
-- **Error Handling**: Clear, specific error messages with location information
-- **High Performance**: Parse <100ms, Roll <50ms for complex expressions
-- **Type Safe**: Full PHP 8.1+ type declarations and strict mode
-- **Well Tested**: 235+ tests with comprehensive coverage
+- **🎲 Universal Dice Notation**: Support for all major RPG systems (D&D 5e, Pathfinder, Shadowrun, World of Darkness, FATE, Savage Worlds, etc.)
+- **⚡ Advanced Mechanics**: Advantage/disadvantage, success counting, rerolls, exploding dice, critical detection, DC comparisons
+- **📊 Statistical Analysis**: Pre-calculated min/max/expected values for any expression
+- **🔧 Placeholder Variables**: Character sheet integration with `$variable$` syntax
+- **➗ Complex Arithmetic**: Full expression evaluation with operator precedence and parentheses
+- **❗ Error Handling**: Clear, specific error messages with location information
+- **🚀 High Performance**: Parse <100ms, Roll <50ms for complex expressions
+- **🎯 Type Safe**: Full PHP 8.1+ type declarations and strict mode
+- **🧪 Well Tested**: 235+ tests with comprehensive coverage
 
 ## Requirements
 
@@ -21,7 +26,7 @@ A comprehensive PHP library for parsing and rolling dice expressions for tableto
 ## Installation
 
 ```bash
-composer require phpdice/phpdice
+composer require codryn/phpdice
 ```
 
 ## Quick Start and Usage
@@ -63,6 +68,7 @@ See [docs/expressions.md](docs/expressions.md) for all supported dice expression
 | **FATE** | `4dF+2` | Fudge dice, modifiers |
 | **Savage Worlds** | `1d6 explode + 1d8 explode` | Exploding dice |
 | **Call of Cthulhu** | `d%` | Percentile dice |
+| **Even/Odd Counting** | `6d6 count even` or `12d4 count odd` | Count even or odd results |
 
 ## API Overview
 
