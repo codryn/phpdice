@@ -777,7 +777,8 @@ class DiceExpressionParser
         }
 
         // STEP 3: Parse count (success counting - must come after keep)
-        // Check for success counting: "count >=N" or "count >N" or "count even" or "count odd" or "success threshold N" (legacy)
+        // Check for success counting: "count >=N", "count >N", "count even", "count odd",
+        // or "success threshold N" (legacy)
         if ($this->match(Token::TYPE_KEYWORD, ['count'])) {
             // After 'count', we expect either a comparison operator, 'even', or 'odd'
             if ($this->match(Token::TYPE_KEYWORD, ['even', 'odd'])) {
@@ -792,7 +793,8 @@ class DiceExpressionParser
                 // Allow all comparison operators for success counting
                 if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
                     throw new \PHPDice\Exception\ValidationException(
-                        "Invalid success operator '{$operator}'. Only >=, >, <=, <, and == are supported for success counting.",
+                        "Invalid success operator '{$operator}'. " .
+                        "Only >=, >, <=, <, and == are supported for success counting.",
                         'success'
                     );
                 }

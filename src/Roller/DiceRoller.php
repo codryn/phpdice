@@ -388,11 +388,11 @@ class DiceRoller
             $matches = match ($operator) {
                 'even' => $value % 2 === 0,
                 'odd' => $value % 2 !== 0,
-                '>=' => $value >= $threshold,
-                '>' => $value > $threshold,
-                '<=' => $value <= $threshold,
-                '<' => $value < $threshold,
-                '==' => $value === $threshold,
+                '>=' => $threshold !== null && $value >= $threshold,
+                '>' => $threshold !== null && $value > $threshold,
+                '<=' => $threshold !== null && $value <= $threshold,
+                '<' => $threshold !== null && $value < $threshold,
+                '==' => $threshold !== null && $value === $threshold,
                 default => false,
             };
             if ($matches) {
