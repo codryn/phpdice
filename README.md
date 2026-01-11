@@ -25,6 +25,7 @@
 ## Requirements
 
 - PHP 8.1 or higher
+- ctype extension enabled
 
 ## Installation
 
@@ -126,7 +127,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history and migration guides.
 
 Developed with adherence to:
 - PSR-12 coding standards
-- PHPStan level 9 strict analysis
+- PHPStan level 10 strict analysis
 - Test-Driven Development (TDD)
 - Comprehensive documentation
 

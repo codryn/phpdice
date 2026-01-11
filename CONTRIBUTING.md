@@ -122,7 +122,7 @@ composer test
 # PSR-12 compliance check and fix
 ./vendor/bin/php-cs-fixer fix
 
-# Static analysis (PHPStan level 9)
+# Static analysis (PHPStan 2.1 level 10 strict)
 ./vendor/bin/phpstan analyse
 
 # Run all quality checks
@@ -161,7 +161,7 @@ For bug fixes:
 PHPDice strictly adheres to:
 
 - **PSR-12**: Extended coding style guide
-- **PHPStan Level 9**: Maximum static analysis strictness
+- **PHPStan 2.1 Level 10 Strict**: Maximum static analysis strictness
 - **Strict Types**: All files MUST have `declare(strict_types=1);`
 
 ### Code Style Requirements
@@ -319,14 +319,14 @@ vendor/bin/phpunit --filter testParseSimpleDiceNotation
 
 ### PHPStan
 
-PHPDice uses **PHPStan Level 9** (strictest):
+PHPDice uses **PHPStan 2.1 Level 10 Strict** (strictest):
 
 ```bash
 # Run PHPStan
 composer phpstan
 
 # Analyze specific file
-vendor/bin/phpstan analyse src/Parser/DiceExpressionParser.php --level 9
+vendor/bin/phpstan analyse src/Parser/DiceExpressionParser.php --level 10
 ```
 
 ### Common PHPStan Issues
@@ -376,7 +376,7 @@ vendor/bin/phpstan analyse src/Parser/DiceExpressionParser.php --level 9
 ### PR Checklist
 
 - [ ] Tests added/updated and passing
-- [ ] PHPStan level 9 passes
+- [ ] PHPStan 2.1 Level 10 Strict passes
 - [ ] PSR-12 code style applied
 - [ ] All files have `declare(strict_types=1)`
 - [ ] Documentation updated

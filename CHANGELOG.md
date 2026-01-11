@@ -97,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Code Quality
 - **360 Passing Tests**: 100% test coverage for critical paths (82% overall)
 - **1510 Test Assertions**: Comprehensive validation of all features
-- **PHPStan Level 9**: Maximum static analysis strictness
+- **PHPStan Level 10 Strict**: Maximum static analysis strictness
 - **PSR-12 Compliant**: Industry-standard code formatting
 - **Strict Types**: All 38 source files use `declare(strict_types=1)`
 
@@ -151,7 +151,7 @@ N/A - Initial release
 - Development tooling setup
 - PSR-12 coding standards enforcement
 - PHPUnit testing framework with 90% coverage threshold
-- PHPStan static analysis at level 9
+- PHPStan 2.1 static analysis at level 10 strict
 
 ---
 
