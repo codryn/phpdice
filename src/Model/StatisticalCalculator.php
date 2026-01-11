@@ -122,6 +122,11 @@ class StatisticalCalculator
             $minValue = -1;
             $maxValue = 1;
             $totalValues = 3;
+        } elseif ($spec->type === DiceType::COIN) {
+            // Coin dice have values: 0, 1
+            $minValue = 0;
+            $maxValue = 1;
+            $totalValues = 2;
         } else {
             // Standard and percentile dice: 1 to sides
             $minValue = 1;
@@ -628,6 +633,12 @@ class StatisticalCalculator
                 $maxPerDie = 1;
                 $expectedPerDie = 0;
                 $variancePerDie = 2.0 / 3.0;
+            } elseif ($node->getType() === DiceType::COIN) {
+                // Coin dice have values: 0, 1
+                $minPerDie = 0;
+                $maxPerDie = 1;
+                $expectedPerDie = 0.5;
+                $variancePerDie = 0.25; // (0^2 + 1^2)/2 - 0.5^2 = 0.5 - 0.25 = 0.25
             } else {
                 // Standard and percentile dice
                 $minPerDie = 1;
