@@ -27,7 +27,7 @@ class RollModifiers
      * @param string|null $edgeOperator Edge comparison operator (>=, <=)
      * @param int $edgeLimit Max edge dice per die (default 100)
      * @param int|null $successThreshold Count successes above this value
-     * @param string|null $successOperator Success comparison operator (>=, >)
+     * @param string|null $successOperator Success comparison operator (>=, >, <=, <, ==, 'even', 'odd')
      * @param int|null $criticalSuccess Flag critical success on this value
      * @param int|null $criticalFailure Flag critical failure on this value
      * @param int|null $autoSuccess Automatic success on this value (regardless of DC)

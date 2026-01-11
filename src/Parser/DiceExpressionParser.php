@@ -777,29 +777,34 @@ class DiceExpressionParser
         }
 
         // STEP 3: Parse count (success counting - must come after keep)
-        // Check for success counting: "count >=N" or "count >N" or "success threshold N" (legacy)
+        // Check for success counting: "count >=N" or "count >N" or "count even" or "count odd" or "success threshold N" (legacy)
         if ($this->match(Token::TYPE_KEYWORD, ['count'])) {
-            // After 'count', comparison operator is required
-            if (!$this->check(Token::TYPE_COMPARISON)) {
+            // After 'count', we expect either a comparison operator, 'even', or 'odd'
+            if ($this->match(Token::TYPE_KEYWORD, ['even', 'odd'])) {
+                // Handle 'count even' or 'count odd'
+                $successOperator = (string)$this->previous()->value;
+                $successThreshold = null; // Not used for even/odd
+            } elseif ($this->check(Token::TYPE_COMPARISON)) {
+                // Handle 'count >=N' style
+                $comparison = $this->advance();
+                $operator = (string)$comparison->value;
+
+                // Allow all comparison operators for success counting
+                if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
+                    throw new \PHPDice\Exception\ValidationException(
+                        "Invalid success operator '{$operator}'. Only >=, >, <=, <, and == are supported for success counting.",
+                        'success'
+                    );
+                }
+
+                $successOperator = $operator;
+                $successThreshold = $this->consumeNumber();
+            } else {
                 throw new ParseException(
-                    "Expected comparison operator after 'count' keyword",
+                    "Expected comparison operator, 'even', or 'odd' after 'count' keyword",
                     $this->peek()->position
                 );
             }
-
-            $comparison = $this->advance();
-            $operator = (string)$comparison->value;
-
-            // Allow all comparison operators for success counting
-            if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Invalid success operator '{$operator}'. Only >=, >, <=, <, and == are supported for success counting.",
-                    'success'
-                );
-            }
-
-            $successOperator = $operator;
-            $successThreshold = $this->consumeNumber();
         } elseif ($this->match(Token::TYPE_KEYWORD, ['success'])) {
             // Legacy syntax: "success threshold N"
             // Expect "threshold N"

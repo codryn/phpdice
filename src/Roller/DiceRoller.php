@@ -195,12 +195,12 @@ class DiceRoller
 
         // Handle success counting mode
         $successCount = null;
-        if ($modifiers->successThreshold !== null && $modifiers->successOperator !== null) {
+        if ($modifiers->successOperator !== null) {
             $successCount = $this->countSuccesses($finalValues, $modifiers->successThreshold, $modifiers->successOperator);
         }
 
         // Calculate total
-        if ($modifiers->successThreshold !== null) {
+        if ($modifiers->successOperator !== null) {
             // In success counting mode, total = success count
             $total = $successCount ?? 0;
         } elseif ($ast !== null) {
@@ -377,11 +377,11 @@ class DiceRoller
      * Count successes based on threshold and operator.
      *
      * @param array<int> $diceValues Dice values to check
-     * @param int $threshold Success threshold
-     * @param string $operator Comparison operator (>=, >, <=, <, ==)
+     * @param int|null $threshold Success threshold (null for even/odd)
+     * @param string $operator Comparison operator (>=, >, <=, <, ==, 'even', 'odd')
      * @return int Number of successful dice
      */
-    private function countSuccesses(array $diceValues, int $threshold, string $operator): int
+    private function countSuccesses(array $diceValues, ?int $threshold, string $operator): int
     {
         $count = 0;
         foreach ($diceValues as $value) {
@@ -391,6 +391,8 @@ class DiceRoller
                 '<=' => $value <= $threshold,
                 '<' => $value < $threshold,
                 '==' => $value === $threshold,
+                'even' => $value % 2 === 0,
+                'odd' => $value % 2 !== 0,
                 default => false,
             };
             if ($matches) {
@@ -623,7 +625,7 @@ class DiceRoller
 
             // For success counting, use the success count as the result
             // Otherwise, use the total
-            if ($modifiers->successThreshold !== null) {
+            if ($modifiers->successOperator !== null) {
                 $node->setRollResult($result->successCount ?? 0);
             } else {
                 $node->setRollResult($result->total);
