@@ -61,7 +61,7 @@ class DiceExpressionParser
 
         // Tokenize
         $lexer = new Lexer($expression);
-        $this->tokens = $lexer->tokenize();
+        $this->tokens = array_values($lexer->tokenize());
         $this->current = 0;
 
         // Parse initial expression to get base AST

@@ -443,15 +443,24 @@ class DiceRoller
         arsort($indexed);
 
         // Take top N
-        $keptIndices = array_slice(array_keys($indexed), 0, $count, true);
-        $discardedIndices = array_slice(array_keys($indexed), $count, null, true);
+        $sortedIndices = array_keys($indexed);
 
+        $keptList = [];
+        $discardedList = [];
         $keptValues = [];
-        foreach ($keptIndices as $index) {
-            $keptValues[] = $diceValues[$index];
+
+        $i = 0;
+        foreach ($sortedIndices as $index) {
+            if ($i < $count) {
+                $keptList[] = $index;
+                $keptValues[] = $diceValues[$index];
+            } else {
+                $discardedList[] = $index;
+            }
+            $i++;
         }
 
-        return [$keptValues, array_values($keptIndices), array_values($discardedIndices)];
+        return [$keptValues, $keptList, $discardedList];
     }
 
     /**
@@ -473,15 +482,24 @@ class DiceRoller
         asort($indexed);
 
         // Take bottom N
-        $keptIndices = array_slice(array_keys($indexed), 0, $count, true);
-        $discardedIndices = array_slice(array_keys($indexed), $count, null, true);
+        $sortedIndices = array_keys($indexed);
 
+        $keptList = [];
+        $discardedList = [];
         $keptValues = [];
-        foreach ($keptIndices as $index) {
-            $keptValues[] = $diceValues[$index];
+
+        $i = 0;
+        foreach ($sortedIndices as $index) {
+            if ($i < $count) {
+                $keptList[] = $index;
+                $keptValues[] = $diceValues[$index];
+            } else {
+                $discardedList[] = $index;
+            }
+            $i++;
         }
 
-        return [$keptValues, array_values($keptIndices), array_values($discardedIndices)];
+        return [$keptValues, $keptList, $discardedList];
     }
 
     /**
@@ -672,10 +690,10 @@ class DiceRoller
         } elseif ($node instanceof ConditionalNode) {
             // Roll the condition first
             $this->rollDiceNode($node->getCondition(), $allDiceValues);
-            
+
             // Evaluate condition to determine which branch to roll
             $conditionValue = $node->getCondition()->evaluate();
-            
+
             // Roll the appropriate branch
             if ($conditionValue != 0) {
                 $this->rollDiceNode($node->getTrueBranch(), $allDiceValues);

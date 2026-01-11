@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Codryn\PHPDice\Parser\AST;
 
-use Codryn\PHPDice\Exception\ValidationException;
-
 /**
  * Represents a conditional (if-then-else) expression.
  * Evaluates condition and returns either trueBranch or falseBranch result.

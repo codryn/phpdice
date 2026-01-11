@@ -853,18 +853,26 @@ class StatisticalCalculator
                 // Handle multiple arguments
                 $argStats = array_map(fn ($arg) => $this->calculateFromAstInternal($arg), $node->getArguments());
 
+                if ($argStats === []) {
+                    return new StatisticalData(0, 0, 0.0, null, null);
+                }
+
+                $minimums = array_map(fn ($s) => $s->minimum, $argStats);
+                $maximums = array_map(fn ($s) => $s->maximum, $argStats);
+                $expecteds = array_map(fn ($s) => $s->expected, $argStats);
+
                 return match ($lowerName) {
                     'min' => new StatisticalData(
-                        min(array_map(fn ($s) => $s->minimum, $argStats)),
-                        min(array_map(fn ($s) => $s->maximum, $argStats)),
-                        round(min(array_map(fn ($s) => $s->expected, $argStats)), 3),
+                        min($minimums),
+                        min($maximums),
+                        round(min($expecteds), 3),
                         null, // Complex to compute
                         null
                     ),
                     'max' => new StatisticalData(
-                        max(array_map(fn ($s) => $s->minimum, $argStats)),
-                        max(array_map(fn ($s) => $s->maximum, $argStats)),
-                        round(max(array_map(fn ($s) => $s->expected, $argStats)), 3),
+                        max($minimums),
+                        max($maximums),
+                        round(max($expecteds), 3),
                         null, // Complex to compute
                         null
                     ),

@@ -8,6 +8,13 @@ require_once __DIR__ . '/BaseTestCaseMock.php';
 
 /**
  * Test conditional (boolean algebra) expressions.
+ *
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\Model\DiceExpression
+ * @covers \Codryn\PHPDice\Model\RollResult
+ * @covers \Codryn\PHPDice\Parser\AST\ConditionalNode
  */
 class ConditionalTest extends BaseTestCaseMock
 {
