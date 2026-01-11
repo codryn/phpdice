@@ -27,15 +27,15 @@ Single library project structure: `src/`, `tests/` at repository root per plan.m
 
 ### Devcontainer Setup (First Priority)
 
-- [X] T001 Create .devcontainer/devcontainer.json for PHP 8.0+ development environment
+- [X] T001 Create .devcontainer/devcontainer.json for PHP 8.1+ development environment
 - [X] T002 Configure devcontainer with Composer, Git, and development extensions (PHP Intelephense, PHPUnit, etc.)
-- [X] T003 Add devcontainer features: PHP 8.0+, Composer, Xdebug for debugging and coverage
+- [X] T003 Add devcontainer features: PHP 8.1+, Composer, Xdebug for debugging and coverage
 - [X] T004 Reopen workspace in devcontainer to ensure consistent development environment
 
 ### Project Structure Setup
 
 - [X] T005 Create directory structure: src/, tests/, docs/ per plan.md
-- [X] T006 Create composer.json with package metadata, PSR-4 autoloading for PHPDice namespace, require PHP 8.0+
+- [X] T006 Create composer.json with package metadata, PSR-4 autoloading for PHPDice namespace, require PHP 8.1+
 - [X] T007 [P] Create phpunit.xml with 90% coverage threshold and test suite configuration
 - [X] T008 [P] Create .php-cs-fixer.php for PSR-12 enforcement with strict_types requirement
 - [X] T009 [P] Create phpstan.neon for static analysis at strict level

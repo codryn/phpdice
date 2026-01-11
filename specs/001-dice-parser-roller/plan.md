@@ -11,7 +11,7 @@ Build a PHP library for parsing and rolling dice expressions that supports all m
 
 ## Technical Context
 
-**Language/Version**: PHP 8.0+
+**Language/Version**: PHP 8.1+
 **Primary Dependencies**: Composer (package management), PHPUnit 10+ (testing), PHP-CS-Fixer or PHPCS (PSR-12 enforcement), PHPStan or Psalm (static analysis)
 **Storage**: N/A (stateless library - no persistence)
 **Testing**: PHPUnit with 90% minimum code coverage enforced via phpunit.xml
@@ -128,7 +128,7 @@ CHANGELOG.md                           # Version history
 4. **Expression Syntax**: Whitespace-tolerant, developer-friendly notation
 5. **Error Handling**: Fail-fast at parse time with specific error messages
 6. **Testing Strategy**: 3-layer pyramid (unit 60%, integration 35%, contract 5%)
-7. **PHP Features**: Leverage PHP 8.0+ named arguments, union types, match expressions
+7. **PHP Features**: Leverage PHP 8.1+ named arguments, union types, match expressions
 8. **Package Standards**: PSR-4 autoloading, packagist.org publication
 9. **Documentation**: Multi-level approach (README, quickstart, API, examples)
 10. **Workflow**: TDD with feature branch strategy
@@ -147,7 +147,7 @@ All technical unknowns resolved. No blocking decisions remain.
    - 5 core entities defined: DiceExpression, DiceSpecification, RollModifiers, RollResult, StatisticalData
    - Field validation rules specified
    - Relationships and invariants documented
-   - PHP 8.0+ implementation patterns provided
+   - PHP 8.1+ implementation patterns provided
 
 2. **API Contracts** ([contracts/](./contracts/))
    - Parser API contract ([parser-api.md](./contracts/parser-api.md))
@@ -164,7 +164,7 @@ All technical unknowns resolved. No blocking decisions remain.
    - Performance tips and troubleshooting
 
 4. **Agent Context Update**
-   - GitHub Copilot context updated with PHP 8.0+, Composer, PHPUnit, PSR-12 tools
+   - GitHub Copilot context updated with PHP 8.1+, Composer, PHPUnit, PSR-12 tools
 
 ### Constitution Re-Check (Post-Design)
 
@@ -249,7 +249,7 @@ All tasks include:
 ### Files to Create First
 
 **Development Environment** (First Priority):
-1. `.devcontainer/devcontainer.json` - PHP 8.0+ development container
+1. `.devcontainer/devcontainer.json` - PHP 8.1+ development container
 2. Configure devcontainer with Composer, Git, PHP extensions (Intelephense, PHPUnit, Xdebug)
 3. Reopen workspace in devcontainer for consistent environment
 
@@ -279,14 +279,14 @@ All tasks include:
 | Parser complexity grows | Medium | Medium | Keep grammar simple; incremental additions |
 | Statistical calculations incorrect | Low | High | Test against known distributions; peer review math |
 | Performance targets missed | Low | Medium | Profile early; optimize hot paths |
-| PHP version compatibility issues | Low | Low | Use devcontainer with PHP 8.0; CI tests multiple versions |
+| PHP version compatibility issues | Low | Low | Use devcontainer with PHP 8.1; CI tests multiple versions |
 
 ### Mitigation Strategies
 
 1. **Parser complexity**: Start with simple recursive descent; refactor if needed
 2. **Statistical accuracy**: Unit tests with known probability values; 3 decimal precision verification
 3. **Performance**: Benchmark early in P1; optimize if targets missed
-4. **Compatibility**: CI pipeline tests PHP 8.0, 8.1, 8.2, 8.3
+4. **Compatibility**: CI pipeline tests PHP 8.1, 8.2, 8.3
 
 ---
 
@@ -323,4 +323,4 @@ From specification success criteria (SC-001 through SC-007):
 - Documentation polish: 2 days
 - **Total**: ~17-19 days for experienced PHP developer
 
-**With Devcontainer**: All development occurs in consistent PHP 8.0+ environment with pre-configured tools
+**With Devcontainer**: All development occurs in consistent PHP 8.1+ environment with pre-configured tools

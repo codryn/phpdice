@@ -52,14 +52,14 @@ Lexer (tokenization) → Parser (AST construction) → Validator (semantic check
 - `random_int()` is cryptographically secure (PHP 7.0+)
 - Better distribution quality than `mt_rand()`
 - Performance difference negligible for typical dice rolling (<100 dice)
-- Available in PHP 8.0+ (our minimum version)
+- Available in PHP 8.1+ (our minimum version)
 
 **Alternatives Considered**:
 - **mt_rand()**: Rejected as primary due to weaker distribution quality
 - **External RNG libraries**: Rejected as unnecessary complexity
 - **Hardware RNG**: Out of scope per spec constraints
 
-**Best Practice**: Use `random_int()` exclusively; no need for fallback at PHP 8.0+
+**Best Practice**: Use `random_int()` exclusively; no need for fallback at PHP 8.1+
 
 ## Expression Syntax Design
 
@@ -153,12 +153,12 @@ Contract Tests (5% of suite):
 
 **Coverage Target**: 90% minimum enforced via phpunit.xml
 
-## PHP 8.0+ Feature Utilization
+## PHP 8.1+ Feature Utilization
 
 ### Decision: Leverage Modern PHP Features
 
 **Rationale**:
-- PHP 8.0 minimum version enables modern syntax (per spec clarification)
+- PHP 8.1 minimum version enables modern syntax (per spec clarification)
 - Named arguments improve API clarity
 - Union types strengthen type safety
 - Match expressions simplify conditional logic
@@ -201,7 +201,7 @@ readonly class DiceExpression {
   "keywords": ["dice", "rpg", "parser", "roller", "gaming"],
   "authors": [{"name": "Marco Wuelser"}],
   "require": {
-    "php": "^8.0"
+    "php": "^8.1"
   },
   "require-dev": {
     "phpunit/phpunit": "^10.0",
@@ -262,11 +262,11 @@ readonly class DiceExpression {
 |--------------|--------|-------------|
 | Parser Technology | Custom Recursive Descent | Full control, lightweight, clear errors |
 | Statistics | Analytical Calculation | Deterministic, fast, testable |
-| RNG | random_int() | Better distribution, PHP 8.0+ standard |
+| RNG | random_int() | Better distribution, PHP 8.1+ standard |
 | Syntax | Whitespace-tolerant, $var$ placeholders, full arithmetic | Developer-friendly, no keyword collisions, powerful expressions |
 | Error Handling | Fail-fast at parse time | Early detection, statistical requirements |
 | Testing | 3-layer pyramid | 90% coverage, TDD-friendly |
-| PHP Features | PHP 8.0+ modern syntax | Type safety, readability |
+| PHP Features | PHP 8.1+ modern syntax | Type safety, readability |
 | Package | PSR-4, packagist.org | Professional, discoverable |
 | Docs | Multi-level | All audiences served |
 | Workflow | TDD + feature branches | Constitution compliance |
