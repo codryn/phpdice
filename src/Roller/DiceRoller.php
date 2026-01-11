@@ -386,13 +386,13 @@ class DiceRoller
         $count = 0;
         foreach ($diceValues as $value) {
             $matches = match ($operator) {
+                'even' => $value % 2 === 0,
+                'odd' => $value % 2 !== 0,
                 '>=' => $value >= $threshold,
                 '>' => $value > $threshold,
                 '<=' => $value <= $threshold,
                 '<' => $value < $threshold,
                 '==' => $value === $threshold,
-                'even' => $value % 2 === 0,
-                'odd' => $value % 2 !== 0,
                 default => false,
             };
             if ($matches) {

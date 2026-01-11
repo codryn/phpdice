@@ -133,13 +133,13 @@ class StatisticalCalculator
         $successValues = 0;
         for ($value = $minValue; $value <= $maxValue; $value++) {
             $matches = match ($operator) {
+                'even' => $value % 2 === 0,
+                'odd' => $value % 2 !== 0,
                 '>=' => $value >= $threshold,
                 '>' => $value > $threshold,
                 '<=' => $value <= $threshold,
                 '<' => $value < $threshold,
                 '==' => $value === $threshold,
-                'even' => $value % 2 === 0,
-                'odd' => $value % 2 !== 0,
                 default => false,
             };
             if ($matches) {
