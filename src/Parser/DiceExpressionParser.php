@@ -459,15 +459,12 @@ class DiceExpressionParser
         // Check for range operator (-)
         if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
             // Check if this is a negative end value or a range operator
-            // If the next token is also a minus, it's a negative number
-            $endIsNegative = false;
+            // If the next token is also a minus, it's a negative number (e.g., 1--5)
+            // @phpstan-ignore if.alwaysTrue (this can be false for positive ranges like 1-5)
             if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
-                $endIsNegative = true;
-            }
-
-            $end = $this->consumeNumber();
-            if ($endIsNegative) {
-                $end = -$end;
+                $end = -$this->consumeNumber();
+            } else {
+                $end = $this->consumeNumber();
             }
 
             // Validate range
