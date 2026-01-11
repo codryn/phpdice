@@ -389,12 +389,12 @@ class DiceExpressionParser
 
                 $cases[] = [
                     'range' => $range,
-                    'expression' => $caseExpression
+                    'expression' => $caseExpression,
                 ];
             } elseif ($keyword === 'default') {
                 if ($hasDefault) {
                     throw new ParseException(
-                        "Multiple default cases are not allowed in switch expression",
+                        'Multiple default cases are not allowed in switch expression',
                         $this->getCurrentPosition()
                     );
                 }
@@ -422,7 +422,7 @@ class DiceExpressionParser
         // Validate that we have at least one case
         if (empty($cases)) {
             throw new ParseException(
-                "Switch expression must have at least one case",
+                'Switch expression must have at least one case',
                 $this->getCurrentPosition()
             );
         }
@@ -586,7 +586,6 @@ class DiceExpressionParser
             $diceValue = (string)$diceToken->value;
 
             // Check for special dice types
-            $diceNode = null;
             if ($diceValue === 'dF') {
                 // Fudge dice: count is specified, sides is always 3 (representing -1, 0, +1)
                 $diceNode = new DiceNode($count, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
@@ -611,20 +610,21 @@ class DiceExpressionParser
             $diceToken = $this->peek();
             $diceValue = (string)$diceToken->value;
 
-            $diceNode = null;
             if ($diceValue === 'd%') {
                 $this->advance(); // Consume d%
                 $diceNode = new DiceNode(1, 100, \Codryn\PHPDice\Model\DiceType::PERCENTILE);
-            } elseif ($diceValue === 'dF') {
-                $this->advance(); // Consume dF
-                $diceNode = new DiceNode(1, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
-            } elseif ($diceValue === 'C') {
-                $this->advance(); // Consume C
-                $diceNode = new DiceNode(1, 2, \Codryn\PHPDice\Model\DiceType::COIN);
+                return $this->tryParseModifiersForDiceNode($diceNode);
             }
 
-            // Check if modifiers follow (for use in function arguments)
-            if ($diceNode !== null) {
+            if ($diceValue === 'dF') {
+                $this->advance(); // Consume dF
+                $diceNode = new DiceNode(1, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
+                return $this->tryParseModifiersForDiceNode($diceNode);
+            }
+
+            if ($diceValue === 'C') {
+                $this->advance(); // Consume C
+                $diceNode = new DiceNode(1, 2, \Codryn\PHPDice\Model\DiceType::COIN);
                 return $this->tryParseModifiersForDiceNode($diceNode);
             }
         }

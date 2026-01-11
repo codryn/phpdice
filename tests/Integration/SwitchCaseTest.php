@@ -167,7 +167,7 @@ class SwitchCaseTest extends BaseTestCaseMock
     }
 
     /**
-     * Test example 1 from issue: switch 1d6 case 1: 42 | case 2-5: 23 | case 6: 0
+     * Test example 1 from issue: switch 1d6 case 1: 42 | case 2-5: 23 | case 6: 0.
      */
     public function testIssueExample1(): void
     {
@@ -196,7 +196,7 @@ class SwitchCaseTest extends BaseTestCaseMock
     }
 
     /**
-     * Test example 2 from issue: switch %arg% case 1: 42 | case 2-5: 23 | case 6: 0 | default: -1
+     * Test example 2 from issue: switch %arg% case 1: 42 | case 2-5: 23 | case 6: 0 | default: -1.
      */
     public function testIssueExample2(): void
     {
