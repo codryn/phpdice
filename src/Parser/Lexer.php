@@ -195,8 +195,8 @@ class Lexer
             return new Token(Token::TYPE_DICE, 'dF', $start);
         }
 
-        // Check for dC or C (coin flip dice)
-        if ($lower === 'dc' || $lower === 'c') {
+        // Check for C (coin flip dice)
+        if ($lower === 'c') {
             return new Token(Token::TYPE_DICE, 'C', $start);
         }
 
