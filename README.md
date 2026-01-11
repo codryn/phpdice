@@ -11,12 +11,12 @@ A comprehensive PHP library for parsing and rolling dice expressions for tableto
 - **Complex Arithmetic**: Full expression evaluation with operator precedence and parentheses
 - **Error Handling**: Clear, specific error messages with location information
 - **High Performance**: Parse <100ms, Roll <50ms for complex expressions
-- **Type Safe**: Full PHP 8.0+ type declarations and strict mode
+- **Type Safe**: Full PHP 8.1+ type declarations and strict mode
 - **Well Tested**: 235+ tests with comprehensive coverage
 
 ## Requirements
 
-- PHP 8.0 or higher
+- PHP 8.1 or higher
 
 ## Installation
 
