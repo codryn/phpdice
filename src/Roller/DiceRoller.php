@@ -553,10 +553,10 @@ class DiceRoller
         } elseif ($node instanceof BinaryOpNode) {
             $this->countDiceNodes($node->getLeft(), $count);
             $this->countDiceNodes($node->getRight(), $count);
-        } elseif ($node instanceof \Codryn\PHPDice\Parser\AST\ComparisonNode) {
+        } elseif ($node instanceof ComparisonNode) {
             $this->countDiceNodes($node->getLeft(), $count);
             $this->countDiceNodes($node->getRight(), $count);
-        } elseif ($node instanceof \Codryn\PHPDice\Parser\AST\ConditionalNode) {
+        } elseif ($node instanceof ConditionalNode) {
             // Count dice in all branches (we'll only roll one, but we need to know if there are dice)
             $this->countDiceNodes($node->getCondition(), $count);
             $this->countDiceNodes($node->getTrueBranch(), $count);
@@ -665,11 +665,11 @@ class DiceRoller
             // Process left and right children
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
-        } elseif ($node instanceof \Codryn\PHPDice\Parser\AST\ComparisonNode) {
+        } elseif ($node instanceof ComparisonNode) {
             // Roll both sides of the comparison
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
-        } elseif ($node instanceof \Codryn\PHPDice\Parser\AST\ConditionalNode) {
+        } elseif ($node instanceof ConditionalNode) {
             // Roll the condition first
             $this->rollDiceNode($node->getCondition(), $allDiceValues);
             

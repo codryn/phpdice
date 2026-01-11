@@ -23,14 +23,8 @@ class ConditionalNode extends Node
     {
         $conditionValue = $this->condition->evaluate();
 
-        // Validate that condition is boolean (0 or 1)
-        // We allow any numeric value but treat 0 as false, non-zero as true
-        if ($conditionValue != 0 && $conditionValue != 1) {
-            // For non-boolean results, treat non-zero as true
-            // This allows expressions like (1d6 > 3) which might evaluate to intermediate values
-        }
-
         // Evaluate and return appropriate branch
+        // Treat 0 as false, any non-zero value as true
         if ($conditionValue != 0) {
             return $this->trueBranch->evaluate();
         } else {

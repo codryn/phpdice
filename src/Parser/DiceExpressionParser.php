@@ -10,6 +10,8 @@ use Codryn\PHPDice\Model\DiceSpecification;
 use Codryn\PHPDice\Model\RollModifiers;
 use Codryn\PHPDice\Model\StatisticalCalculator;
 use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\ComparisonNode;
+use Codryn\PHPDice\Parser\AST\ConditionalNode;
 use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
@@ -338,7 +340,7 @@ class DiceExpressionParser
             // Parse false branch
             $falseBranch = $this->parseComparison();
 
-            return new \Codryn\PHPDice\Parser\AST\ConditionalNode($condition, $trueBranch, $falseBranch);
+            return new ConditionalNode($condition, $trueBranch, $falseBranch);
         }
 
         // Not a conditional, parse as comparison
@@ -360,7 +362,7 @@ class DiceExpressionParser
             // We need to handle comparisons in conditionals, not DC checks
             $operator = (string)$this->advance()->value;
             $right = $this->parseExpression();
-            return new \Codryn\PHPDice\Parser\AST\ComparisonNode($node, $operator, $right);
+            return new ComparisonNode($node, $operator, $right);
         }
 
         return $node;
