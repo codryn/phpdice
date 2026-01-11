@@ -8,7 +8,7 @@ use Codryn\PHPDice\Parser\AST\BinaryOpNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
 use Codryn\PHPDice\Parser\AST\Node;
-use PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Parser\AST\NumberNode;
 
 /**
  * Calculates statistical properties of dice expressions.
