@@ -202,7 +202,7 @@ class DiceRoller
         // Calculate total
         if ($modifiers->successOperator !== null) {
             // In success counting mode, total = success count
-            $total = $successCount ?? 0;
+            $total = $successCount;
         } elseif ($ast !== null) {
             // Evaluate AST with dice results
             $this->setDiceResults($ast, array_sum($finalValues));

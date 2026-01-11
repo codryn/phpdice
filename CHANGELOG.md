@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+- Production-ready release
 - Performance optimizations for large dice pools
+- Extended test coverage to 90%+
 
 ## [0.3.0] - 2026-01-11
 
