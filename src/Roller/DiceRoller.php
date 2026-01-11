@@ -15,6 +15,7 @@ use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
 use Codryn\PHPDice\Parser\AST\GroupNode;
 use Codryn\PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
 
 /**
  * Rolls dice based on parsed expressions.
@@ -579,6 +580,15 @@ class DiceRoller
             $this->countDiceNodes($node->getCondition(), $count);
             $this->countDiceNodes($node->getTrueBranch(), $count);
             $this->countDiceNodes($node->getFalseBranch(), $count);
+        } elseif ($node instanceof SwitchCaseNode) {
+            // Count dice in switch expression and all case expressions
+            $this->countDiceNodes($node->getSwitchExpression(), $count);
+            foreach ($node->getCases() as $case) {
+                $this->countDiceNodes($case['expression'], $count);
+            }
+            if ($node->getDefaultExpression() !== null) {
+                $this->countDiceNodes($node->getDefaultExpression(), $count);
+            }
         } elseif ($node instanceof FunctionNode) {
             // Count dice in all arguments
             foreach ($node->getArguments() as $argument) {
@@ -699,6 +709,29 @@ class DiceRoller
                 $this->rollDiceNode($node->getTrueBranch(), $allDiceValues);
             } else {
                 $this->rollDiceNode($node->getFalseBranch(), $allDiceValues);
+            }
+        } elseif ($node instanceof SwitchCaseNode) {
+            // Roll the switch expression first
+            $this->rollDiceNode($node->getSwitchExpression(), $allDiceValues);
+
+            // Evaluate switch expression to determine which case to roll
+            $switchValue = $node->getSwitchExpression()->evaluate();
+
+            // Find and roll the matching case
+            $matched = false;
+            foreach ($node->getCases() as $case) {
+                foreach ($case['range'] as $value) {
+                    if ($switchValue == $value) {
+                        $this->rollDiceNode($case['expression'], $allDiceValues);
+                        $matched = true;
+                        break 2; // Break out of both foreach loops
+                    }
+                }
+            }
+
+            // If no case matched, roll the default expression
+            if (!$matched && $node->getDefaultExpression() !== null) {
+                $this->rollDiceNode($node->getDefaultExpression(), $allDiceValues);
             }
         } elseif ($node instanceof GroupNode) {
             // Roll dice inside the group
