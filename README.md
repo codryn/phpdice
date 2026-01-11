@@ -1,4 +1,4 @@
-# PHP Dice
+# PHPDice
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.1--8.5-blue.svg)](https://www.php.net/)
 [![PHPStan Level 10](https://img.shields.io/badge/PHPStan-level%2010-brightgreen.svg)](https://phpstan.org/)
@@ -8,7 +8,7 @@
 
 > PHP library for parsing and rolling dice expressions for tabletop RPG systems.
 
-**PHP Dice** is a powerful and flexible library that allows developers to parse and roll complex dice expressions used in various tabletop role-playing games (RPGs). It supports a wide range of dice mechanics, including advantage/disadvantage, success counting, rerolls, exploding dice, critical hits, and more.
+**PHPDice** is a powerful and flexible library that allows developers to parse and roll complex dice expressions used in various tabletop role-playing games (RPGs). It supports a wide range of dice mechanics, including advantage/disadvantage, success counting, rerolls, exploding dice, critical hits, and more.
 
 ## Features
 
@@ -19,13 +19,15 @@
 - **➗ Complex Arithmetic**: Full expression evaluation with operator precedence and parentheses
 - **❗ Error Handling**: Clear, specific error messages with location information
 - **🚀 High Performance**: Parse <100ms, Roll <50ms for complex expressions
-- **🎯 Type Safe**: Full PHP 8.1+ type declarations and strict mode
-- **🧪 Well Tested**: 235+ tests with comprehensive coverage
+- **🔒 Type Safe**: Full PHP 8.1+ type declarations and strict mode
+- **⚡ Zero Dependencies**: Pure PHP 8.1+ implementation using only stdlib and ctype extension
+- **🧪 Well Tested**: Unit tests with comprehensive coverage
+- **📦 PSR-12 Compliant**: Modern PHP coding standards
 
 ## Requirements
 
 - PHP 8.1 or higher
-- ctype extension enabled
+- ctype PHP extension enabled
 
 ## Installation
 
@@ -89,6 +91,13 @@ See [docs/api.md](docs/api.md) for complete reference.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
+## Architecture
+
+PHPDice is structured into several key components:
+- **Parser**: Converts dice expression strings into an Abstract Syntax Tree (AST) using a recursive descent parser.
+- **Model**: Represents the AST nodes, dice expressions, roll results, and related data structures.
+- **Roller**: Evaluates the AST to perform dice rolls, applying game mechanics
+
 ## Performance
 
 PHPDice is optimized for real-time use:
@@ -102,9 +111,14 @@ Tips for best performance:
 - Set reasonable explosion/reroll limits (default 100 is safe)
 - Use `getStatistics()` for probability analysis instead of Monte Carlo simulation
 
-## License
+## Quality Standards
 
-MIT License - see [LICENSE](LICENSE) file for details.
+- ✅ **PHPStan Level 10**: Strictest static analysis level from PHPSTan 2.1
+- ✅ **PSR-12**: PHP coding standards compliance
+- ✅ **Strict Types**: `declare(strict_types=1)` in all files
+- ✅ **TDD**: Test-driven development methodology
+- ✅ **Type Hints**: Full type declarations on all methods
+- ✅ **PHPDoc**: Complete documentation blocks
 
 ## Contributing
 
@@ -114,21 +128,33 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Testing requirements
 - Pull request process
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for version history and migration guides.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/codryn/phpdice/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/codryn/phpdice/discussions)
+- 📖 [Documentation](docs/)
+- 🐛 [Issue Tracker](https://github.com/codryn/phpcalendar/issues)
+- 💬 [Discussions](https://github.com/codryn/phpcalendar/discussions)
+- 📧 [Email](mailto:info@codryn.com)
 
 ## Credits
 
-Developed with adherence to:
-- PSR-12 coding standards
-- PHPStan level 10 strict analysis
-- Test-Driven Development (TDD)
-- Comprehensive documentation
+Created and maintained by Marco for [Codryn](https://codryn.com).
+
+Special thanks to:
+- The PHP community
+- PHPUnit, PHPStan, and PHP-CS-Fixer maintainers
+
+### Game Systems Copyright
+
+This library implements dice roll mechanics from various tabletop RPG systems for non-commercial use. All game system names, mechanics, and related intellectual property remain the property of their respective copyright holders. See [GAME_SYSTEMS_COPYRIGHT.md](GAME_SYSTEMS_COPYRIGHT.md) for detailed copyright notices and attributions.
+
+---
 
 Built for the tabletop RPG community 🎲
