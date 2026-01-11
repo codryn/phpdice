@@ -23,7 +23,7 @@ jobs:
       with:
         php-version: ${{ matrix.php-version }}
         coverage: xdebug
-        extensions: mbstring, xml, ctype, json
+        extensions: ctype
         tools: composer:v2
       
     - name: Validate composer.json
