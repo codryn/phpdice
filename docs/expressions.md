@@ -7,8 +7,8 @@ General rules:
 - Supported dice types: standard (d4, d6, d8, d10, d12, d20, d%), FATE dice (dF), coin flip dice (C).
 - Expressions can contain space characters for readability.
 - Parentheses can be used to group sub-expressions.
-- Mathematical functions supported: `floor()`, `ceil()`, `round(), abs(), min(), max()`.
-- Arethmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
+- Mathematical functions supported: `floor()`, `ceil()`, `round()`, `abs()`, `min()`, `max()`.
+- Arithmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
 - Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `edge`, `crit`, `glitch`, `dc`, `if`, `switch`.
 - Comments can be added at the end of expressions using the `#` character.
 
