@@ -827,9 +827,11 @@ class StatisticalCalculator
             $minimum = min($trueBranchStats->minimum, $falseBranchStats->minimum);
             // The maximum is the larger of the two maximums
             $maximum = max($trueBranchStats->maximum, $falseBranchStats->maximum);
-            // The expected value depends on the condition probability
-            // For simplicity, we average the two expectations (assuming 50/50 probability)
-            // A more accurate calculation would require evaluating the condition
+            
+            // The expected value assumes 50/50 probability for the condition
+            // This is a simplification since we don't evaluate the condition at parse time.
+            // A more accurate calculation would require evaluating the condition with
+            // the specific variable values, which is only available at roll time.
             $expected = ($trueBranchStats->expected + $falseBranchStats->expected) / 2;
             
             // Variance and standard deviation are complex to calculate for conditionals
