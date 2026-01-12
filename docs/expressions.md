@@ -7,9 +7,9 @@ General rules:
 - Supported dice types: standard (d4, d6, d8, d10, d12, d20, d%), FATE dice (dF), coin flip dice (C).
 - Expressions can contain space characters for readability.
 - Parentheses can be used to group sub-expressions.
-- Mathematical functions supported: `floor()`, `ceil()`, `round(), abs(), min(), max()`.
-- Arethmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
-- Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `edge`, `crit`, `glitch`, `dc`.
+- Mathematical functions supported: `floor()`, `ceil()`, `round()`, `abs()`, `min()`, `max()`.
+- Arithmetic operators supported: `+`, `-`, `*`, `/`, `%`, `^`.
+- Keywords are used for special mechanics: `advantage`, `disadvantage`, `keep [highest|lowest]`, `count`, `reroll`, `explode`, `edge`, `crit`, `glitch`, `dc`, `if`, `switch`.
 - Comments can be added at the end of expressions using the `#` character.
 
 ## Basic Dice Notation
@@ -131,6 +131,100 @@ Notes:
 - Only the branch corresponding to the condition result is evaluated (lazy evaluation)
 - Conditionals can be nested and combined with other expressions
 - The `if` expression follows standard operator precedence and can be used in parentheses
+
+## Switch Case Expressions
+
+Switch-case expressions allow you to map different input values to different outcomes using pattern matching. This is useful when you have multiple discrete values or ranges that should produce different results.
+
+A switch expression contains a switch value and multiple case branches in the following format:
+```
+switch expression case value: result | case value: result | ...
+```
+
+You can also specify ranges of values using the format `start-end`:
+```
+switch expression case 1-3: result | case 4-6: result
+```
+
+And you can provide a default case for values that don't match any case:
+```
+switch expression case 1: result | default: result
+```
+
+### Basic Switch with Single Values
+
+Examples:
+
+```switch 1d6 case 1: 42 | case 2: 23 | case 3: 10 | case 4: 5 | case 5: 3 | case 6: 0``` - Map each d6 value to a different result
+
+```switch $level$ case 1: 5 | case 2: 10 | case 3: 15``` - Map character level to damage bonus
+
+### Switch with Ranges
+
+You can specify ranges of values using the format `start-end`:
+
+Examples:
+
+```switch 1d6 case 1: 42 | case 2-5: 23 | case 6: 0``` - Roll 1d6, return 42 for 1, 23 for 2-5, 0 for 6
+
+```switch $score$ case 1-5: -2 | case 6-9: -1 | case 10-11: 0 | case 12-15: 1 | case 16-20: 2``` - Map ability score to modifier
+
+### Switch with Default Case
+
+A default case handles values that don't match any other case:
+
+Examples:
+
+```switch $arg$ case 1: 42 | case 2-5: 23 | case 6: 0 | default: -1``` - Return -1 for any value not in 1-6
+
+```switch 1d10 case 1-3: 10 | case 4-7: 20 | default: 30``` - Roll 1d10 with default for 8-10
+
+**Important**: If no case matches and there is no default case, the expression will throw an error. Always provide a default case when the switch expression can produce values outside your defined cases.
+
+### Switch with Dice in Case Expressions
+
+Case expressions can contain dice rolls or any other valid expression:
+
+Examples:
+
+```switch 1d6 case 1-3: 1d4 | case 4-6: 1d8``` - Roll 1d6, then roll either 1d4 or 1d8 based on result
+
+```switch $damage_type$ case 1: 2d6 | case 2: 1d12 | case 3: 3d4 | default: 1d6``` - Different damage dice based on type
+
+```switch 1d20 case 1-5: 0 | case 6-15: 1d6+2 | case 16-20: 2d6+5``` - Escalating damage based on d20 roll
+
+### Switch in Arithmetic Expressions
+
+Switch expressions can be used in larger arithmetic expressions using parentheses:
+
+Examples:
+
+```10 + (switch $bonus$ case 1: 5 | case 2: 3 | case 3: 1 | default: 0)``` - Add variable bonus to base 10
+
+```(switch 1d6 case 1-3: 2 | case 4-6: 4) * 1d8``` - Multiply d8 roll by 2 or 4 based on d6
+
+```1d20 + (switch $proficiency$ case 1: 2 | case 2: 3 | case 3: 4 | case 4: 5 | default: 0)``` - D&D skill check with proficiency bonus
+
+### Switch with Negative Values and Ranges
+
+Switch cases support negative values and ranges:
+
+Examples:
+
+```switch $x$ case -2: 10 | case -1: 20 | case 0: 30 | case 1: 40``` - Handle negative single values
+
+```switch $x$ case -5--1: 10 | case 0-5: 20``` - Negative range (-5 to -1) and positive range (0 to 5)
+
+Note: When specifying negative ranges, use the format `-5--1` (negative 5 to negative 1) where the double hyphen `--` separates the start and end values.
+
+### Switch Evaluation Rules
+
+- Only the matching case expression is evaluated (lazy evaluation)
+- The first matching case is used (cases are evaluated in order)
+- The switch expression is evaluated once before matching
+- If no case matches and no default is provided, a ParseException is thrown
+- Switch expressions can be nested and combined with other expressions
+- Switch expressions follow standard operator precedence and can be used in parentheses
 
 ## Math only expressions
 
@@ -559,18 +653,20 @@ Examples:
 When combining multiple modifiers, they must be specified in the following order:
 
 1. **if** (conditional expression - can wrap entire expressions)
-2. **advantage** or **disadvantage** or **reroll** or **explode** or **edge** (cannot combine these keywords on the same dice)
-3. **keep** or **drop** (highest/lowest)
-4. **auto** (automatic success/failure)
-5. **crit** and/or **glitch** (critical success/failure)
-6. **count** (success counting)
-7. **modifiers** (addition, subtraction, etc.)
-8. **dc** (difficulty class comparison)
-9. **tags** (metadata tags in square brackets [...])
-10. **comment** (descriptive text starting with #)
+2. **switch** (switch-case expression - can wrap entire expressions)
+3. **advantage** or **disadvantage** or **reroll** or **explode** or **edge** (cannot combine these keywords on the same dice)
+4. **keep** or **drop** (highest/lowest)
+5. **auto** (automatic success/failure)
+6. **crit** and/or **glitch** (critical success/failure)
+7. **count** (success counting)
+8. **modifiers** (addition, subtraction, etc.)
+9. **dc** (difficulty class comparison)
+10. **tags** (metadata tags in square brackets [...])
+11. **comment** (descriptive text starting with #)
 
 **Important:** 
 - `if` expressions can wrap entire expressions or be used in sub-expressions with parentheses
+- `switch` expressions can wrap entire expressions or be used in sub-expressions with parentheses
 - `advantage`, `disadvantage`, `explode`, `reroll`, and `edge` cannot be combined on the same dice roll.
 - `advantage`, `disadvantage`, `explode`, `reroll`, or `edge` must come before `keep`.
 - `auto` must come before `crit` and `glitch`
@@ -583,6 +679,8 @@ When combining multiple modifiers, they must be specified in the following order
 Examples of correct ordering:
 - `if $crit$ > 0: 2d6+5 | 1d6+2` - ✓ Correct (conditional wrapping dice rolls)
 - `1d20 + (if $rank$ >= 10: 4 | 2)` - ✓ Correct (conditional in arithmetic)
+- `switch 1d6 case 1: 42 | case 2-5: 23 | case 6: 0` - ✓ Correct (switch expression)
+- `10 + (switch $bonus$ case 1: 5 | case 2: 3 | default: 0)` - ✓ Correct (switch in arithmetic)
 - `4d6 explode keep 3 highest` - ✓ Correct
 - `6d6 reroll <=1 keep 4 highest count >=5` - ✓ Correct
 - `1d20 auto 20 crit 19 glitch 1 dc >= 15` - ✓ Correct
@@ -597,7 +695,8 @@ Examples of correct ordering:
 - `1d20 # Comment dc >= 15` - ✗ Incorrect (comment before dc)
 
 Notes:
-- Conditional expressions (`if`) have the highest precedence and can wrap entire expressions or be nested.
+- Conditional expressions (`if`) and switch-case expressions (`switch`) have the highest precedence and can wrap entire expressions or be nested.
+- Switch expressions can be used anywhere that if expressions can be used.
 - Advantage/Disadvantage shall be the first keyword to ensure correct die selection.
 - Reroll/explode/edge must come before keep/drop to ensure all dice are considered for rerolls/explosions/rule of 6.
 - Auto must come before crit/glitch to establish automatic success behavior first.
