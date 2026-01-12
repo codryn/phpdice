@@ -747,8 +747,8 @@ class StatisticalCalculator
                     floor($arg->maximum),
                     round(floor($arg->expected), 3),
                     // Variance: 0 for constants, null for variable cases
-                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
-                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
+                    $arg->minimum === $arg->maximum ? 0.0 : null,
+                    $arg->minimum === $arg->maximum ? 0.0 : null
                 ),
                 'ceil' => new StatisticalData(
                     ceil($arg->minimum),
