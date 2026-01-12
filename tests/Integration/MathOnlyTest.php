@@ -210,6 +210,31 @@ class MathOnlyTest extends BaseTestCaseMock
     }
 
     /**
+     * Test modulo operator statistics with constants (issue fix).
+     */
+    public function testModuloOperatorStatistics(): void
+    {
+        $expression = $this->phpdice->parse('10 % 3');
+
+        $this->assertEquals(1, $expression->statistics->minimum);
+        $this->assertEquals(1, $expression->statistics->maximum);
+        $this->assertEquals(1.0, $expression->statistics->expected);
+    }
+
+    /**
+     * Test complex expression from issue report.
+     */
+    public function testComplexMathOnlyStatistics(): void
+    {
+        $expression = $this->phpdice->parse('(15 - 4) ^ 2 + 10 % 3');
+
+        // (15 - 4) ^ 2 + 10 % 3 = 11 ^ 2 + 1 = 121 + 1 = 122
+        $this->assertEquals(122, $expression->statistics->minimum);
+        $this->assertEquals(122, $expression->statistics->maximum);
+        $this->assertEquals(122.0, $expression->statistics->expected);
+    }
+
+    /**
      * Test that math-only expression with variables works.
      */
     public function testMathOnlyWithVariables(): void

@@ -698,9 +698,16 @@ class StatisticalCalculator
                     null
                 ),
                 '%' => new StatisticalData(
-                    0,
-                    max($right->maximum - 1, 0),
-                    round(($right->maximum - 1) / 2, 3),
+                    // When both operands are constants (min == max), compute exact result
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum
+                        ? $left->minimum % max($right->minimum, 1)
+                        : 0,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum
+                        ? $left->maximum % max($right->maximum, 1)
+                        : max($right->maximum - 1, 0),
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum
+                        ? (float)($left->expected % max($right->expected, 1))
+                        : round(($right->maximum - 1) / 2, 3),
                     null, // Complex to compute
                     null
                 ),
@@ -819,9 +826,16 @@ class StatisticalCalculator
                     null
                 ),
                 '%' => new StatisticalData(
-                    0,
-                    max($right->maximum - 1, 0),
-                    round(($right->maximum - 1) / 2, 3),
+                    // When both operands are constants (min == max), compute exact result
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum
+                        ? $left->minimum % max($right->minimum, 1)
+                        : 0,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum
+                        ? $left->maximum % max($right->maximum, 1)
+                        : max($right->maximum - 1, 0),
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum
+                        ? (float)($left->expected % max($right->expected, 1))
+                        : round(($right->maximum - 1) / 2, 3),
                     null, // Complex to compute
                     null
                 ),
