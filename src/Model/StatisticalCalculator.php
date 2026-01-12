@@ -832,6 +832,8 @@ class StatisticalCalculator
             // A more accurate calculation would require evaluating the condition
             $expected = ($trueBranchStats->expected + $falseBranchStats->expected) / 2;
             
+            // Variance and standard deviation are complex to calculate for conditionals
+            // as they depend on the condition probability, so we set them to null
             return new StatisticalData($minimum, $maximum, round($expected, 3), null, null);
         }
 

@@ -825,6 +825,9 @@ class DiceRoller
             $groupStats = $calculator->calculateFromAst($groupExpression);
 
             // Create a DiceExpression for this group with its own statistics
+            // Groups don't have a single dice specification or top-level modifiers,
+            // as they contain a complete sub-expression that may have multiple dice
+            // and operators. The statistics are calculated from the group's AST.
             $groupDiceExpression = new DiceExpression(
                 specification: null, // Groups don't have a single dice specification
                 modifiers: new RollModifiers(), // Groups don't have top-level modifiers

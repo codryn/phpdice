@@ -271,9 +271,12 @@ final class RollGroupsTest extends BaseTestCase
         $result = $this->phpdice->roll($expression);
 
         // Main expression statistics
+        // Group 1: 2d6+3 (min: 5, max: 15)
+        // Group 2: 1d4-1 (min: 0, max: 3)
+        // Combined: min: 5+0=5, max: 15+3=18
         $mainStats = $result->expression->statistics;
-        $this->assertSame(3, $mainStats->minimum);   // (2+3) + (1-1) = 5 + 0 = 3 (actually 2+3 + 0)
-        $this->assertSame(15, $mainStats->maximum);  // (12+3) + (4-1) = 15 + 3 = 18 (actually 15 + 3)
+        $this->assertSame(5, $mainStats->minimum);
+        $this->assertSame(18, $mainStats->maximum);
         
         // Group 1 (2d6+3) statistics
         $group1Stats = $result->groups[0]->expression->statistics;
