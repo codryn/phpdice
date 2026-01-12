@@ -521,15 +521,17 @@ class StatisticalCalculator
                         $left->maximum * $right->maximum
                     ),
                     round($left->expected * $right->expected, 3),
-                    null, // Complex to compute for general case
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 '/' => new StatisticalData(
                     $left->minimum / max($right->maximum, 1),
                     $left->maximum / max($right->minimum, 1),
                     round($left->expected / max($right->expected, 1), 3),
-                    null, // Complex to compute for general case
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 default => new StatisticalData(0, 0, 0.0, null, null),
             };
@@ -687,15 +689,17 @@ class StatisticalCalculator
                         $left->maximum * $right->maximum
                     ),
                     round($left->expected * $right->expected, 3),
-                    null, // Complex for general case
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 '/' => new StatisticalData(
                     $left->minimum / max($right->maximum, 1),
                     $left->maximum / max($right->minimum, 1),
                     round($left->expected / max($right->expected, 1), 3),
-                    null, // Complex for general case
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 '%' => new StatisticalData(
                     // When both operands are constants (min == max), compute exact result
@@ -708,8 +712,9 @@ class StatisticalCalculator
                     $left->minimum === $left->maximum && $right->minimum === $right->maximum
                         ? (float)($left->expected % max($right->expected, 1))
                         : round(($right->maximum - 1) / 2, 3),
-                    null, // Complex to compute
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 '^' => new StatisticalData(
                     min(
@@ -725,8 +730,9 @@ class StatisticalCalculator
                         pow($left->maximum, $right->maximum)
                     ),
                     round(pow($left->expected, $right->expected), 3),
-                    null, // Complex to compute
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 default => new StatisticalData(0, 0, 0.0, null, null),
             };
@@ -740,8 +746,9 @@ class StatisticalCalculator
                     floor($arg->minimum),
                     floor($arg->maximum),
                     round(floor($arg->expected), 3),
-                    null, // Complex to compute
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 'ceil' => new StatisticalData(
                     ceil($arg->minimum),
@@ -815,15 +822,17 @@ class StatisticalCalculator
                         $left->maximum * $right->maximum
                     ),
                     round($left->expected * $right->expected, 3),
-                    null, // Complex for general case
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 '/' => new StatisticalData(
                     $left->minimum / max($right->maximum, 1),
                     $left->maximum / max($right->minimum, 1),
                     round($left->expected / max($right->expected, 1), 3),
-                    null, // Complex for general case
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 '%' => new StatisticalData(
                     // When both operands are constants (min == max), compute exact result
@@ -836,8 +845,9 @@ class StatisticalCalculator
                     $left->minimum === $left->maximum && $right->minimum === $right->maximum
                         ? (float)($left->expected % max($right->expected, 1))
                         : round(($right->maximum - 1) / 2, 3),
-                    null, // Complex to compute
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 '^' => new StatisticalData(
                     min(
@@ -853,8 +863,9 @@ class StatisticalCalculator
                         pow($left->maximum, $right->maximum)
                     ),
                     round(pow($left->expected, $right->expected), 3),
-                    null, // Complex to compute
-                    null
+                    // Variance: 0 for constants, null for variable cases
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null,
+                    $left->minimum === $left->maximum && $right->minimum === $right->maximum ? 0.0 : null
                 ),
                 default => new StatisticalData(0, 0, 0.0, null, null),
             };
