@@ -233,4 +233,71 @@ class ConditionalTest extends BaseTestCaseMock
             );
         }
     }
+
+    /**
+     * Test that conditional expressions have non-zero statistics.
+     */
+    public function testConditionalHasStatistics(): void
+    {
+        $expression = 'if $crit$ > 0: 2d6+5 | 1d6+2';
+        $result = $this->phpdice->roll($expression, ['crit' => 0]);
+
+        // Main expression should have valid statistics covering both branches
+        $stats = $result->expression->statistics;
+        $this->assertNotNull($stats);
+        $this->assertGreaterThan(0, $stats->expected, 'Expected value should be greater than 0');
+        $this->assertGreaterThan(0, $stats->minimum, 'Minimum should be greater than 0');
+        $this->assertGreaterThan(0, $stats->maximum, 'Maximum should be greater than 0');
+
+        // Statistics should cover the range of both branches
+        // True branch: 2d6+5 (min: 7, max: 17, expected: 12)
+        // False branch: 1d6+2 (min: 3, max: 8, expected: 5.5)
+        // Combined: min: 3, max: 17, expected: (12 + 5.5) / 2 = 8.75
+        $this->assertSame(3, $stats->minimum);
+        $this->assertSame(17, $stats->maximum);
+        $this->assertSame(8.75, $stats->expected);
+    }
+
+    /**
+     * Test conditional statistics with different value ranges.
+     */
+    public function testConditionalStatisticsWithDifferentRanges(): void
+    {
+        $expression = 'if $check$ >= 10: 3d6 | 1d4';
+
+        // Parse to get statistics
+        $expr = $this->phpdice->parse($expression, ['check' => 5]);
+
+        // Statistics should cover both branches
+        // True branch: 3d6 (min: 3, max: 18, expected: 10.5)
+        // False branch: 1d4 (min: 1, max: 4, expected: 2.5)
+        // Combined: min: 1, max: 18, expected: (10.5 + 2.5) / 2 = 6.5
+        $stats = $expr->statistics;
+        $this->assertSame(1, $stats->minimum);
+        $this->assertSame(18, $stats->maximum);
+        $this->assertSame(6.5, $stats->expected);
+    }
+
+    /**
+     * Test nested conditional expressions have statistics.
+     */
+    public function testNestedConditionalHasStatistics(): void
+    {
+        $expression = 'if $a$ > 0: (if $b$ > 0: 2d6 | 1d6) | 1d4';
+
+        // Parse to get statistics
+        $expr = $this->phpdice->parse($expression, ['a' => 0, 'b' => 0]);
+
+        // Statistics should cover all three possible outcomes
+        $stats = $expr->statistics;
+        $this->assertNotNull($stats);
+        $this->assertGreaterThan(0, $stats->minimum);
+        $this->assertGreaterThan(0, $stats->maximum);
+        $this->assertGreaterThan(0, $stats->expected);
+
+        // The minimum should be at least 1 (from 1d4 or 1d6)
+        $this->assertGreaterThanOrEqual(1, $stats->minimum);
+        // The maximum should be at least 12 (from 2d6)
+        $this->assertGreaterThanOrEqual(12, $stats->maximum);
+    }
 }

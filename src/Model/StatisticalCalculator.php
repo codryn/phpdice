@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Codryn\PHPDice\Model;
 
 use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\ConditionalNode;
+use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\GroupNode;
 use Codryn\PHPDice\Parser\AST\Node;
 use Codryn\PHPDice\Parser\AST\NumberNode;
 
@@ -789,6 +792,51 @@ class StatisticalCalculator
         if ($node instanceof NumberNode) {
             $value = $node->getValue();
             return new StatisticalData($value, $value, (float)$value, 0.0, 0.0);
+        }
+
+        if ($node instanceof DiceNode) {
+            // Handle dice nodes - calculate basic statistics
+            $spec = new DiceSpecification(
+                count: $node->getCount(),
+                sides: $node->getSides(),
+                type: $node->getType()
+            );
+            return $this->calculateBasicDice($spec);
+        }
+
+        if ($node instanceof DiceExpressionNode) {
+            // Handle dice expression nodes (dice with modifiers)
+            $spec = $node->getSpecification();
+            $modifiers = $node->getModifiers();
+            $diceNode = $node->getDiceNode();
+            return $this->calculate($spec, $modifiers, $diceNode);
+        }
+
+        if ($node instanceof GroupNode) {
+            // Handle group nodes - recursively calculate statistics for the group's expression
+            return $this->calculateFromAstInternal($node->getExpression());
+        }
+
+        if ($node instanceof ConditionalNode) {
+            // For conditionals, we need to calculate statistics for both branches
+            // and return a range that covers both possibilities
+            $trueBranchStats = $this->calculateFromAstInternal($node->getTrueBranch());
+            $falseBranchStats = $this->calculateFromAstInternal($node->getFalseBranch());
+
+            // The minimum is the smaller of the two minimums
+            $minimum = min($trueBranchStats->minimum, $falseBranchStats->minimum);
+            // The maximum is the larger of the two maximums
+            $maximum = max($trueBranchStats->maximum, $falseBranchStats->maximum);
+
+            // The expected value assumes 50/50 probability for the condition
+            // This is a simplification since we don't evaluate the condition at parse time.
+            // A more accurate calculation would require evaluating the condition with
+            // the specific variable values, which is only available at roll time.
+            $expected = ($trueBranchStats->expected + $falseBranchStats->expected) / 2;
+
+            // Variance and standard deviation are complex to calculate for conditionals
+            // as they depend on the condition probability, so we set them to null
+            return new StatisticalData($minimum, $maximum, round($expected, 3), null, null);
         }
 
         if ($node instanceof BinaryOpNode) {
