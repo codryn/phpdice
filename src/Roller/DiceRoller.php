@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Codryn\PHPDice\Roller;
 
 use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\RollModifiers;
 use Codryn\PHPDice\Model\RollResult;
 use Codryn\PHPDice\Model\StatisticalCalculator;
 use Codryn\PHPDice\Parser\AST\BinaryOpNode;
@@ -819,9 +820,24 @@ class DiceRoller
             // Note: dice have already been rolled and their results set in the nodes
             $groupTotal = $groupExpression->evaluate();
 
+            // Calculate statistics for this group's expression
+            $calculator = new StatisticalCalculator();
+            $groupStats = $calculator->calculateFromAst($groupExpression);
+
+            // Create a DiceExpression for this group with its own statistics
+            $groupDiceExpression = new DiceExpression(
+                specification: null, // Groups don't have a single dice specification
+                modifiers: new RollModifiers(), // Groups don't have top-level modifiers
+                statistics: $groupStats,
+                originalExpression: '', // Not needed for groups
+                astRoot: $groupExpression,
+                comment: $groupComment,
+                tags: $groupTags
+            );
+
             // Create a RollResult for this group
             $results[] = new RollResult(
-                expression: $expression,
+                expression: $groupDiceExpression,
                 total: $groupTotal,
                 diceValues: $groupDiceValues,
                 comment: $groupComment,
