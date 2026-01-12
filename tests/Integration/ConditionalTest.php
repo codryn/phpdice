@@ -264,10 +264,10 @@ class ConditionalTest extends BaseTestCaseMock
     public function testConditionalStatisticsWithDifferentRanges(): void
     {
         $expression = 'if $check$ >= 10: 3d6 | 1d4';
-        
+
         // Parse to get statistics
         $expr = $this->phpdice->parse($expression, ['check' => 5]);
-        
+
         // Statistics should cover both branches
         // True branch: 3d6 (min: 3, max: 18, expected: 10.5)
         // False branch: 1d4 (min: 1, max: 4, expected: 2.5)
@@ -284,17 +284,17 @@ class ConditionalTest extends BaseTestCaseMock
     public function testNestedConditionalHasStatistics(): void
     {
         $expression = 'if $a$ > 0: (if $b$ > 0: 2d6 | 1d6) | 1d4';
-        
+
         // Parse to get statistics
         $expr = $this->phpdice->parse($expression, ['a' => 0, 'b' => 0]);
-        
+
         // Statistics should cover all three possible outcomes
         $stats = $expr->statistics;
         $this->assertNotNull($stats);
         $this->assertGreaterThan(0, $stats->minimum);
         $this->assertGreaterThan(0, $stats->maximum);
         $this->assertGreaterThan(0, $stats->expected);
-        
+
         // The minimum should be at least 1 (from 1d4 or 1d6)
         $this->assertGreaterThanOrEqual(1, $stats->minimum);
         // The maximum should be at least 12 (from 2d6)

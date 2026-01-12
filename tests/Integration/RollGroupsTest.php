@@ -277,7 +277,7 @@ final class RollGroupsTest extends BaseTestCase
         $mainStats = $result->expression->statistics;
         $this->assertSame(5, $mainStats->minimum);
         $this->assertSame(18, $mainStats->maximum);
-        
+
         // Group 1 (2d6+3) statistics
         $group1Stats = $result->groups[0]->expression->statistics;
         $this->assertSame(5, $group1Stats->minimum);   // 2 + 3
