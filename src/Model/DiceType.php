@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
 /**
  * Enum representing different types of dice.
@@ -23,4 +23,9 @@ enum DiceType: string
      * Percentile dice (d% or d100) with values 1-100.
      */
     case PERCENTILE = 'percentile';
+
+    /**
+     * Coin flip dice (C or dC) with values 0 or 1.
+     */
+    case COIN = 'coin';
 }

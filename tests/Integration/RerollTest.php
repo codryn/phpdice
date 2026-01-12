@@ -2,18 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\PHPDice;
+use Codryn\PHPDice\Roller\RandomNumberGenerator;
 
 /**
  * Integration tests for reroll mechanics (US5).
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
  */
-class RerollTest extends BaseTestCase
+class RerollTest extends BaseTestCaseMock
 {
     /**
      * @test
@@ -28,23 +30,26 @@ class RerollTest extends BaseTestCase
         $this->assertEquals('<=', $expression->modifiers->rerollOperator);
         $this->assertEquals(100, $expression->modifiers->rerollLimit);
 
-        // Roll multiple times to verify rerolls happen
-        $foundReroll = false;
-        for ($i = 0; $i < 10; $i++) {
-            $result = $this->phpdice->roll('4d6 reroll <= 2');
+        // Mock a roll with one die needing reroll
+        // Die 1: 2 (reroll) -> 5
+        // Die 2: 3
+        // Die 3: 4
+        // Die 4: 6
+        $this->mockRng->expects($this->exactly(5))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(2, 5, 3, 4, 6);
 
-            // All final values should be > 2
-            foreach ($result->diceValues as $value) {
-                $this->assertGreaterThan(2, $value, 'Final die value should be > 2 after rerolling <= 2');
-            }
+        $result = $this->phpdice->roll('4d6 reroll <= 2');
 
-            if ($result->rerollHistory !== null) {
-                $foundReroll = true;
-            }
+        // All final values should be > 2
+        $this->assertEquals([5, 3, 4, 6], $result->diceValues);
+        foreach ($result->diceValues as $value) {
+            $this->assertGreaterThan(2, $value, 'Final die value should be > 2 after rerolling <= 2');
         }
 
-        // With 4d6 and threshold <=2, rerolls should happen frequently
-        $this->assertTrue($foundReroll, 'Should have found at least one reroll in 10 attempts');
+        // Should have reroll history for die 0
+        $this->assertNotNull($result->rerollHistory);
+        $this->assertArrayHasKey(0, $result->rerollHistory);
     }
 
     /**
@@ -81,9 +86,18 @@ class RerollTest extends BaseTestCase
         $this->assertEquals('<=', $expression->modifiers->rerollOperator);
         $this->assertEquals(5, $expression->modifiers->rerollLimit);
 
-        // Roll and verify final values
+        // Mock rolls: die 1 needs 2 rerolls, die 2 needs no reroll, die 3 needs 1 reroll
+        // Die 1: 2 (reroll) -> 3 (reroll) -> 5 (keep)
+        // Die 2: 6 (keep)
+        // Die 3: 1 (reroll) -> 4 (keep)
+        $this->mockRng->expects($this->exactly(6))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(2, 3, 5, 6, 1, 4);
+
         $result = $this->phpdice->roll('3d6 reroll 5 <= 3');
 
+        // Verify final values are all > 3
+        $this->assertEquals([5, 6, 4], $result->diceValues);
         foreach ($result->diceValues as $value) {
             $this->assertGreaterThan(3, $value, 'Final values should all be > 3');
         }
@@ -133,26 +147,54 @@ class RerollTest extends BaseTestCase
      */
     public function testDifferentComparisonOperators(): void
     {
-        // Test <
+        // Test < : reroll if value < 3, so reroll 1,2
+        // Rolls: 2 (reroll) -> 4, 3, 5, 6
+        $this->mockRng = $this->createMock(RandomNumberGenerator::class);
+        $this->phpdice = new \Codryn\PHPDice\PHPDice($this->mockRng);
+        $this->mockRng->expects($this->exactly(5))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(2, 4, 3, 5, 6);
         $result1 = $this->phpdice->roll('4d6 reroll < 3');
+        $this->assertEquals([4, 3, 5, 6], $result1->diceValues);
         foreach ($result1->diceValues as $value) {
             $this->assertGreaterThanOrEqual(3, $value);
         }
 
-        // Test >=
+        // Test >= : reroll if value >= 5, so reroll 5,6
+        // Rolls: 6 (reroll) -> 3, 4, 2, 1
+        $this->mockRng = $this->createMock(RandomNumberGenerator::class);
+        $this->phpdice = new \Codryn\PHPDice\PHPDice($this->mockRng);
+        $this->mockRng->expects($this->exactly(5))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(6, 3, 4, 2, 1);
         $result2 = $this->phpdice->roll('4d6 reroll >= 5');
+        $this->assertEquals([3, 4, 2, 1], $result2->diceValues);
         foreach ($result2->diceValues as $value) {
             $this->assertLessThan(5, $value);
         }
 
-        // Test >
+        // Test > : reroll if value > 4, so reroll 5,6
+        // Rolls: 5 (reroll) -> 3, 4, 2, 1
+        $this->mockRng = $this->createMock(RandomNumberGenerator::class);
+        $this->phpdice = new \Codryn\PHPDice\PHPDice($this->mockRng);
+        $this->mockRng->expects($this->exactly(5))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(5, 3, 4, 2, 1);
         $result3 = $this->phpdice->roll('4d6 reroll > 4');
+        $this->assertEquals([3, 4, 2, 1], $result3->diceValues);
         foreach ($result3->diceValues as $value) {
             $this->assertLessThanOrEqual(4, $value);
         }
 
-        // Test ==
+        // Test == : reroll if value == 1
+        // Rolls: 1 (reroll) -> 3, 4, 5, 6, 2, 6
+        $this->mockRng = $this->createMock(RandomNumberGenerator::class);
+        $this->phpdice = new PHPDice($this->mockRng);
+        $this->mockRng->expects($this->exactly(7))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(1, 3, 4, 5, 6, 2, 6);
         $result4 = $this->phpdice->roll('6d6 reroll == 1');
+        $this->assertEquals([3, 4, 5, 6, 2, 6], $result4->diceValues);
         foreach ($result4->diceValues as $value) {
             $this->assertNotEquals(1, $value);
         }
@@ -164,22 +206,23 @@ class RerollTest extends BaseTestCase
      */
     public function testRerollWithSuccessCounting(): void
     {
+        // Mock rolls: 2 (reroll) -> 5, 1 (reroll) -> 4, 6, 3, 5
+        // Final values: [5, 4, 6, 3, 5]
+        // Successes (>= 4): 5, 4, 6, 5 = 4 successes
+        $this->mockRng->expects($this->exactly(7))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(2, 5, 1, 4, 6, 3, 5);
+
         $result = $this->phpdice->roll('5d6 reroll <= 2 count >= 4');
 
         // All dice should be > 2 (rerolled)
+        $this->assertEquals([5, 4, 6, 3, 5], $result->diceValues);
         foreach ($result->diceValues as $value) {
             $this->assertGreaterThan(2, $value);
         }
 
-        // Count successes (>= 4)
-        $expectedSuccesses = 0;
-        foreach ($result->diceValues as $value) {
-            if ($value >= 4) {
-                $expectedSuccesses++;
-            }
-        }
-
-        $this->assertEquals($expectedSuccesses, $result->successCount);
+        // Count successes (>= 4): 5, 4, 6, 5 = 4
+        $this->assertEquals(4, $result->successCount);
     }
 
     /**
@@ -253,10 +296,18 @@ class RerollTest extends BaseTestCase
     public function testRerollWithKeepMechanics(): void
     {
         // Parser expects modifiers in order: reroll, keep, count, dc
+        // Mock rolls: 2 (reroll) -> 5, 1 (reroll) -> 6, 4, 3, 5, 6
+        // Final values: [5, 6, 4, 3, 5, 6]
+        // Keep 4 highest: [6, 6, 5, 5] (indices 1, 5, 0, 4)
+        $this->mockRng->expects($this->exactly(8))
+            ->method('generate')
+            ->willReturnOnConsecutiveCalls(2, 5, 1, 6, 4, 3, 5, 6);
+
         $result = $this->phpdice->roll('6d6 reroll <= 2 keep 4 highest');
 
         // Should roll 6 dice
         $this->assertCount(6, $result->diceValues);
+        $this->assertEquals([5, 6, 4, 3, 5, 6], $result->diceValues);
 
         // All should be > 2 (rerolled)
         foreach ($result->diceValues as $value) {

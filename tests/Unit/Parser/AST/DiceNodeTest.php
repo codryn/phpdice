@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Parser\AST;
+namespace Codryn\PHPDice\Tests\Unit\Parser\AST;
 
-use PHPDice\Model\DiceType;
-use PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Model\DiceType;
+use Codryn\PHPDice\Parser\AST\DiceNode;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for DiceNode.
  *
- * @covers \PHPDice\Parser\AST\DiceNode
- * @covers \PHPDice\Parser\AST\Node
+ * @covers \Codryn\PHPDice\Parser\AST\DiceNode
+ * @covers \Codryn\PHPDice\Parser\AST\Node
  */
 class DiceNodeTest extends TestCase
 {

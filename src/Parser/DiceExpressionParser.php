@@ -2,24 +2,32 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
-use PHPDice\Exception\ParseException;
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\RollModifiers;
-use PHPDice\Model\StatisticalCalculator;
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\DiceNode;
-use PHPDice\Parser\AST\FunctionNode;
-use PHPDice\Parser\AST\Node;
-use PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Model\StatisticalCalculator;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\ComparisonNode;
+use Codryn\PHPDice\Parser\AST\ConditionalNode;
+use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
+use Codryn\PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
 
 /**
  * Parses dice expressions into structured DiceExpression objects.
  */
 class DiceExpressionParser
 {
+    /** @var array<string> Dice modifier keywords that can appear after dice notation */
+    private const MODIFIER_KEYWORDS = ['advantage', 'disadvantage', 'keep', 'explode', 'reroll', 'edge', 'count', 'success', 'threshold', 'crit', 'glitch', 'auto'];
+
     /** @var array<int, Token> */
     private array $tokens = [];
     private int $current = 0;
@@ -28,6 +36,8 @@ class DiceExpressionParser
     private array $variables = [];
     /** @var array<string, int> Track which variables were actually used */
     private array $usedVariables = [];
+    /** @var int Group nesting depth (0 = not in group, 1 = in group) */
+    private int $groupDepth = 0;
 
     public function __construct(
         private readonly Validator $validator = new Validator(),
@@ -48,14 +58,15 @@ class DiceExpressionParser
         // Store variables for placeholder substitution
         $this->variables = $variables;
         $this->usedVariables = [];
+        $this->groupDepth = 0; // Reset group depth for each parse
 
         // Tokenize
         $lexer = new Lexer($expression);
-        $this->tokens = $lexer->tokenize();
+        $this->tokens = array_values($lexer->tokenize());
         $this->current = 0;
 
         // Parse initial expression to get base AST
-        $this->astRoot = $this->parseTerm(); // Start with term to get just the dice
+        $this->astRoot = $this->parseConditional(); // Start with conditional to support if-then-else
 
         // Extract dice specification from AST
         $diceNode = $this->findDiceNode($this->astRoot);
@@ -89,7 +100,7 @@ class DiceExpressionParser
         // At this point, current token might be +, -, *, /, or EOF
         while ($this->match(Token::TYPE_OPERATOR, ['+', '-'])) {
             $operator = $this->previous()->value;
-            $right = $this->parseTerm();
+            $right = $this->parseConditional(); // Support conditionals in dice expressions
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
         }
 
@@ -135,12 +146,38 @@ class DiceExpressionParser
             }
         }
 
+        // Parse tags if present (must come after DC and before comment)
+        $tags = null;
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
+        }
+
+        // Parse comment if present (must come after all other tokens)
+        $comment = null;
+        if ($this->match(Token::TYPE_COMMENT)) {
+            $comment = $this->expandPlaceholdersInComment((string)$this->previous()->value);
+        }
+
         // Ensure all tokens are consumed
         if (!$this->isAtEnd()) {
             $remaining = $this->peek();
+            // Check if it's a duplicate tag section
+            if ($remaining->type === Token::TYPE_TAGS) {
+                throw new ParseException(
+                    'Multiple tag sections are not allowed. Use a single tag section with comma-separated tags: [tag1, tag2, ...]',
+                    $remaining->position
+                );
+            }
+            // Check if DC keyword comes after tags (wrong order)
+            if ($remaining->type === Token::TYPE_KEYWORD && $remaining->value === 'dc' && $tags !== null) {
+                throw new ParseException(
+                    'Tags must come after DC comparison. Correct order: expression dc >= N [tags] # comment',
+                    $remaining->position
+                );
+            }
             // Check if it's a duplicate modifier keyword
             if ($remaining->type === Token::TYPE_KEYWORD) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     'Modifier conflict: cannot specify multiple or conflicting keep modifiers',
                     'modifiers'
                 );
@@ -165,6 +202,9 @@ class DiceExpressionParser
                 rerollThreshold: $modifiers->rerollThreshold,
                 rerollOperator: $modifiers->rerollOperator,
                 rerollLimit: $modifiers->rerollLimit,
+                criticalSuccess: $modifiers->criticalSuccess,
+                criticalFailure: $modifiers->criticalFailure,
+                autoSuccess: $modifiers->autoSuccess,
                 resolvedVariables: $this->usedVariables
             );
         }
@@ -180,7 +220,9 @@ class DiceExpressionParser
             originalExpression: $expression,
             astRoot: $this->astRoot,
             comparisonOperator: $comparisonOperator,
-            comparisonThreshold: $comparisonThreshold
+            comparisonThreshold: $comparisonThreshold,
+            comment: $comment,
+            tags: $tags
         );
     }
 
@@ -203,9 +245,10 @@ class DiceExpressionParser
     private function createMathOnlyExpression(string $expression): DiceExpression
     {
         // Continue parsing the rest of the expression (arithmetic operators)
+        // astRoot already contains the parsed conditional/comparison/expression
         while ($this->match(Token::TYPE_OPERATOR, ['+', '-'])) {
             $operator = $this->previous()->value;
-            $right = $this->parseTerm();
+            $right = $this->parseConditional(); // Support conditionals in math expressions
             if ($this->astRoot === null) {
                 throw new ParseException(
                     'Invalid expression: missing left operand',
@@ -213,6 +256,18 @@ class DiceExpressionParser
                 );
             }
             $this->astRoot = new BinaryOpNode($this->astRoot, (string)$operator, $right);
+        }
+
+        // Parse tags if present (must come before comment)
+        $tags = null;
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
+        }
+
+        // Parse comment if present (must come after all other tokens)
+        $comment = null;
+        if ($this->match(Token::TYPE_COMMENT)) {
+            $comment = $this->expandPlaceholdersInComment((string)$this->previous()->value);
         }
 
         // Ensure all tokens are consumed
@@ -245,8 +300,208 @@ class DiceExpressionParser
             originalExpression: $expression,
             astRoot: $this->astRoot,
             comparisonOperator: null,
-            comparisonThreshold: null
+            comparisonThreshold: null,
+            comment: $comment,
+            tags: $tags
         );
+    }
+
+    /**
+     * Parse a conditional expression (if condition: trueBranch | falseBranch).
+     * This is the highest precedence level.
+     *
+     * @return Node Conditional or comparison node
+     */
+    private function parseConditional(): Node
+    {
+        // Check for 'if' keyword
+        if ($this->match(Token::TYPE_KEYWORD, ['if'])) {
+            // Parse the condition (comparison expression)
+            $condition = $this->parseComparison();
+
+            // Expect colon
+            if (!$this->match(Token::TYPE_COLON)) {
+                throw new ParseException(
+                    "Expected ':' after if condition",
+                    $this->getCurrentPosition()
+                );
+            }
+
+            // Parse true branch
+            $trueBranch = $this->parseComparison();
+
+            // Expect pipe
+            if (!$this->match(Token::TYPE_PIPE)) {
+                throw new ParseException(
+                    "Expected '|' to separate true and false branches in if expression",
+                    $this->getCurrentPosition()
+                );
+            }
+
+            // Parse false branch
+            $falseBranch = $this->parseComparison();
+
+            return new ConditionalNode($condition, $trueBranch, $falseBranch);
+        }
+
+        // Check for 'switch' keyword
+        if ($this->match(Token::TYPE_KEYWORD, ['switch'])) {
+            return $this->parseSwitchCase();
+        }
+
+        // Not a conditional, parse as comparison
+        return $this->parseComparison();
+    }
+
+    /**
+     * Parse a switch-case expression.
+     *
+     * @return Node SwitchCase node
+     */
+    private function parseSwitchCase(): Node
+    {
+        // Parse the switch expression
+        $switchExpression = $this->parseComparison();
+
+        // Parse cases
+        $cases = [];
+        $defaultExpression = null;
+        $hasDefault = false;
+
+        // Expect at least one case or default
+        while ($this->match(Token::TYPE_KEYWORD, ['case', 'default'])) {
+            $keyword = (string)$this->previous()->value;
+
+            if ($keyword === 'case') {
+                // Parse case range (e.g., "1", "2-5")
+                $range = $this->parseCaseRange();
+
+                // Expect colon
+                if (!$this->match(Token::TYPE_COLON)) {
+                    throw new ParseException(
+                        "Expected ':' after case range",
+                        $this->getCurrentPosition()
+                    );
+                }
+
+                // Parse case expression
+                $caseExpression = $this->parseComparison();
+
+                $cases[] = [
+                    'range' => $range,
+                    'expression' => $caseExpression,
+                ];
+            } elseif ($keyword === 'default') {
+                if ($hasDefault) {
+                    throw new ParseException(
+                        'Multiple default cases are not allowed in switch expression',
+                        $this->getCurrentPosition()
+                    );
+                }
+
+                // Expect colon
+                if (!$this->match(Token::TYPE_COLON)) {
+                    throw new ParseException(
+                        "Expected ':' after default",
+                        $this->getCurrentPosition()
+                    );
+                }
+
+                // Parse default expression
+                $defaultExpression = $this->parseComparison();
+                $hasDefault = true;
+            }
+
+            // Check for pipe to continue with more cases
+            if (!$this->match(Token::TYPE_PIPE)) {
+                // No more cases
+                break;
+            }
+        }
+
+        // Validate that we have at least one case
+        if (empty($cases)) {
+            throw new ParseException(
+                'Switch expression must have at least one case',
+                $this->getCurrentPosition()
+            );
+        }
+
+        // If no default is provided, validate that cases cover all possible values
+        // This validation will be done at evaluation time since we need to know the
+        // possible values from the switch expression
+        if (!$hasDefault) {
+            // For now, we'll let the SwitchCaseNode handle this validation
+            // by checking if a value is not covered and throwing an error
+        }
+
+        return new SwitchCaseNode($switchExpression, $cases, $defaultExpression);
+    }
+
+    /**
+     * Parse a case range (e.g., "1", "2-5", "10", "-1", "-5--1").
+     *
+     * @return array<int> Array of values in the range
+     */
+    private function parseCaseRange(): array
+    {
+        // Handle negative numbers at the start
+        $isNegative = false;
+        if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+            $isNegative = true;
+        }
+
+        $start = $this->consumeNumber();
+        if ($isNegative) {
+            $start = -$start;
+        }
+
+        // Check for range operator (-)
+        if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+            // Check if this is a negative end value or a range operator
+            // If the next token is also a minus, it's a negative number (e.g., 1--5)
+            // @phpstan-ignore if.alwaysTrue (this can be false for positive ranges like 1-5)
+            if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+                $end = -$this->consumeNumber();
+            } else {
+                $end = $this->consumeNumber();
+            }
+
+            // Validate range
+            if ($start > $end) {
+                throw new ParseException(
+                    "Invalid range: start ({$start}) must be less than or equal to end ({$end})",
+                    $this->getCurrentPosition()
+                );
+            }
+
+            // Generate range
+            return range($start, $end);
+        }
+
+        // Single value
+        return [$start];
+    }
+
+    /**
+     * Parse a comparison expression (left > right, left >= right, etc.).
+     *
+     * @return Node Comparison or expression node
+     */
+    private function parseComparison(): Node
+    {
+        $node = $this->parseExpression();
+
+        // Check for comparison operators
+        if ($this->check(Token::TYPE_COMPARISON)) {
+            // Peek ahead to see if this is part of a conditional or a standalone comparison
+            // We need to handle comparisons in conditionals, not DC checks
+            $operator = (string)$this->advance()->value;
+            $right = $this->parseExpression();
+            return new ComparisonNode($node, $operator, $right);
+        }
+
+        return $node;
     }
 
     /**
@@ -292,6 +547,18 @@ class DiceExpressionParser
      */
     private function parseFactor(): Node
     {
+        // Unary minus (negative numbers)
+        if ($this->match(Token::TYPE_OPERATOR, ['-'])) {
+            $right = $this->parseFactor();
+            // Create a binary operation: 0 - right
+            return new BinaryOpNode(new NumberNode(0), '-', $right);
+        }
+
+        // Unary plus (optional, for completeness)
+        if ($this->match(Token::TYPE_OPERATOR, ['+'])) {
+            return $this->parseFactor();
+        }
+
         // Function call
         if ($this->match(Token::TYPE_FUNCTION)) {
             return $this->parseFunction();
@@ -299,12 +566,17 @@ class DiceExpressionParser
 
         // Parenthesized expression
         if ($this->match(Token::TYPE_LPAREN)) {
-            $expr = $this->parseExpression();
+            $expr = $this->parseConditional(); // Support conditionals in parentheses
             $this->consume(Token::TYPE_RPAREN, 'Expected closing parenthesis');
             return $expr;
         }
 
-        // Dice notation (XdY) - DON'T consume modifiers here, they're parsed separately
+        // Grouped expression { expression # comment }
+        if ($this->match(Token::TYPE_LBRACE)) {
+            return $this->parseGroup();
+        }
+
+        // Dice notation (XdY) - Check for modifiers and wrap in DiceExpressionNode if present
         if ($this->check(Token::TYPE_NUMBER) && $this->checkNext(Token::TYPE_DICE)) {
             $count = $this->consumeNumber();
             $diceToken = $this->advance();
@@ -313,15 +585,21 @@ class DiceExpressionParser
             // Check for special dice types
             if ($diceValue === 'dF') {
                 // Fudge dice: count is specified, sides is always 3 (representing -1, 0, +1)
-                return new DiceNode($count, 3, \PHPDice\Model\DiceType::FUDGE);
+                $diceNode = new DiceNode($count, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
             } elseif ($diceValue === 'd%') {
                 // Percentile dice: count is specified, sides is always 100
-                return new DiceNode($count, 100, \PHPDice\Model\DiceType::PERCENTILE);
+                $diceNode = new DiceNode($count, 100, \Codryn\PHPDice\Model\DiceType::PERCENTILE);
+            } elseif ($diceValue === 'C') {
+                // Coin dice: count is specified, sides is always 2 (representing 0, 1)
+                $diceNode = new DiceNode($count, 2, \Codryn\PHPDice\Model\DiceType::COIN);
             } else {
                 // Standard dice: get the sides
                 $sides = $this->consumeNumber();
-                return new DiceNode($count, $sides);
+                $diceNode = new DiceNode($count, $sides);
             }
+
+            // Check if modifiers follow (for use in function arguments)
+            return $this->tryParseModifiersForDiceNode($diceNode);
         }
 
         // Standalone d% or dF (equivalent to 1d% or 1dF)
@@ -331,10 +609,20 @@ class DiceExpressionParser
 
             if ($diceValue === 'd%') {
                 $this->advance(); // Consume d%
-                return new DiceNode(1, 100, \PHPDice\Model\DiceType::PERCENTILE);
-            } elseif ($diceValue === 'dF') {
+                $diceNode = new DiceNode(1, 100, \Codryn\PHPDice\Model\DiceType::PERCENTILE);
+                return $this->tryParseModifiersForDiceNode($diceNode);
+            }
+
+            if ($diceValue === 'dF') {
                 $this->advance(); // Consume dF
-                return new DiceNode(1, 3, \PHPDice\Model\DiceType::FUDGE);
+                $diceNode = new DiceNode(1, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
+                return $this->tryParseModifiersForDiceNode($diceNode);
+            }
+
+            if ($diceValue === 'C') {
+                $this->advance(); // Consume C
+                $diceNode = new DiceNode(1, 2, \Codryn\PHPDice\Model\DiceType::COIN);
+                return $this->tryParseModifiersForDiceNode($diceNode);
             }
         }
 
@@ -396,9 +684,69 @@ class DiceExpressionParser
     }
 
     /**
+     * Try to parse modifiers after a dice node. If modifiers are found,
+     * wrap the dice node in a DiceExpressionNode. Otherwise, return the plain dice node.
+     *
+     * This method only parses modifiers when inside a function argument context.
+     * For top-level expressions, modifiers are parsed separately by the parse() method.
+     *
+     * @param DiceNode $diceNode The dice node to potentially wrap
+     * @return Node Either the original DiceNode or a DiceExpressionNode with modifiers
+     */
+    private function tryParseModifiersForDiceNode(DiceNode $diceNode): Node
+    {
+        // Check if the next token is a modifier keyword
+        // We need to be careful not to consume tokens that belong to the parent expression
+        // Only parse modifiers if we see a modifier keyword followed by something that indicates
+        // we're in a function context (comma or closing parenthesis)
+
+        if ($this->check(Token::TYPE_KEYWORD)) {
+            $keyword = (string)$this->peek()->value;
+            if (in_array($keyword, self::MODIFIER_KEYWORDS, true)) {
+                // Look ahead to see if there's a comma or closing paren later
+                // This indicates we're in a function argument context
+                $hasCommaOrRParenAhead = false;
+                $lookahead = $this->current + 1;
+                while ($lookahead < count($this->tokens)) {
+                    $token = $this->tokens[$lookahead];
+                    if ($token->type === Token::TYPE_COMMA || $token->type === Token::TYPE_RPAREN) {
+                        $hasCommaOrRParenAhead = true;
+                        break;
+                    }
+                    // Stop looking if we hit EOF or an operator that suggests top-level expression
+                    if ($token->type === Token::TYPE_EOF) {
+                        break;
+                    }
+                    // If we see 'dc' keyword, we're likely in a top-level expression with comparison
+                    // (dc = "difficulty class", used for success rolls like "1d20+5 dc >= 15")
+                    if ($token->type === Token::TYPE_KEYWORD && $token->value === 'dc') {
+                        break;
+                    }
+                    $lookahead++;
+                }
+
+                if ($hasCommaOrRParenAhead) {
+                    // We're in a function argument - parse modifiers and wrap
+                    $spec = new DiceSpecification(
+                        count: $diceNode->getCount(),
+                        sides: $diceNode->getSides(),
+                        type: $diceNode->getType()
+                    );
+
+                    $modifiers = $this->parseModifiers($spec);
+                    return new DiceExpressionNode($diceNode, $modifiers);
+                }
+            }
+        }
+
+        // No modifiers or not in function context - return plain dice node
+        return $diceNode;
+    }
+
+    /**
      * Parse modifiers like advantage, disadvantage, keep.
      *
-     * Order: explode/reroll -> keep -> count -> dc
+     * Order: explode/reroll/edge -> keep -> count -> dc
      *
      * @param DiceSpecification $spec Dice specification
      * @return RollModifiers Roll modifiers
@@ -421,7 +769,7 @@ class DiceExpressionParser
         // Check for disadvantage keyword
         if ($this->match(Token::TYPE_KEYWORD, ['disadvantage'])) {
             if ($advantageCount !== null) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     'Cannot have both advantage and disadvantage',
                     'modifiers'
                 );
@@ -431,7 +779,7 @@ class DiceExpressionParser
             $keepLowest = $spec->count;
         }
 
-        // STEP 1: Parse explode/reroll (must come before keep)
+        // STEP 1: Parse explode/reroll/edge (must come before keep)
         $rerollThreshold = null;
         $rerollOperator = null;
         $rerollLimit = 100; // Default limit
@@ -469,7 +817,7 @@ class DiceExpressionParser
 
                 // Validate operator (only >= and <= allowed for explosions per spec)
                 if (!in_array($explosionOperator, ['>=', '<='], true)) {
-                    throw new \PHPDice\Exception\ValidationException(
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
                         "Invalid explosion operator '{$explosionOperator}'. Only >= and <= are supported for exploding dice.",
                         'explode'
                     );
@@ -494,7 +842,7 @@ class DiceExpressionParser
         if ($this->match(Token::TYPE_KEYWORD, ['reroll'])) {
             // Validate: cannot combine explode and reroll on same dice
             if ($explosionThreshold !== null) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     'Cannot combine explode and reroll on the same dice',
                     'modifiers'
                 );
@@ -520,7 +868,7 @@ class DiceExpressionParser
 
             // Validate operator (all comparison operators allowed for reroll)
             if (!in_array($rerollOperator, ['<=', '<', '>=', '>', '=='], true)) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     "Invalid reroll operator '{$rerollOperator}'",
                     'reroll'
                 );
@@ -533,14 +881,83 @@ class DiceExpressionParser
             $this->validator->validateRerollRange($spec, $rerollThreshold, $rerollOperator);
         }
 
-        // STEP 2: Parse keep (must come after explode/reroll)
+        // Check for edge: "edge [limit] [operator threshold]"
+        $edgeThreshold = null;
+        $edgeOperator = null;
+        $edgeLimit = 100; // Default limit
+
+        if ($this->match(Token::TYPE_KEYWORD, ['edge'])) {
+            // Validate: cannot combine edge with explode or reroll
+            if ($explosionThreshold !== null) {
+                throw new \Codryn\PHPDice\Exception\ValidationException(
+                    'Cannot combine edge and explode on the same dice',
+                    'modifiers'
+                );
+            }
+            if ($rerollThreshold !== null) {
+                throw new \Codryn\PHPDice\Exception\ValidationException(
+                    'Cannot combine edge and reroll on the same dice',
+                    'modifiers'
+                );
+            }
+
+            // Check for optional limit number
+            if ($this->check(Token::TYPE_NUMBER)) {
+                $nextPos = $this->current + 1;
+                // Peek ahead to see if the next token after the number is a comparison operator or EOF
+                $hasComparison = ($nextPos < count($this->tokens) && $this->tokens[$nextPos]->type === Token::TYPE_COMPARISON);
+
+                if ($hasComparison) {
+                    // This number is the limit
+                    $edgeLimit = $this->consumeNumber();
+                } else {
+                    // This number might be the limit, check if we're at end or next is keyword
+                    $nextIsEnd = ($nextPos >= count($this->tokens) || $this->tokens[$nextPos]->type === Token::TYPE_EOF);
+                    $nextIsKeyword = (!$nextIsEnd && $this->tokens[$nextPos]->type === Token::TYPE_KEYWORD);
+
+                    if ($nextIsEnd || $nextIsKeyword) {
+                        // This number is the limit with no threshold
+                        $edgeLimit = $this->consumeNumber();
+                    }
+                }
+            }
+
+            // Check for optional comparison operator and threshold
+            if ($this->check(Token::TYPE_COMPARISON)) {
+                $comparison = $this->advance();
+                $edgeOperator = (string)$comparison->value;
+
+                // Validate operator (only >= and <= allowed for edge per spec)
+                if (!in_array($edgeOperator, ['>=', '<='], true)) {
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
+                        "Invalid edge operator '{$edgeOperator}'. Only >= and <= are supported for edge dice.",
+                        'edge'
+                    );
+                }
+
+                // Get threshold value
+                $edgeThreshold = $this->consumeNumber();
+
+                // Validate edge range doesn't cover entire die
+                $this->validator->validateEdgeRange($spec, $edgeThreshold, $edgeOperator);
+            } else {
+                // No threshold specified - default to maximum die value
+                $edgeThreshold = $spec->sides;
+                $edgeOperator = '>=';
+
+                // Validate this doesn't create infinite loop (single-sided die)
+                $this->validator->validateEdgeRange($spec, $edgeThreshold, $edgeOperator);
+            }
+        }
+
+        // STEP 2: Parse keep (must come after explode/reroll/edge)
         // Check for keep X highest/lowest
         if ($this->match(Token::TYPE_KEYWORD, ['keep'])) {
             $count = $this->consumeNumber();
 
             if ($this->match(Token::TYPE_KEYWORD, ['highest'])) {
                 if ($keepHighest !== null || $keepLowest !== null) {
-                    throw new \PHPDice\Exception\ValidationException(
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
                         'Cannot specify keep multiple times',
                         'modifiers'
                     );
@@ -548,7 +965,7 @@ class DiceExpressionParser
                 $keepHighest = $count;
             } elseif ($this->match(Token::TYPE_KEYWORD, ['lowest'])) {
                 if ($keepHighest !== null || $keepLowest !== null) {
-                    throw new \PHPDice\Exception\ValidationException(
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
                         'Cannot specify keep multiple times',
                         'modifiers'
                     );
@@ -566,13 +983,13 @@ class DiceExpressionParser
 
             // Validate keep count doesn't exceed total dice
             if ($keepHighest !== null && $keepHighest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     "Cannot keep {$keepHighest} dice when only rolling {$totalDiceToRoll}",
                     'keep'
                 );
             }
             if ($keepLowest !== null && $keepLowest > $totalDiceToRoll) {
-                throw new \PHPDice\Exception\ValidationException(
+                throw new \Codryn\PHPDice\Exception\ValidationException(
                     "Cannot keep {$keepLowest} dice when only rolling {$totalDiceToRoll}",
                     'keep'
                 );
@@ -580,29 +997,36 @@ class DiceExpressionParser
         }
 
         // STEP 3: Parse count (success counting - must come after keep)
-        // Check for success counting: "count >=N" or "count >N" or "success threshold N" (legacy)
+        // Check for success counting: "count >=N", "count >N", "count even", "count odd",
+        // or "success threshold N" (legacy)
         if ($this->match(Token::TYPE_KEYWORD, ['count'])) {
-            // After 'count', comparison operator is required
-            if (!$this->check(Token::TYPE_COMPARISON)) {
+            // After 'count', we expect either a comparison operator, 'even', or 'odd'
+            if ($this->match(Token::TYPE_KEYWORD, ['even', 'odd'])) {
+                // Handle 'count even' or 'count odd'
+                $successOperator = (string)$this->previous()->value;
+                $successThreshold = null; // Not used for even/odd
+            } elseif ($this->check(Token::TYPE_COMPARISON)) {
+                // Handle 'count >=N' style
+                $comparison = $this->advance();
+                $operator = (string)$comparison->value;
+
+                // Allow all comparison operators for success counting
+                if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
+                    throw new \Codryn\PHPDice\Exception\ValidationException(
+                        "Invalid success operator '{$operator}'. " .
+                        'Only >=, >, <=, <, and == are supported for success counting.',
+                        'success'
+                    );
+                }
+
+                $successOperator = $operator;
+                $successThreshold = $this->consumeNumber();
+            } else {
                 throw new ParseException(
-                    "Expected comparison operator after 'count' keyword",
+                    "Expected comparison operator, 'even', or 'odd' after 'count' keyword",
                     $this->peek()->position
                 );
             }
-
-            $comparison = $this->advance();
-            $operator = (string)$comparison->value;
-
-            // Allow all comparison operators for success counting
-            if (!in_array($operator, ['>=', '>', '<=', '<', '=='], true)) {
-                throw new \PHPDice\Exception\ValidationException(
-                    "Invalid success operator '{$operator}'. Only >=, >, <=, <, and == are supported for success counting.",
-                    'success'
-                );
-            }
-
-            $successOperator = $operator;
-            $successThreshold = $this->consumeNumber();
         } elseif ($this->match(Token::TYPE_KEYWORD, ['success'])) {
             // Legacy syntax: "success threshold N"
             // Expect "threshold N"
@@ -615,6 +1039,15 @@ class DiceExpressionParser
             // Legacy syntax: just "threshold N" (shorthand for "success threshold N")
             $successThreshold = $this->consumeNumber();
             $successOperator = '>=';
+        }
+
+        // Check for auto success: "auto N"
+        $autoSuccess = null;
+        if ($this->match(Token::TYPE_KEYWORD, ['auto'])) {
+            $autoSuccess = $this->consumeNumber();
+
+            // Validate auto threshold is within die range
+            $this->validator->validateCriticalThreshold($spec, $autoSuccess, 'auto');
         }
 
         // Check for critical success: "crit N"
@@ -647,14 +1080,18 @@ class DiceExpressionParser
             rerollThreshold: $rerollThreshold,
             rerollOperator: $rerollOperator,
             rerollLimit: $rerollLimit,
+            edgeThreshold: $edgeThreshold,
+            edgeOperator: $edgeOperator,
+            edgeLimit: $edgeLimit,
             criticalSuccess: $criticalSuccess,
             criticalFailure: $criticalFailure,
+            autoSuccess: $autoSuccess,
             resolvedVariables: $this->usedVariables
         );
     }
 
     /**
-     * Find the first dice node in the AST.
+     * Find the first dice node in the AST that isn't already wrapped in a DiceExpressionNode.
      *
      * @param Node $node Node to search
      * @return DiceNode|null Dice node if found
@@ -663,6 +1100,12 @@ class DiceExpressionParser
     {
         if ($node instanceof DiceNode) {
             return $node;
+        }
+
+        // Don't look inside DiceExpressionNode - those dice already have their modifiers
+        // and should be treated as complete sub-expressions
+        if ($node instanceof DiceExpressionNode) {
+            return null;
         }
 
         if ($node instanceof BinaryOpNode) {
@@ -674,7 +1117,14 @@ class DiceExpressionParser
         }
 
         if ($node instanceof FunctionNode) {
-            return $this->findDiceNode($node->getArgument());
+            // Check all arguments for dice
+            foreach ($node->getArguments() as $argument) {
+                $found = $this->findDiceNode($argument);
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+            return null;
         }
 
         return null;
@@ -816,5 +1266,132 @@ class DiceExpressionParser
     private function getCurrentPosition(): int
     {
         return $this->peek()->position ?? 0;
+    }
+
+    /**
+     * Expand placeholders in a comment string to their numeric values.
+     *
+     * @param string $comment Comment string with possible placeholders
+     * @return string Comment with placeholders expanded
+     */
+    private function expandPlaceholdersInComment(string $comment): string
+    {
+        // Replace all $variable$ placeholders with their resolved values
+        $result = preg_replace_callback(
+            '/\$([a-zA-Z0-9_.]+)\$/',
+            function ($matches) {
+                $variableName = $matches[1];
+                if (array_key_exists($variableName, $this->variables)) {
+                    return (string)$this->variables[$variableName];
+                }
+                // If variable not found, leave placeholder as-is
+                return $matches[0];
+            },
+            $comment
+        );
+
+        return $result ?? $comment;
+    }
+
+    /**
+     * Parse a group expression { expression [tag1, tag2] # comment }.
+     *
+     * @return GroupNode Group node
+     * @throws ParseException If group is nested or empty
+     */
+    private function parseGroup(): GroupNode
+    {
+        // Check for nested groups
+        if ($this->groupDepth > 0) {
+            throw new ParseException(
+                'Groups cannot be nested',
+                $this->getCurrentPosition()
+            );
+        }
+
+        $this->groupDepth++;
+
+        // Parse the expression inside the group
+        $expr = $this->parseExpression();
+
+        // Check if there's an empty expression
+        // Parse optional tags
+        $tags = null;
+        if ($this->match(Token::TYPE_TAGS)) {
+            $tags = $this->parseTags((string)$this->previous()->value);
+        }
+
+        // Check for duplicate tag section before parsing comment
+        if ($this->check(Token::TYPE_TAGS)) {
+            throw new ParseException(
+                'Multiple tag sections are not allowed in a group. Use a single tag section with comma-separated tags: [tag1, tag2, ...]',
+                $this->peek()->position
+            );
+        }
+
+        // Parse optional comment
+        $comment = null;
+        if ($this->match(Token::TYPE_COMMENT)) {
+            $comment = $this->expandPlaceholdersInComment((string)$this->previous()->value);
+        }
+
+        // Expect closing brace
+        $this->consume(Token::TYPE_RBRACE, 'Expected closing brace }');
+
+        $this->groupDepth--;
+
+        return new GroupNode($expr, $comment, $tags);
+    }
+
+    /**
+     * Parse tags from tag content string.
+     * Tags are case-insensitive and can contain a-z, 0-9, ., -, _
+     * Returns lowercase normalized tag array.
+     *
+     * @param string $content Raw tag content (e.g., "tag1, tag2, tag3")
+     * @return array<string> Array of tags
+     * @throws ParseException If tag syntax is invalid
+     */
+    private function parseTags(string $content): array
+    {
+        if (trim($content) === '') {
+            return [];
+        }
+
+        // Split by comma
+        $rawTags = explode(',', $content);
+        $tags = [];
+
+        foreach ($rawTags as $rawTag) {
+            $tag = trim($rawTag);
+            if ($tag !== '') {
+                $tags[] = $this->normalizeTag($tag);
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
+     * Normalize a tag to lowercase and validate characters.
+     *
+     * @param string $tag Raw tag string
+     * @return string Normalized tag
+     * @throws ParseException If tag contains invalid characters
+     */
+    private function normalizeTag(string $tag): string
+    {
+        $tag = trim($tag);
+        $tag = strtolower($tag);
+
+        // Validate: only a-z, 0-9, ., -, _
+        if (!preg_match('/^[a-z0-9._-]+$/', $tag)) {
+            throw new ParseException(
+                "Invalid tag '{$tag}': tags can only contain a-z, 0-9, ., -, _",
+                $this->getCurrentPosition()
+            );
+        }
+
+        return $tag;
     }
 }

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
 /**
- * Integration tests for special dice types: Fudge dice (dF) and Percentile dice (d%)
- * Tests FR-007 (Fudge dice) and FR-008 (Percentile dice).
+ * Integration tests for special dice types: Fudge dice (dF), Percentile dice (d%), and Coin dice (C)
+ * Tests FR-007 (Fudge dice), FR-008 (Percentile dice), and Coin flip dice.
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Parser\Lexer
- * @covers \PHPDice\Roller\DiceRoller
- * @covers \PHPDice\Model\StatisticalCalculator
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Parser\Lexer
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\Model\StatisticalCalculator
  */
 class SpecialDiceTest extends BaseTestCase
 {
@@ -304,5 +304,181 @@ class SpecialDiceTest extends BaseTestCase
         // Actually roll to verify it works
         $result = $this->phpdice->roll('4dF explode');
         $this->assertCount(4, $result->diceValues);
+    }
+
+    /**
+     * Test coin flip notation parsing and basic rolling
+     * Coin dice work exactly as 1d2 but return 0 or 1 (head or tails).
+     */
+    public function testCoinFlipNotation(): void
+    {
+        $result = $this->phpdice->roll('1C');
+
+        $this->assertCount(1, $result->diceValues);
+        $this->assertGreaterThanOrEqual(0, $result->total);
+        $this->assertLessThanOrEqual(1, $result->total);
+        $this->assertTrue(in_array($result->total, [0, 1]), 'Coin flip must be 0 or 1');
+    }
+
+    /**
+     * Test standalone coin notation (C without count).
+     */
+    public function testStandaloneCoinNotation(): void
+    {
+        $result = $this->phpdice->roll('C');
+
+        $this->assertCount(1, $result->diceValues);
+        $this->assertGreaterThanOrEqual(0, $result->total);
+        $this->assertLessThanOrEqual(1, $result->total);
+        $this->assertTrue(in_array($result->total, [0, 1]), 'Coin flip must be 0 or 1');
+    }
+
+    /**
+     * Test multiple coin flips.
+     */
+    public function testMultipleCoinFlips(): void
+    {
+        $result = $this->phpdice->roll('5C');
+
+        $this->assertCount(5, $result->diceValues);
+
+        // Each coin should be 0 or 1
+        foreach ($result->diceValues as $value) {
+            $this->assertGreaterThanOrEqual(0, $value);
+            $this->assertLessThanOrEqual(1, $value);
+            $this->assertTrue(in_array($value, [0, 1]), 'Each coin flip must be 0 or 1');
+        }
+
+        // Total should be between 0 and 5
+        $this->assertGreaterThanOrEqual(0, $result->total);
+        $this->assertLessThanOrEqual(5, $result->total);
+    }
+
+    /**
+     * Test coin dice statistics.
+     */
+    public function testCoinDiceStatistics(): void
+    {
+        $expression = $this->phpdice->parse('1C');
+        $stats = $expression->statistics;
+
+        $this->assertSame(0, $stats->minimum, '1C minimum should be 0');
+        $this->assertSame(1, $stats->maximum, '1C maximum should be 1');
+        $this->assertSame(0.5, $stats->expected, '1C expected should be 0.5');
+    }
+
+    /**
+     * Test multiple coin dice statistics.
+     */
+    public function testMultipleCoinDiceStatistics(): void
+    {
+        $expression = $this->phpdice->parse('3C');
+        $stats = $expression->statistics;
+
+        $this->assertSame(0, $stats->minimum, '3C minimum should be 0');
+        $this->assertSame(3, $stats->maximum, '3C maximum should be 3');
+        $this->assertSame(1.5, $stats->expected, '3C expected should be 1.5');
+    }
+
+    /**
+     * Test coin dice with arithmetic modifiers.
+     */
+    public function testCoinDiceWithArithmetic(): void
+    {
+        $result = $this->phpdice->roll('2C+5');
+
+        // 2C contributes 0 to 2
+        // +5 adds 5
+        // Total range: 5 to 7
+        $this->assertGreaterThanOrEqual(5, $result->total);
+        $this->assertLessThanOrEqual(7, $result->total);
+    }
+
+    /**
+     * Test coin dice statistics with arithmetic.
+     */
+    public function testCoinDiceStatisticsWithArithmetic(): void
+    {
+        $expression = $this->phpdice->parse('2C+5');
+        $stats = $expression->statistics;
+
+        $this->assertSame(5, $stats->minimum); // 0 + 5
+        $this->assertSame(7, $stats->maximum);  // 2 + 5
+        $this->assertSame(6.0, $stats->expected); // 1 + 5
+    }
+
+    /**
+     * Test coin dice distribution over multiple rolls.
+     */
+    public function testCoinDiceDistribution(): void
+    {
+        $counts = [0 => 0, 1 => 0];
+        $iterations = 200; // Roll 200 times
+
+        for ($i = 0; $i < $iterations; $i++) {
+            $result = $this->phpdice->roll('C');
+            $value = $result->total;
+            $counts[$value]++;
+        }
+
+        // Each value should appear roughly 50% of the time (allow 30-70% range)
+        foreach ($counts as $value => $count) {
+            $percentage = ($count / $iterations) * 100;
+            $this->assertGreaterThan(30, $percentage, "Value $value appears too rarely");
+            $this->assertLessThan(70, $percentage, "Value $value appears too frequently");
+        }
+    }
+
+    /**
+     * Test complex expression with coin dice.
+     */
+    public function testComplexCoinDiceExpression(): void
+    {
+        $result = $this->phpdice->roll('3C + 1d6');
+
+        // 3C contributes 0 to 3
+        // 1d6 contributes 1 to 6
+        // Total range: 1 to 9
+        $this->assertGreaterThanOrEqual(1, $result->total);
+        $this->assertLessThanOrEqual(9, $result->total);
+    }
+
+    /**
+     * Test coin dice with success counting.
+     */
+    public function testCoinDiceSuccessCounting(): void
+    {
+        $result = $this->phpdice->roll('10C count >=1');
+
+        // Success count: how many coins rolled 1 (heads)
+        $this->assertGreaterThanOrEqual(0, $result->successCount);
+        $this->assertLessThanOrEqual(10, $result->successCount);
+    }
+
+    /**
+     * Test that coin dice work like 1d2 in behavior.
+     */
+    public function testCoinEquivalentToDice(): void
+    {
+        // Parse both expressions
+        $exprCoin = $this->phpdice->parse('1C');
+        $expr1d2 = $this->phpdice->parse('1d2');
+
+        // The statistics should have same range
+        $statsCoin = $exprCoin->statistics;
+        $stats1d2 = $expr1d2->statistics;
+
+        // Coin: 0 to 1, 1d2: 1 to 2
+        // The ranges are different by offset
+        $this->assertSame(0, $statsCoin->minimum);
+        $this->assertSame(1, $statsCoin->maximum);
+        $this->assertSame(1, $stats1d2->minimum);
+        $this->assertSame(2, $stats1d2->maximum);
+
+        // But both have the same span
+        $this->assertSame(
+            $statsCoin->maximum - $statsCoin->minimum,
+            $stats1d2->maximum - $stats1d2->minimum
+        );
     }
 }

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Exception\ValidationException;
 
 /**
  * Integration tests for User Story 5a: Success Counting.
@@ -12,11 +12,11 @@ use PHPDice\Exception\ParseException;
  * Tests dice pool mechanics where dice are counted as successes
  * if they meet a threshold (Shadowrun-style).
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Roller\DiceRoller
- * @covers \PHPDice\Model\DiceExpression
- * @covers \PHPDice\Model\RollResult
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\Model\DiceExpression
+ * @covers \Codryn\PHPDice\Model\RollResult
  */
 class SuccessCountingTest extends BaseTestCase
 {
@@ -233,8 +233,8 @@ class SuccessCountingTest extends BaseTestCase
      */
     public function testInvalidOperatorThrowsException(): void
     {
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Unexpected character');
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid success operator');
 
         $this->phpdice->parse('5d6 count != 3');
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
 /**
  * Represents the complete result of a dice roll.
@@ -23,6 +23,10 @@ class RollResult
      * @param bool|null $isSuccess Whether comparison check succeeded (for success rolls)
      * @param array<int, array{rolls: array<int, int>, count: int, limitReached: bool}>|null $rerollHistory History of rerolls per die
      * @param array<int, array{rolls: array<int, int>, count: int, cumulativeTotal: int, limitReached: bool}>|null $explosionHistory History of explosions per die
+     * @param array<int, array{rolls: array<int, int>, count: int, limitReached: bool}>|null $edgeHistory History of edge rolls per die
+     * @param string|null $comment Comment string with placeholders expanded
+     * @param array<RollResult>|null $groups Array of group roll results
+     * @param array<string>|null $tags Array of tags (lowercase)
      */
     public function __construct(
         public readonly DiceExpression $expression,
@@ -35,7 +39,11 @@ class RollResult
         public readonly bool $isCriticalFailure = false,
         public readonly ?bool $isSuccess = null,
         public readonly ?array $rerollHistory = null,
-        public readonly ?array $explosionHistory = null
+        public readonly ?array $explosionHistory = null,
+        public readonly ?array $edgeHistory = null,
+        public readonly ?string $comment = null,
+        public readonly ?array $groups = null,
+        public readonly ?array $tags = null
     ) {
     }
 }

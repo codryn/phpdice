@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
 /**
  * Contains all modifiers and special mechanics for a dice roll.
@@ -23,10 +23,14 @@ class RollModifiers
      * @param int|null $explosionThreshold Explode if condition met
      * @param string|null $explosionOperator Explosion comparison operator (>=, <=)
      * @param int $explosionLimit Max explosions per die (default 100)
+     * @param int|null $edgeThreshold Edge if condition met (adds additional dice)
+     * @param string|null $edgeOperator Edge comparison operator (>=, <=)
+     * @param int $edgeLimit Max edge dice per die (default 100)
      * @param int|null $successThreshold Count successes above this value
-     * @param string|null $successOperator Success comparison operator (>=, >)
+     * @param string|null $successOperator Success comparison operator (>=, >, <=, <, ==, 'even', 'odd')
      * @param int|null $criticalSuccess Flag critical success on this value
      * @param int|null $criticalFailure Flag critical failure on this value
+     * @param int|null $autoSuccess Automatic success on this value (regardless of DC)
      * @param array<string, int> $resolvedVariables Placeholder values (name => value)
      */
     public function __construct(
@@ -41,10 +45,14 @@ class RollModifiers
         public readonly ?int $explosionThreshold = null,
         public readonly ?string $explosionOperator = null,
         public readonly int $explosionLimit = 100,
+        public readonly ?int $edgeThreshold = null,
+        public readonly ?string $edgeOperator = null,
+        public readonly int $edgeLimit = 100,
         public readonly ?int $successThreshold = null,
         public readonly ?string $successOperator = null,
         public readonly ?int $criticalSuccess = null,
         public readonly ?int $criticalFailure = null,
+        public readonly ?int $autoSuccess = null,
         public readonly array $resolvedVariables = []
     ) {
     }

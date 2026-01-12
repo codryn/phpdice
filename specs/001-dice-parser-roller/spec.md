@@ -11,7 +11,7 @@
 
 - Q: When a placeholder variable is referenced in a roll expression but not provided at roll time (e.g., "1d20+$str$" rolled without binding "str"), what should happen? → A: Reject with clear error message listing missing variables
 - Q: How should reroll mechanics handle potentially infinite reroll scenarios (e.g., "4d6 reroll <= 6" on a d6 where every result would trigger another reroll)? → A: Validate and define hard limit for maximal rerolls.
-- Q: What is the minimum PHP version the library must support? → A: PHP 8.0
+- Q: What is the minimum PHP version the library must support? → A: PHP 8.1
 - Q: What should happen when advantage/disadvantage is requested with invalid parameters (e.g., "roll 3d6 keep 5 highest" where you're trying to keep more dice than you rolled)? → A: Reject at parse time with validation error
 - Q: When should critical success/failure thresholds be specified - at parse time (part of the expression syntax) or at roll time (as parameters to the roll function)? → A: Parse time (expression syntax)
 - Q: When should placeholder variables be bound - at parse time or roll time? → A: Parse time (required for statistical calculations to work)
@@ -376,7 +376,7 @@ The parser MUST fail with clear, actionable error messages for all invalid input
 ### Technical Assumptions
 
 - The library will be consumed as a Composer package following PSR-4 autoloading standards
-- All code will be written in PHP 8.0+ with strict type declarations enabled
+- All code will be written in PHP 8.1+ with strict type declarations enabled
 - PHPUnit will be used for all testing with minimum 90% code coverage
 - The library will be stateless - each parse/roll operation is independent
 - Randomness will use PHP's built-in random number generation (random_int preferred over mt_rand)
@@ -400,7 +400,7 @@ The parser MUST fail with clear, actionable error messages for all invalid input
 
 ### Compatibility Constraints
 
-- Must support PHP 8.0 and higher
+- Must support PHP 8.1 and higher
 - Must work on all major PHP platforms (Linux, Windows, macOS)
 - Must be compatible with common PHP frameworks (Laravel, Symfony, etc.) without conflicts
 

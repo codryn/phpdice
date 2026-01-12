@@ -253,7 +253,7 @@ public ?bool $isSuccess = null;              // True if comparison passed
 **RNG Function**: `random_int(min, max)`
 - Cryptographically secure random integers
 - Uniform distribution across range
-- Available in PHP 7.0+ (guaranteed in PHP 8.0+)
+- Available in PHP 7.0+ (guaranteed in PHP 8.1+)
 
 **Distribution Quality**:
 - Each die face has equal probability

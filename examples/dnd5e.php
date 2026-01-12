@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use PHPDice\PHPDice;
+use Codryn\PHPDice\PHPDice;
 
 $phpdice = new PHPDice();
 
@@ -45,12 +45,12 @@ $result = $phpdice->roll('1d20+5 dc >= 15');
 echo "   Roll: {$result->total}\n";
 echo "   Result: " . ($result->isSuccess ? 'SUCCESS!' : 'FAILURE') . "\n\n";
 
-// 5. Critical Hit Detection
+// 5. Critical Hit Detection (with auto success on natural 20)
 echo "5. Attack Roll with Critical Detection:\n";
-$result = $phpdice->roll('1d20 crit 15 glitch 1 +7 dc >= 15');
+$result = $phpdice->roll('1d20 auto 20 crit 20 glitch 1 +7 dc >= 15');
 echo "   Result: {$result->total} (Rolled: " . implode(', ', $result->diceValues) . ")\n";
 if ($result->isCriticalSuccess) {
-    echo "   *** CRITICAL HIT CHANGE! ***\n";
+    echo "   *** CRITICAL HIT! ***\n";
 } elseif ($result->isCriticalFailure) {
     echo "   *** CRITICAL MISS! ***\n";
 } else {
@@ -76,16 +76,16 @@ echo "8. Initiative Roll (+2 DEX):\n";
 $result = $phpdice->roll('1d20+2');
 echo "   Initiative: {$result->total}\n\n";
 
-// 9. Death Saving Throw
+// 9. Death Saving Throw (with auto success on natural 20)
 echo "9. Death Saving Throw:\n";
-$result = $phpdice->roll('1d20 crit 20 glitch 1');
+$result = $phpdice->roll('1d20 auto 20 crit 20 glitch 1 dc >= 10');
 $die = $result->diceValues[0];
 echo "   Roll: {$die}\n";
 if ($result->isCriticalSuccess) {
     echo "   Natural 20! Character stabilizes and regains 1 HP!\n";
 } elseif ($result->isCriticalFailure) {
     echo "   Natural 1! Counts as TWO failures!\n";
-} elseif ($die >= 10) {
+} elseif ($result->isSuccess) {
     echo "   Success!\n";
 } else {
     echo "   Failure.\n";

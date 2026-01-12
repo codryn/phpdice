@@ -1,5 +1,8 @@
 parameters:
-    level: 9
+    level: 10
     paths:
         - src
+    excludePaths:
+        - tests
     tmpDir: build/phpstan
+    reportUnmatchedIgnoredErrors: true

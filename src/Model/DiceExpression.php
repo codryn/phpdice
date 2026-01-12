@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
-use PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\Node;
 
 /**
  * Represents a fully parsed and validated dice expression ready for rolling.
@@ -21,6 +21,8 @@ class DiceExpression
      * @param Node|null $astRoot Abstract syntax tree for evaluation
      * @param string|null $comparisonOperator Operator for success rolls (>=, <=, etc.)
      * @param int|null $comparisonThreshold Target number for comparisons
+     * @param string|null $comment Comment string (if provided)
+     * @param array<string>|null $tags Array of tags (lowercase)
      */
     public function __construct(
         public readonly ?DiceSpecification $specification,
@@ -29,7 +31,9 @@ class DiceExpression
         public readonly string $originalExpression,
         public readonly ?Node $astRoot = null,
         public readonly ?string $comparisonOperator = null,
-        public readonly ?int $comparisonThreshold = null
+        public readonly ?int $comparisonThreshold = null,
+        public readonly ?string $comment = null,
+        public readonly ?array $tags = null
     ) {
     }
 

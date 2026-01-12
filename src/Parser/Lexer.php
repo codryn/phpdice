@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
-use PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Exception\ParseException;
 
 /**
  * Tokenizes dice expressions into a stream of tokens.
@@ -87,11 +87,61 @@ class Lexer
                 continue;
             }
 
+            // Braces (for groups)
+            if ($char === '{') {
+                $tokens[] = new Token(Token::TYPE_LBRACE, '{', $this->position);
+                $this->position++;
+                continue;
+            }
+
+            if ($char === '}') {
+                $tokens[] = new Token(Token::TYPE_RBRACE, '}', $this->position);
+                $this->position++;
+                continue;
+            }
+
             // Comma (for function arguments)
             if ($char === ',') {
                 $tokens[] = new Token(Token::TYPE_COMMA, ',', $this->position);
                 $this->position++;
                 continue;
+            }
+
+            // Brackets (for tags) - read entire tag content
+            if ($char === '[') {
+                $tokens[] = $this->readTags();
+                continue;
+            }
+
+            // Comment (# followed by everything until end of input)
+            if ($char === '#') {
+                $tokens[] = $this->readComment();
+                continue;
+            }
+
+            // Colon (for conditionals)
+            if ($char === ':') {
+                $tokens[] = new Token(Token::TYPE_COLON, ':', $this->position);
+                $this->position++;
+                continue;
+            }
+
+            // Pipe (for conditional branches)
+            if ($char === '|') {
+                $tokens[] = new Token(Token::TYPE_PIPE, '|', $this->position);
+                $this->position++;
+                continue;
+            }
+
+            // Exclamation mark (for != operator)
+            if ($char === '!') {
+                if ($this->position + 1 < $this->length && $this->input[$this->position + 1] === '=') {
+                    $tokens[] = new Token(Token::TYPE_COMPARISON, '!=', $this->position);
+                    $this->position += 2;
+                    continue;
+                }
+                // Standalone ! is not supported
+                throw new ParseException("Unexpected character '!'", $this->position);
             }
 
             // Unknown character
@@ -170,6 +220,11 @@ class Lexer
             return new Token(Token::TYPE_DICE, 'dF', $start);
         }
 
+        // Check for C (coin flip dice)
+        if ($lower === 'c') {
+            return new Token(Token::TYPE_DICE, 'C', $start);
+        }
+
         // Check if it's 'd' for dice notation (might be d%)
         if ($lower === 'd') {
             // Check for d% (percentile dice)
@@ -187,8 +242,8 @@ class Lexer
             return new Token(Token::TYPE_FUNCTION, $lower, $start);
         }
 
-        // Check for advantage/disadvantage/success/reroll/explode/critical/dc keywords
-        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'crit', 'glitch', 'dc', 'count'];
+        // Check for advantage/disadvantage/success/reroll/explode/edge/critical/dc/if/switch keywords
+        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'edge', 'crit', 'glitch', 'dc', 'count', 'auto', 'even', 'odd', 'if', 'switch', 'case', 'default'];
         if (in_array($lower, $keywords, true)) {
             return new Token(Token::TYPE_KEYWORD, $lower, $start);
         }
@@ -238,6 +293,67 @@ class Lexer
 
         // Reached end of input without finding closing $
         throw new ParseException('Unclosed placeholder: missing closing $', $start);
+    }
+
+    /**
+     * Read a comment (# followed by text until end of input or closing brace).
+     *
+     * @return Token Comment token
+     */
+    private function readComment(): Token
+    {
+        $start = $this->position;
+        $this->position++; // Skip opening #
+
+        // Read until end of input or closing brace
+        $comment = '';
+        while ($this->position < $this->length) {
+            $char = $this->input[$this->position];
+
+            // Stop at closing brace (for group comments)
+            if ($char === '}') {
+                break;
+            }
+
+            $comment .= $char;
+            $this->position++;
+        }
+
+        // Trim leading and trailing whitespace from comment
+        $comment = trim($comment);
+
+        return new Token(Token::TYPE_COMMENT, $comment, $start);
+    }
+
+    /**
+     * Read tags [ tag1, tag2, tag3 ].
+     * Reads the entire content between brackets as a single string.
+     *
+     * @return Token Tags token
+     * @throws ParseException If tags are not closed
+     */
+    private function readTags(): Token
+    {
+        $start = $this->position;
+        $this->position++; // Skip opening [
+
+        // Read until closing bracket
+        $content = '';
+        while ($this->position < $this->length) {
+            $char = $this->input[$this->position];
+
+            // Found closing bracket
+            if ($char === ']') {
+                $this->position++; // Consume ]
+                return new Token(Token::TYPE_TAGS, $content, $start);
+            }
+
+            $content .= $char;
+            $this->position++;
+        }
+
+        // Reached end of input without finding closing bracket
+        throw new ParseException('Unclosed tag: missing closing ]', $start);
     }
 
     /**

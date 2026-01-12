@@ -2,30 +2,30 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Parser;
+namespace Codryn\PHPDice\Tests\Unit\Parser;
 
-use PHPDice\Exception\ParseException;
-use PHPDice\Model\DiceType;
-use PHPDice\Parser\DiceExpressionParser;
+use Codryn\PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Model\DiceType;
+use Codryn\PHPDice\Parser\DiceExpressionParser;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for DiceExpressionParser.
  *
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Parser\Validator
- * @covers \PHPDice\Parser\Lexer
- * @covers \PHPDice\Parser\Token
- * @covers \PHPDice\Model\StatisticalCalculator
- * @covers \PHPDice\Model\StatisticalData
- * @covers \PHPDice\Model\DiceSpecification
- * @covers \PHPDice\Model\DiceExpression
- * @covers \PHPDice\Model\RollModifiers
- * @covers \PHPDice\Model\DiceType
- * @covers \PHPDice\Parser\AST\DiceNode
- * @covers \PHPDice\Parser\AST\NumberNode
- * @covers \PHPDice\Parser\AST\BinaryOpNode
- * @covers \PHPDice\Parser\AST\Node
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Parser\Validator
+ * @covers \Codryn\PHPDice\Parser\Lexer
+ * @covers \Codryn\PHPDice\Parser\Token
+ * @covers \Codryn\PHPDice\Model\StatisticalCalculator
+ * @covers \Codryn\PHPDice\Model\StatisticalData
+ * @covers \Codryn\PHPDice\Model\DiceSpecification
+ * @covers \Codryn\PHPDice\Model\DiceExpression
+ * @covers \Codryn\PHPDice\Model\RollModifiers
+ * @covers \Codryn\PHPDice\Model\DiceType
+ * @covers \Codryn\PHPDice\Parser\AST\DiceNode
+ * @covers \Codryn\PHPDice\Parser\AST\NumberNode
+ * @covers \Codryn\PHPDice\Parser\AST\BinaryOpNode
+ * @covers \Codryn\PHPDice\Parser\AST\Node
  */
 class DiceExpressionParserTest extends TestCase
 {

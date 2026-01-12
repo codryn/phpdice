@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit;
+namespace Codryn\PHPDice\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 

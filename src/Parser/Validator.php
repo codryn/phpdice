@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
-use PHPDice\Exception\ValidationException;
-use PHPDice\Model\DiceSpecification;
-use PHPDice\Model\RollModifiers;
+use Codryn\PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Model\DiceSpecification;
+use Codryn\PHPDice\Model\RollModifiers;
 
 /**
  * Validates dice expressions and their components.
@@ -192,7 +192,7 @@ class Validator
                 $coversAll = $threshold > $maxValue;
                 break;
             case '==':
-                // can never be true, dice has at least 2 distinct values
+                // Equality matches only one value, never all values (dice have at least 2 sides)
                 $coversAll = false;
                 break;
         }
@@ -201,6 +201,55 @@ class Validator
             throw new ValidationException(
                 "Explosion condition '{$operator} {$threshold}' would trigger on all possible die values (1-{$maxValue}), preventing termination",
                 'explode'
+            );
+        }
+    }
+
+    /**
+     * Validate edge range doesn't cover entire die.
+     *
+     * @param DiceSpecification $spec Dice specification
+     * @param int $threshold Edge threshold
+     * @param string $operator Edge operator
+     * @throws ValidationException If edge would always trigger
+     */
+    public function validateEdgeRange(DiceSpecification $spec, int $threshold, string $operator): void
+    {
+        $minValue = 1;
+        $maxValue = $spec->sides;
+
+        if ($threshold < 0) {
+            throw new ValidationException(
+                "Edge threshold '{$threshold}' is negative",
+                'edge'
+            );
+        }
+
+        // Check if edge condition covers all possible values
+        $coversAll = false;
+        switch ($operator) {
+            case '>':
+                $coversAll = $threshold < $minValue;
+                break;
+            case '>=':
+                $coversAll = $threshold <= $minValue;
+                break;
+            case '<=':
+                $coversAll = $threshold >= $maxValue;
+                break;
+            case '<':
+                $coversAll = $threshold > $maxValue;
+                break;
+            case '==':
+                // Equality matches only one value, never all values (dice have at least 2 sides)
+                $coversAll = false;
+                break;
+        }
+
+        if ($coversAll) {
+            throw new ValidationException(
+                "Edge condition '{$operator} {$threshold}' would trigger on all possible die values (1-{$maxValue}), preventing termination",
+                'edge'
             );
         }
     }
@@ -219,7 +268,12 @@ class Validator
         $maxValue = $spec->sides;
 
         if ($threshold < $minValue || $threshold > $maxValue) {
-            $label = $type === 'success' ? 'Critical success' : 'Critical failure';
+            $label = match ($type) {
+                'success' => 'Critical success',
+                'failure' => 'Critical failure',
+                'auto' => 'Auto success',
+                default => 'Critical',
+            };
             throw new ValidationException(
                 "{$label} threshold {$threshold} is outside die range ({$minValue}-{$maxValue})",
                 'critical'

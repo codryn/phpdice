@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Exception\ValidationException;
+use Codryn\PHPDice\Exception\ValidationException;
 
 /**
  * Integration tests for User Story 4 & 4a: Advantage/Disadvantage and Keep Mechanics.
  *
  * Tests D&D 5e style advantage/disadvantage and general keep highest/lowest mechanics.
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Roller\DiceRoller
- * @covers \PHPDice\Model\DiceExpression
- * @covers \PHPDice\Model\RollResult
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Roller\DiceRoller
+ * @covers \Codryn\PHPDice\Model\DiceExpression
+ * @covers \Codryn\PHPDice\Model\RollResult
  */
 class AdvantageTest extends BaseTestCaseMock
 {

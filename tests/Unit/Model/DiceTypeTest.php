@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Unit\Model;
+namespace Codryn\PHPDice\Tests\Unit\Model;
 
-use PHPDice\Model\DiceType;
+use Codryn\PHPDice\Model\DiceType;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for DiceType enum.
  *
- * @covers \PHPDice\Model\DiceType
+ * @covers \Codryn\PHPDice\Model\DiceType
  */
 class DiceTypeTest extends TestCase
 {
@@ -35,14 +35,22 @@ class DiceTypeTest extends TestCase
         $this->assertSame('percentile', $type->value);
     }
 
+    public function testCoinDiceType(): void
+    {
+        $type = DiceType::COIN;
+
+        $this->assertSame('coin', $type->value);
+    }
+
     public function testEnumCases(): void
     {
         $cases = DiceType::cases();
 
-        $this->assertCount(3, $cases);
+        $this->assertCount(4, $cases);
         $this->assertContains(DiceType::STANDARD, $cases);
         $this->assertContains(DiceType::FUDGE, $cases);
         $this->assertContains(DiceType::PERCENTILE, $cases);
+        $this->assertContains(DiceType::COIN, $cases);
     }
 
     public function testEnumFromValue(): void
@@ -50,5 +58,6 @@ class DiceTypeTest extends TestCase
         $this->assertSame(DiceType::STANDARD, DiceType::from('standard'));
         $this->assertSame(DiceType::FUDGE, DiceType::from('fudge'));
         $this->assertSame(DiceType::PERCENTILE, DiceType::from('percentile'));
+        $this->assertSame(DiceType::COIN, DiceType::from('coin'));
     }
 }

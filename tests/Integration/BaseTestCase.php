@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\PHPDice;
+use Codryn\PHPDice\PHPDice;
 use PHPUnit\Framework\TestCase;
 
 /**

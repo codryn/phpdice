@@ -269,7 +269,7 @@ No state transitions (immutable snapshot of roll execution)
 ## Invariants
 
 1. **Immutability**: All entities are immutable after construction
-2. **Type Safety**: All fields use strict types (PHP 8.0+ type declarations)
+2. **Type Safety**: All fields use strict types (PHP 8.1+ type declarations)
 3. **Validation**: All entities validate themselves in constructor
 4. **Completeness**: All required data for a roll is captured in these entities
 5. **Statelessness**: No entity maintains mutable state or dependencies on external services
@@ -288,7 +288,7 @@ Query Time:
   RollResult.expression → DiceExpression (trace back to request)
 ```
 
-## PHP 8.0+ Implementation Notes
+## PHP 8.1+ Implementation Notes
 
 **Use Constructor Property Promotion**:
 ```php

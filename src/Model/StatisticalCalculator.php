@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Model;
+namespace Codryn\PHPDice\Model;
 
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\DiceNode;
-use PHPDice\Parser\AST\FunctionNode;
-use PHPDice\Parser\AST\Node;
-use PHPDice\Parser\AST\NumberNode;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\NumberNode;
 
 /**
  * Calculates statistical properties of dice expressions.
@@ -26,13 +26,18 @@ class StatisticalCalculator
     public function calculate(DiceSpecification $spec, RollModifiers $modifiers, ?Node $ast = null): StatisticalData
     {
         // Handle success counting mode
-        if ($modifiers->successThreshold !== null && $modifiers->successOperator !== null) {
+        if ($modifiers->successOperator !== null) {
             return $this->calculateSuccessCount($spec, $modifiers);
         }
 
-        // Handle explosion mechanics (must check before rerolls)
+        // Handle explosion mechanics (must check before edge and rerolls)
         if ($modifiers->explosionThreshold !== null && $modifiers->explosionOperator !== null) {
             return $this->calculateWithExplosions($spec, $modifiers, $ast);
+        }
+
+        // Handle edge mechanics (must check before rerolls)
+        if ($modifiers->edgeThreshold !== null && $modifiers->edgeOperator !== null) {
+            return $this->calculateWithEdge($spec, $modifiers, $ast);
         }
 
         // Handle reroll mechanics
@@ -68,11 +73,11 @@ class StatisticalCalculator
             // If there's an AST, we need to adjust for the arithmetic operations
             if ($ast !== null) {
                 // For expressions like "1d20 advantage + 5", we need to apply the arithmetic to the keep stats
-                $keepStats = new StatisticalData($minimum, $maximum, round($expected, 3));
+                $keepStats = new StatisticalData($minimum, $maximum, round($expected, 3), null, null);
                 return $this->applyAstOperations($ast, $keepStats);
             }
 
-            return new StatisticalData($minimum, $maximum, round($expected, 3));
+            return new StatisticalData($minimum, $maximum, round($expected, 3), null, null);
         }
 
         // Apply arithmetic modifier if no AST
@@ -80,7 +85,8 @@ class StatisticalCalculator
             $minimum = $baseStats->minimum + $modifiers->arithmeticModifier;
             $maximum = $baseStats->maximum + $modifiers->arithmeticModifier;
             $expected = $baseStats->expected + $modifiers->arithmeticModifier;
-            return new StatisticalData($minimum, $maximum, round($expected, 3));
+            // Variance and standard deviation are unaffected by adding a constant
+            return new StatisticalData($minimum, $maximum, round($expected, 3), $baseStats->variance, $baseStats->standardDeviation);
         }
 
         return $baseStats;
@@ -116,6 +122,11 @@ class StatisticalCalculator
             $minValue = -1;
             $maxValue = 1;
             $totalValues = 3;
+        } elseif ($spec->type === DiceType::COIN) {
+            // Coin dice have values: 0, 1
+            $minValue = 0;
+            $maxValue = 1;
+            $totalValues = 2;
         } else {
             // Standard and percentile dice: 1 to sides
             $minValue = 1;
@@ -127,11 +138,13 @@ class StatisticalCalculator
         $successValues = 0;
         for ($value = $minValue; $value <= $maxValue; $value++) {
             $matches = match ($operator) {
-                '>=' => $value >= $threshold,
-                '>' => $value > $threshold,
-                '<=' => $value <= $threshold,
-                '<' => $value < $threshold,
-                '==' => $value === $threshold,
+                'even' => $value % 2 === 0,
+                'odd' => $value % 2 !== 0,
+                '>=' => $threshold !== null && $value >= $threshold,
+                '>' => $threshold !== null && $value > $threshold,
+                '<=' => $threshold !== null && $value <= $threshold,
+                '<' => $threshold !== null && $value < $threshold,
+                '==' => $threshold !== null && $value === $threshold,
                 default => false,
             };
             if ($matches) {
@@ -150,7 +163,11 @@ class StatisticalCalculator
         // Expected successes: count * probability
         $expected = $count * $probabilityPerDie;
 
-        return new StatisticalData($minimum, $maximum, round($expected, 3));
+        // Variance for binomial distribution: n * p * (1 - p)
+        $variance = $count * $probabilityPerDie * (1 - $probabilityPerDie);
+        $standardDeviation = sqrt($variance);
+
+        return new StatisticalData($minimum, $maximum, round($expected, 3), round($variance, 3), round($standardDeviation, 3));
     }
 
     /**
@@ -171,7 +188,30 @@ class StatisticalCalculator
             $maximum = $spec->count * $maxPerDie;
             $expected = $spec->count * $expectedPerDie;
 
-            return new StatisticalData($minimum, $maximum, round($expected, 3));
+            // Variance for fudge dice: E[X^2] - E[X]^2 = ((-1)^2 + 0^2 + 1^2)/3 - 0 = 2/3
+            $variancePerDie = 2.0 / 3.0;
+            $variance = $spec->count * $variancePerDie;
+            $standardDeviation = sqrt($variance);
+
+            return new StatisticalData($minimum, $maximum, round($expected, 3), round($variance, 3), round($standardDeviation, 3));
+        }
+
+        // Handle coin dice (C) - values are 0, 1
+        if ($spec->type === DiceType::COIN) {
+            $minPerDie = 0;
+            $maxPerDie = 1;
+            $expectedPerDie = 0.5; // Equal probability of 0, 1
+
+            $minimum = $spec->count * $minPerDie;
+            $maximum = $spec->count * $maxPerDie;
+            $expected = $spec->count * $expectedPerDie;
+
+            // Variance for coin flip: E[X^2] - E[X]^2 = (0^2 + 1^2)/2 - 0.5^2 = 0.5 - 0.25 = 0.25
+            $variancePerDie = 0.25;
+            $variance = $spec->count * $variancePerDie;
+            $standardDeviation = sqrt($variance);
+
+            return new StatisticalData($minimum, $maximum, round($expected, 3), round($variance, 3), round($standardDeviation, 3));
         }
 
         // Standard and percentile dice work the same way for statistics
@@ -183,7 +223,12 @@ class StatisticalCalculator
         $maximum = $spec->count * $maxPerDie;
         $expected = $spec->count * $expectedPerDie;
 
-        return new StatisticalData($minimum, $maximum, round($expected, 3));
+        // Variance for uniform distribution: (n^2 - 1) / 12 where n is the number of sides
+        $variancePerDie = ($spec->sides * $spec->sides - 1) / 12.0;
+        $variance = $spec->count * $variancePerDie;
+        $standardDeviation = sqrt($variance);
+
+        return new StatisticalData($minimum, $maximum, round($expected, 3), round($variance, 3), round($standardDeviation, 3));
     }
 
     /**
@@ -243,11 +288,11 @@ class StatisticalCalculator
 
         // Apply arithmetic if AST exists
         if ($ast !== null) {
-            $rerollStats = new StatisticalData($minimum, $maximum, round($expected, 3));
+            $rerollStats = new StatisticalData($minimum, $maximum, round($expected, 3), null, null);
             return $this->applyAstOperations($ast, $rerollStats);
         }
 
-        return new StatisticalData($minimum, $maximum, round($expected, 3));
+        return new StatisticalData($minimum, $maximum, round($expected, 3), null, null);
     }
 
     /**
@@ -321,11 +366,11 @@ class StatisticalCalculator
 
         // Apply arithmetic if AST exists
         if ($ast !== null) {
-            $explosionStats = new StatisticalData($minimum, $maximum, round($expected, 3));
+            $explosionStats = new StatisticalData($minimum, $maximum, round($expected, 3), null, null);
             return $this->applyAstOperations($ast, $explosionStats);
         }
 
-        return new StatisticalData($minimum, $maximum, round($expected, 3));
+        return new StatisticalData($minimum, $maximum, round($expected, 3), null, null);
     }
 
     /**
@@ -337,6 +382,84 @@ class StatisticalCalculator
      * @return bool True if should explode
      */
     private function shouldExplode(int $value, int $threshold, string $operator): bool
+    {
+        return match ($operator) {
+            '>=' => $value >= $threshold,
+            '<=' => $value <= $threshold,
+            default => false,
+        };
+    }
+
+    /**
+     * Calculate statistics for dice with edge mechanics (Shadowrun Rule of Six).
+     * Edge adds additional dice rather than summing into one die.
+     *
+     * @param DiceSpecification $spec Dice specification
+     * @param RollModifiers $modifiers Roll modifiers with edge settings
+     * @param Node|null $ast Optional AST for arithmetic
+     * @return StatisticalData Statistics adjusted for edge
+     */
+    private function calculateWithEdge(DiceSpecification $spec, RollModifiers $modifiers, ?Node $ast): StatisticalData
+    {
+        $sides = $spec->sides;
+        $threshold = $modifiers->edgeThreshold;
+        $operator = $modifiers->edgeOperator;
+
+        assert($threshold !== null && $operator !== null, 'Edge threshold and operator must not be null');
+
+        // Determine which values trigger edge
+        $edgeValues = [];
+        for ($value = 1; $value <= $sides; $value++) {
+            if ($this->shouldEdge($value, $threshold, $operator)) {
+                $edgeValues[] = $value;
+            }
+        }
+
+        // Probability of edge
+        $edgeProb = count($edgeValues) / $sides;
+
+        // Expected number of additional dice per die (geometric series)
+        // E[edge_dice] = p + p^2 + p^3 + ... = p / (1 - p) where p = probability of edge
+        // But capped at edge limit
+        $avgEdgeDicePerDie = $edgeProb > 0 && $edgeProb < 1
+            ? min($modifiers->edgeLimit, $edgeProb / (1 - $edgeProb))
+            : 0;
+
+        // Expected total dice = original dice + expected edge dice
+        $expectedTotalDice = $spec->count * (1 + $avgEdgeDicePerDie);
+
+        // Average value per die
+        $avgValuePerDie = ($sides + 1) / 2;
+
+        // Minimum: no edge triggers (just original dice, all roll 1)
+        $minimum = $spec->count * 1;
+
+        // Maximum: all dice trigger edge to limit, all rolls are maximum
+        $maxEdgeDicePerDie = $modifiers->edgeLimit;
+        $maxTotalDice = $spec->count * (1 + $maxEdgeDicePerDie);
+        $maximum = $maxTotalDice * $sides;
+
+        // Expected: expected total dice * average value per die
+        $expected = $expectedTotalDice * $avgValuePerDie;
+
+        // Apply arithmetic if AST exists
+        if ($ast !== null) {
+            $edgeStats = new StatisticalData($minimum, $maximum, round($expected, 3));
+            return $this->applyAstOperations($ast, $edgeStats);
+        }
+
+        return new StatisticalData($minimum, $maximum, round($expected, 3));
+    }
+
+    /**
+     * Check if a value should trigger edge.
+     *
+     * @param int $value Die value
+     * @param int $threshold Edge threshold
+     * @param string $operator Comparison operator
+     * @return bool True if should trigger edge
+     */
+    private function shouldEdge(int $value, int $threshold, string $operator): bool
     {
         return match ($operator) {
             '>=' => $value >= $threshold,
@@ -361,7 +484,8 @@ class StatisticalCalculator
 
         if ($node instanceof NumberNode) {
             $value = $node->getValue();
-            return new StatisticalData($value, $value, (float)$value);
+            // Constants have zero variance
+            return new StatisticalData($value, $value, (float)$value, 0.0, 0.0);
         }
 
         if ($node instanceof BinaryOpNode) {
@@ -372,12 +496,16 @@ class StatisticalCalculator
                 '+' => new StatisticalData(
                     $left->minimum + $right->minimum,
                     $left->maximum + $right->maximum,
-                    round($left->expected + $right->expected, 3)
+                    round($left->expected + $right->expected, 3),
+                    // Var(X + Y) = Var(X) + Var(Y) for independent variables
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '-' => new StatisticalData(
                     $left->minimum - $right->maximum,
                     $left->maximum - $right->minimum,
-                    round($left->expected - $right->expected, 3)
+                    round($left->expected - $right->expected, 3),
+                    // Var(X - Y) = Var(X) + Var(Y) for independent variables
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '*' => new StatisticalData(
                     min(
@@ -392,14 +520,18 @@ class StatisticalCalculator
                         $left->maximum * $right->minimum,
                         $left->maximum * $right->maximum
                     ),
-                    round($left->expected * $right->expected, 3)
+                    round($left->expected * $right->expected, 3),
+                    null, // Complex to compute for general case
+                    null
                 ),
                 '/' => new StatisticalData(
                     $left->minimum / max($right->maximum, 1),
                     $left->maximum / max($right->minimum, 1),
-                    round($left->expected / max($right->expected, 1), 3)
+                    round($left->expected / max($right->expected, 1), 3),
+                    null, // Complex to compute for general case
+                    null
                 ),
-                default => new StatisticalData(0, 0, 0.0),
+                default => new StatisticalData(0, 0, 0.0, null, null),
             };
         }
 
@@ -410,17 +542,23 @@ class StatisticalCalculator
                 'floor' => new StatisticalData(
                     floor($arg->minimum),
                     floor($arg->maximum),
-                    round(floor($arg->expected), 3)
+                    round(floor($arg->expected), 3),
+                    null, // Variance calculation complex for floor
+                    null
                 ),
                 'ceil' => new StatisticalData(
                     ceil($arg->minimum),
                     ceil($arg->maximum),
-                    round(ceil($arg->expected), 3)
+                    round(ceil($arg->expected), 3),
+                    null, // Variance calculation complex for ceil
+                    null
                 ),
                 'round' => new StatisticalData(
                     round($arg->minimum),
                     round($arg->maximum),
-                    round($arg->expected, 3)
+                    round($arg->expected, 3),
+                    null, // Variance calculation complex for round
+                    null
                 ),
                 default => $arg,
             };
@@ -485,7 +623,7 @@ class StatisticalCalculator
     {
         if ($node instanceof NumberNode) {
             $value = $node->getValue();
-            return new StatisticalData($value, $value, (float)$value);
+            return new StatisticalData($value, $value, (float)$value, 0.0, 0.0);
         }
 
         if ($node instanceof DiceNode) {
@@ -494,18 +632,28 @@ class StatisticalCalculator
                 $minPerDie = -1;
                 $maxPerDie = 1;
                 $expectedPerDie = 0;
+                $variancePerDie = 2.0 / 3.0;
+            } elseif ($node->getType() === DiceType::COIN) {
+                // Coin dice have values: 0, 1
+                $minPerDie = 0;
+                $maxPerDie = 1;
+                $expectedPerDie = 0.5;
+                $variancePerDie = 0.25; // (0^2 + 1^2)/2 - 0.5^2 = 0.5 - 0.25 = 0.25
             } else {
                 // Standard and percentile dice
                 $minPerDie = 1;
                 $maxPerDie = $node->getSides();
                 $expectedPerDie = ($minPerDie + $maxPerDie) / 2;
+                $variancePerDie = ($node->getSides() * $node->getSides() - 1) / 12.0;
             }
 
             $min = $node->getCount() * $minPerDie;
             $max = $node->getCount() * $maxPerDie;
             $expected = $node->getCount() * $expectedPerDie;
+            $variance = $node->getCount() * $variancePerDie;
+            $standardDeviation = sqrt($variance);
 
-            return new StatisticalData($min, $max, round($expected, 3));
+            return new StatisticalData($min, $max, round($expected, 3), round($variance, 3), round($standardDeviation, 3));
         }
 
         if ($node instanceof BinaryOpNode) {
@@ -516,12 +664,14 @@ class StatisticalCalculator
                 '+' => new StatisticalData(
                     $left->minimum + $right->minimum,
                     $left->maximum + $right->maximum,
-                    round($left->expected + $right->expected, 3)
+                    round($left->expected + $right->expected, 3),
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '-' => new StatisticalData(
                     $left->minimum - $right->maximum,
                     $left->maximum - $right->minimum,
-                    round($left->expected - $right->expected, 3)
+                    round($left->expected - $right->expected, 3),
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '*' => new StatisticalData(
                     min(
@@ -536,17 +686,23 @@ class StatisticalCalculator
                         $left->maximum * $right->minimum,
                         $left->maximum * $right->maximum
                     ),
-                    round($left->expected * $right->expected, 3)
+                    round($left->expected * $right->expected, 3),
+                    null, // Complex for general case
+                    null
                 ),
                 '/' => new StatisticalData(
                     $left->minimum / max($right->maximum, 1),
                     $left->maximum / max($right->minimum, 1),
-                    round($left->expected / max($right->expected, 1), 3)
+                    round($left->expected / max($right->expected, 1), 3),
+                    null, // Complex for general case
+                    null
                 ),
                 '%' => new StatisticalData(
                     0,
                     max($right->maximum - 1, 0),
-                    round(($right->maximum - 1) / 2, 3)
+                    round(($right->maximum - 1) / 2, 3),
+                    null, // Complex to compute
+                    null
                 ),
                 '^' => new StatisticalData(
                     min(
@@ -561,9 +717,11 @@ class StatisticalCalculator
                         pow($left->maximum, $right->minimum),
                         pow($left->maximum, $right->maximum)
                     ),
-                    round(pow($left->expected, $right->expected), 3)
+                    round(pow($left->expected, $right->expected), 3),
+                    null, // Complex to compute
+                    null
                 ),
-                default => new StatisticalData(0, 0, 0.0),
+                default => new StatisticalData(0, 0, 0.0, null, null),
             };
         }
 
@@ -574,28 +732,36 @@ class StatisticalCalculator
                 'floor' => new StatisticalData(
                     floor($arg->minimum),
                     floor($arg->maximum),
-                    round(floor($arg->expected), 3)
+                    round(floor($arg->expected), 3),
+                    null, // Complex to compute
+                    null
                 ),
                 'ceil' => new StatisticalData(
                     ceil($arg->minimum),
                     ceil($arg->maximum),
-                    round(ceil($arg->expected), 3)
+                    round(ceil($arg->expected), 3),
+                    null, // Complex to compute
+                    null
                 ),
                 'round' => new StatisticalData(
                     round($arg->minimum),
                     round($arg->maximum),
-                    round($arg->expected, 3)
+                    round($arg->expected, 3),
+                    null, // Complex to compute
+                    null
                 ),
                 'abs' => new StatisticalData(
                     abs($arg->minimum),
                     abs($arg->maximum),
-                    round(abs($arg->expected), 3)
+                    round(abs($arg->expected), 3),
+                    null, // Complex to compute
+                    null
                 ),
                 default => $arg,
             };
         }
 
-        return new StatisticalData(0, 0, 0.0);
+        return new StatisticalData(0, 0, 0.0, null, null);
     }
 
     /**
@@ -608,7 +774,7 @@ class StatisticalCalculator
     {
         if ($node instanceof NumberNode) {
             $value = $node->getValue();
-            return new StatisticalData($value, $value, (float)$value);
+            return new StatisticalData($value, $value, (float)$value, 0.0, 0.0);
         }
 
         if ($node instanceof BinaryOpNode) {
@@ -619,12 +785,14 @@ class StatisticalCalculator
                 '+' => new StatisticalData(
                     $left->minimum + $right->minimum,
                     $left->maximum + $right->maximum,
-                    round($left->expected + $right->expected, 3)
+                    round($left->expected + $right->expected, 3),
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '-' => new StatisticalData(
                     $left->minimum - $right->maximum,
                     $left->maximum - $right->minimum,
-                    round($left->expected - $right->expected, 3)
+                    round($left->expected - $right->expected, 3),
+                    ...($this->calculateCombinedVariance($left->variance, $right->variance))
                 ),
                 '*' => new StatisticalData(
                     min(
@@ -639,17 +807,23 @@ class StatisticalCalculator
                         $left->maximum * $right->minimum,
                         $left->maximum * $right->maximum
                     ),
-                    round($left->expected * $right->expected, 3)
+                    round($left->expected * $right->expected, 3),
+                    null, // Complex for general case
+                    null
                 ),
                 '/' => new StatisticalData(
                     $left->minimum / max($right->maximum, 1),
                     $left->maximum / max($right->minimum, 1),
-                    round($left->expected / max($right->expected, 1), 3)
+                    round($left->expected / max($right->expected, 1), 3),
+                    null, // Complex for general case
+                    null
                 ),
                 '%' => new StatisticalData(
                     0,
                     max($right->maximum - 1, 0),
-                    round(($right->maximum - 1) / 2, 3)
+                    round(($right->maximum - 1) / 2, 3),
+                    null, // Complex to compute
+                    null
                 ),
                 '^' => new StatisticalData(
                     min(
@@ -664,9 +838,11 @@ class StatisticalCalculator
                         pow($left->maximum, $right->minimum),
                         pow($left->maximum, $right->maximum)
                     ),
-                    round(pow($left->expected, $right->expected), 3)
+                    round(pow($left->expected, $right->expected), 3),
+                    null, // Complex to compute
+                    null
                 ),
-                default => new StatisticalData(0, 0, 0.0),
+                default => new StatisticalData(0, 0, 0.0, null, null),
             };
         }
 
@@ -677,16 +853,28 @@ class StatisticalCalculator
                 // Handle multiple arguments
                 $argStats = array_map(fn ($arg) => $this->calculateFromAstInternal($arg), $node->getArguments());
 
+                if ($argStats === []) {
+                    return new StatisticalData(0, 0, 0.0, null, null);
+                }
+
+                $minimums = array_map(fn ($s) => $s->minimum, $argStats);
+                $maximums = array_map(fn ($s) => $s->maximum, $argStats);
+                $expecteds = array_map(fn ($s) => $s->expected, $argStats);
+
                 return match ($lowerName) {
                     'min' => new StatisticalData(
-                        min(array_map(fn ($s) => $s->minimum, $argStats)),
-                        min(array_map(fn ($s) => $s->maximum, $argStats)),
-                        round(min(array_map(fn ($s) => $s->expected, $argStats)), 3)
+                        min($minimums),
+                        min($maximums),
+                        round(min($expecteds), 3),
+                        null, // Complex to compute
+                        null
                     ),
                     'max' => new StatisticalData(
-                        max(array_map(fn ($s) => $s->minimum, $argStats)),
-                        max(array_map(fn ($s) => $s->maximum, $argStats)),
-                        round(max(array_map(fn ($s) => $s->expected, $argStats)), 3)
+                        max($minimums),
+                        max($maximums),
+                        round(max($expecteds), 3),
+                        null, // Complex to compute
+                        null
                     ),
                 };
             }
@@ -698,27 +886,52 @@ class StatisticalCalculator
                 'floor' => new StatisticalData(
                     floor($arg->minimum),
                     floor($arg->maximum),
-                    round(floor($arg->expected), 3)
+                    round(floor($arg->expected), 3),
+                    null, // Complex to compute
+                    null
                 ),
                 'ceil' => new StatisticalData(
                     ceil($arg->minimum),
                     ceil($arg->maximum),
-                    round(ceil($arg->expected), 3)
+                    round(ceil($arg->expected), 3),
+                    null, // Complex to compute
+                    null
                 ),
                 'round' => new StatisticalData(
                     round($arg->minimum),
                     round($arg->maximum),
-                    round($arg->expected, 3)
+                    round($arg->expected, 3),
+                    null, // Complex to compute
+                    null
                 ),
                 'abs' => new StatisticalData(
                     abs($arg->minimum),
                     abs($arg->maximum),
-                    round(abs($arg->expected), 3)
+                    round(abs($arg->expected), 3),
+                    null, // Complex to compute
+                    null
                 ),
                 default => $arg,
             };
         }
 
-        return new StatisticalData(0, 0, 0.0);
+        return new StatisticalData(0, 0, 0.0, null, null);
+    }
+
+    /**
+     * Calculate combined variance and standard deviation for addition/subtraction.
+     * For independent random variables: Var(X ± Y) = Var(X) + Var(Y).
+     *
+     * @param float|null $leftVariance Left operand variance
+     * @param float|null $rightVariance Right operand variance
+     * @return array{0: float|null, 1: float|null} [variance, standardDeviation]
+     */
+    private function calculateCombinedVariance(?float $leftVariance, ?float $rightVariance): array
+    {
+        if ($leftVariance !== null && $rightVariance !== null) {
+            $variance = $leftVariance + $rightVariance;
+            return [round($variance, 3), round(sqrt($variance), 3)];
+        }
+        return [null, null];
     }
 }

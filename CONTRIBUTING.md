@@ -2,19 +2,6 @@
 
 Thank you for considering contributing to PHPDice! This document outlines the development workflow, coding standards, and guidelines for contributing.
 
-## Table of Contents
-
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Workflow](#development-workflow)
-- [Coding Standards](#coding-standards)
-- [Testing Requirements](#testing-requirements)
-- [Pull Request Process](#pull-request-process)
-- [Project Structure](#project-structure)
-- [Running Tests](#running-tests)
-- [Static Analysis](#static-analysis)
-- [Documentation](#documentation)
-
 ## Code of Conduct
 
 This project follows a simple code of conduct:
@@ -28,10 +15,10 @@ This project follows a simple code of conduct:
 
 ### Prerequisites
 
-- **PHP 8.0+** (strict requirement)
+- **PHP 8.1+** (strict requirement)
 - **Composer** for dependency management
 - **Git** for version control
-- Recommended: PHPStorm or VS Code with PHP extensions
+- Recommended: VS Code with devcontainer and PHP extensions
 
 ### Initial Setup
 
@@ -40,6 +27,8 @@ This project follows a simple code of conduct:
    git clone https://github.com/codryn/phpdice.git
    cd phpdice
    ```
+
+Note: Its is recommended to use the proviced vs code devcontainer for consistent environment. Please refere to https://code.visualstudio.com/docs/devcontainers/containers for more information.
 
 2. **Install dependencies**
    ```bash
@@ -70,46 +59,14 @@ PHPDice follows strict TDD practices:
 4. **Refactor** while keeping tests green
 5. **Repeat** for each feature increment
 
-**Example workflow:**
-
-```bash
-# 1. Write a failing test
-vim tests/Unit/Parser/DiceExpressionParserTest.php
-
-# 2. Run the test (should fail)
-composer test
-
-# 3. Implement the feature
-vim src/Parser/DiceExpressionParser.php
-
-# 4. Run tests (should pass)
-composer test
-
-# 5. Refactor and verify
-composer test
-composer phpstan
-composer cs-check
-```
-
-
-### Setup
-
-```bash
-git clone https://github.com/codryn/phpdice.git
-cd phpdice
-composer install
-```
-
-Note: Its is recommended to use the proviced vs code devcontainer for consistent environment. Please refere to https://code.visualstudio.com/docs/devcontainers/containers for more information.
-
 ### Running Tests
 
 ```bash
 # Run all tests
 composer test
 
-# Run with coverage
-./vendor/bin/phpunit
+# Run with coverage and HTML report
+composer test-coverage-html
 
 # Run specific test suite
 ./vendor/bin/phpunit tests/Unit
@@ -120,120 +77,54 @@ composer test
 
 ```bash
 # PSR-12 compliance check and fix
-./vendor/bin/php-cs-fixer fix
-
-# Static analysis (PHPStan level 9)
-./vendor/bin/phpstan analyse
-
-# Run all quality checks
-composer test
-./vendor/bin/phpstan analyse
-./vendor/bin/php-cs-fixer fix --dry-run
-```
-
-
-
-
-### 2. Feature Development Process
-
-For new features:
-
-1. **Discuss first**: Open an issue to discuss the feature
-2. **Design**: Document expected behavior and API
-3. **Write tests**: Create comprehensive test cases
-4. **Implement**: Write code to pass tests
-5. **Document**: Update README, API docs, and examples
-6. **Review**: Submit PR for review
-
-### 3. Bug Fixes
-
-For bug fixes:
-
-1. **Reproduce**: Create a failing test that reproduces the bug
-2. **Fix**: Implement the minimal fix
-3. **Verify**: Ensure all tests pass
-4. **Document**: Add comments explaining the fix if non-obvious
-
-## Coding Standards
-
-### PHP Standards
-
-PHPDice strictly adheres to:
-
-- **PSR-12**: Extended coding style guide
-- **PHPStan Level 9**: Maximum static analysis strictness
-- **Strict Types**: All files MUST have `declare(strict_types=1);`
-
-### Code Style Requirements
-
-1. **Type Declarations**
-   ```php
-   <?php
-
-   declare(strict_types=1);  // REQUIRED
-
-   namespace PHPDice\Model;
-
-   // GOOD: Full type declarations
-   public function roll(string $expression, array $variables = []): RollResult
-   {
-       // ...
-   }
-
-   // BAD: Missing types
-   public function roll($expression, $variables = [])
-   {
-       // ...
-   }
-   ```
-
-2. **PHPDoc Comments**
-   ```php
-   /**
-    * Parse a dice expression into an AST
-    *
-    * @param string $expression Dice notation (e.g., "3d6+5")
-    * @param array<string, int> $variables Placeholder variables
-    * @return DiceExpression Parsed expression with statistics
-    * @throws ParseException If expression is invalid
-    */
-   public function parse(string $expression, array $variables = []): DiceExpression
-   ```
-
-3. **Immutability**
-   ```php
-   // GOOD: Readonly properties
-   public readonly int $total;
-   public readonly array $diceValues;
-
-   // BAD: Mutable public properties
-   public int $total;
-   ```
-
-4. **Naming Conventions**
-   - **Classes**: PascalCase (e.g., `DiceExpressionParser`)
-   - **Methods**: camelCase (e.g., `parseExpression()`)
-   - **Constants**: SCREAMING_SNAKE_CASE (e.g., `MAX_DICE_COUNT`)
-   - **Private properties**: camelCase with underscore prefix optional (e.g., `$tokens` or `$_tokens`)
-
-### Automatic Formatting
-
-**Before committing**, run:
-
-```bash
-# Fix code style automatically
+composer cs-check
 composer cs-fix
 
-# Or check without fixing
-composer cs-check
+# Static analysis (PHPStan 2.1 level 10 strict)
+composer analyse
+
+# Run all quality checks
+composer ci
 ```
 
-Configuration is in `.php-cs-fixer.php`:
-- PSR-12 compliance
-- Strict types enforcement
-- Ordered imports
-- No unused imports
-- Array syntax normalization
+### Strict Types
+
+All PHP files must declare strict types:
+
+```php
+<?php
+
+declare(strict_types=1);
+```
+
+### Type Hints
+
+- Use PHP 8.1 type hints for all parameters and return values
+- Document complex types with PHPDoc annotations
+- Use union types when appropriate (e.g., `string|null`)
+
+### PHPDoc Blocks
+
+All public methods must have comprehensive PHPDoc blocks:
+
+```php
+/**
+ * Brief description of what the method does
+ *
+ * @param int $year Year to check
+ * @param bool $strict Enable strict validation
+ * @return bool True if valid
+ * @throws InvalidArgumentException if year is invalid
+ */
+public function isValid(int $year, bool $strict = false): bool
+{
+    // implementation
+}
+```
+
+
+
+
 
 ## Testing Requirements
 
@@ -249,107 +140,19 @@ Configuration is in `.php-cs-fixer.php`:
 
 ```
 tests/
-├── Unit/              # Unit tests (isolated, fast)
-│   ├── Model/
-│   ├── Parser/
-│   └── Roller/
-└── Integration/       # Integration tests (end-to-end)
-    └── PHPDiceTest.php
+├── Acceptance/      # Acceptance tests for user stories
+├── Contract/        # API Contract tests (planned)
+├── Unit/            # Unit tests (isolated, fast)
+└── Integration/     # Integration tests (end-to-end)
 ```
 
 ### Writing Tests
 
-**Unit Test Example:**
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace PHPDice\Tests\Unit\Parser;
-
-use PHPUnit\Framework\TestCase;
-use PHPDice\Parser\DiceExpressionParser;
-
-final class DiceExpressionParserTest extends TestCase
-{
-    private DiceExpressionParser $parser;
-
-    protected function setUp(): void
-    {
-        $this->parser = new DiceExpressionParser();
-    }
-
-    public function testParseSimpleDiceNotation(): void
-    {
-        $expression = $this->parser->parse('3d6');
-
-        $this->assertSame('3d6', $expression->originalExpression);
-        $this->assertSame(3, $expression->diceCount);
-        $this->assertSame(6, $expression->sides);
-    }
-
-    public function testInvalidNotationThrowsException(): void
-    {
-        $this->expectException(ParseException::class);
-        $this->expectExceptionMessage('Invalid dice notation');
-
-        $this->parser->parse('invalid');
-    }
-}
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-composer test
-
-# Run specific test file
-vendor/bin/phpunit tests/Unit/Parser/DiceExpressionParserTest.php
-
-# Run with coverage
-composer test-coverage
-
-# Run specific test method
-vendor/bin/phpunit --filter testParseSimpleDiceNotation
-```
-
-## Static Analysis
-
-### PHPStan
-
-PHPDice uses **PHPStan Level 9** (strictest):
-
-```bash
-# Run PHPStan
-composer phpstan
-
-# Analyze specific file
-vendor/bin/phpstan analyse src/Parser/DiceExpressionParser.php --level 9
-```
-
-### Common PHPStan Issues
-
-1. **Nullable types**: Always check for null
-   ```php
-   // BAD
-   $value = $array['key'];
-
-   // GOOD
-   $value = $array['key'] ?? null;
-   if ($value !== null) {
-       // Use $value
-   }
-   ```
-
-2. **Array shapes**: Document array structures
-   ```php
-   /**
-    * @param array<int, string> $items
-    * @return array{total: int, items: array<int, string>}
-    */
-   ```
+See existing tests for examples. Key guidelines:
+- Use descriptive test method names: `testCreateGregorianCalendarWithCorrectProperties()`
+- Follow Arrange-Act-Assert pattern
+- One assertion concept per test
+- Use data providers for testing multiple scenarios
 
 ## Pull Request Process
 
@@ -357,9 +160,7 @@ vendor/bin/phpstan analyse src/Parser/DiceExpressionParser.php --level 9
 
 1. **Run all checks**
    ```bash
-   composer test          # All tests must pass
-   composer phpstan       # No errors allowed
-   composer cs-fix        # Fix code style
+   composer ci
    ```
 
 2. **Update documentation**
@@ -376,7 +177,7 @@ vendor/bin/phpstan analyse src/Parser/DiceExpressionParser.php --level 9
 ### PR Checklist
 
 - [ ] Tests added/updated and passing
-- [ ] PHPStan level 9 passes
+- [ ] PHPStan 2.1 Level 10 Strict passes
 - [ ] PSR-12 code style applied
 - [ ] All files have `declare(strict_types=1)`
 - [ ] Documentation updated
@@ -395,23 +196,35 @@ vendor/bin/phpstan analyse src/Parser/DiceExpressionParser.php --level 9
 ```
 
 **Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding/updating tests
-- `chore`: Maintenance tasks
+- `feature`: New feature
+- `bug`: Bug fix
+- `task`: Any other change
 
 **Example:**
 ```
-feat(roller): Add exploding dice support for Savage Worlds
+feature/savage-world: Add exploding dice support for Savage Worlds
 
 Implement explosion mechanic where dice roll again on max value.
 Configurable explosion limit prevents infinite loops.
 
 Closes #42
 ```
+
+## Code Review Guidelines
+
+### For Contributors
+
+- Respond to feedback promptly
+- Keep PRs focused and reasonably sized
+- Update tests when changing functionality
+- Maintain backward compatibility when possible
+
+### For Reviewers
+
+- Be respectful and constructive
+- Focus on code quality and maintainability
+- Check test coverage
+- Verify documentation is updated
 
 ## Project Structure
 
@@ -427,10 +240,7 @@ phpdice/
 │   ├── Parser/                  # Expression parsing
 │   ├── Roller/                  # Dice rolling
 │   └── Exception/               # Custom exceptions
-├── tests/
-│   ├── Contract/                # Contract tests (planned)
-│   ├── Integration/             # Integration tests
-│   └── Unit/                    # Unit tests
+├── tests/                       # Test cases
 ├── .php-cs-fixer.php            # Code style config
 ├── phpstan.neon                 # Static analysis config
 ├── phpunit.xml                  # Test configuration
@@ -442,16 +252,15 @@ phpdice/
 
 ```bash
 # Testing
-composer test              # Run all tests
-composer test-coverage     # Generate coverage report
-
+composer test               # Run all tests
+composer test-coverage      # Generate coverage report
+composer test-coverage-html # Generate HTML coverage report
 # Code Quality
-composer phpstan           # Static analysis
+composer analyse           # Static analysis
 composer cs-check          # Check code style
 composer cs-fix            # Fix code style
-
 # Combined
-composer ci                # Run all CI checks (test + phpstan + cs-check)
+composer ci                # Run all CI checks (test + analyse + cs-check)
 ```
 
 ## Documentation

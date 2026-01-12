@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Tests\Integration;
+namespace Codryn\PHPDice\Tests\Integration;
 
-use PHPDice\Model\StatisticalData;
+use Codryn\PHPDice\Model\StatisticalData;
 
 /**
  * Integration tests for User Story 10: Statistical Analysis.
@@ -12,11 +12,11 @@ use PHPDice\Model\StatisticalData;
  * Tests that statistics (min, max, expected) are correctly calculated
  * for all expression types without rolling dice.
  *
- * @covers \PHPDice\PHPDice
- * @covers \PHPDice\Parser\DiceExpressionParser
- * @covers \PHPDice\Model\DiceExpression
- * @covers \PHPDice\Model\StatisticalCalculator
- * @covers \PHPDice\Model\StatisticalData
+ * @covers \Codryn\PHPDice\PHPDice
+ * @covers \Codryn\PHPDice\Parser\DiceExpressionParser
+ * @covers \Codryn\PHPDice\Model\DiceExpression
+ * @covers \Codryn\PHPDice\Model\StatisticalCalculator
+ * @covers \Codryn\PHPDice\Model\StatisticalData
  */
 class StatisticsTest extends BaseTestCase
 {

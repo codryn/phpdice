@@ -2,14 +2,20 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Roller;
+namespace Codryn\PHPDice\Roller;
 
-use PHPDice\Model\DiceExpression;
-use PHPDice\Model\RollResult;
-use PHPDice\Parser\AST\BinaryOpNode;
-use PHPDice\Parser\AST\DiceNode;
-use PHPDice\Parser\AST\FunctionNode;
-use PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\RollResult;
+use Codryn\PHPDice\Model\StatisticalCalculator;
+use Codryn\PHPDice\Parser\AST\BinaryOpNode;
+use Codryn\PHPDice\Parser\AST\ComparisonNode;
+use Codryn\PHPDice\Parser\AST\ConditionalNode;
+use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
+use Codryn\PHPDice\Parser\AST\DiceNode;
+use Codryn\PHPDice\Parser\AST\FunctionNode;
+use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\Node;
+use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
 
 /**
  * Rolls dice based on parsed expressions.
@@ -53,7 +59,9 @@ class DiceRoller
         // Roll each die
         $rerollHistory = null;
         $explosionHistory = null;
+        $edgeHistory = null;
         $originalDiceValues = []; // Track original values before explosions for critical detection
+        $edgeTriggers = []; // Track which dice triggered edge (for deferred processing)
 
         for ($i = 0; $i < $totalDiceToRoll; $i++) {
             // Generate raw roll based on dice type
@@ -63,7 +71,7 @@ class DiceRoller
             $initialRoll = $this->convertDiceValue($rawRoll, $spec->type);
             $diceValues[] = $initialRoll;
 
-            // Handle rerolls if configured (rerolls happen first, then explosions)
+            // Handle rerolls if configured (rerolls happen first, then explosions/edge)
             if ($modifiers->rerollThreshold !== null && $modifiers->rerollOperator !== null) {
                 $rerollCount = 0;
                 $currentValue = $initialRoll;
@@ -129,6 +137,52 @@ class DiceRoller
                     ];
                 }
             }
+
+            // Handle edge if configured (Shadowrun Rule of Six: add additional dice when threshold met)
+            // We defer actual edge rolling until after all original dice are rolled
+            if ($modifiers->edgeThreshold !== null && $modifiers->edgeOperator !== null) {
+                if ($this->shouldEdge($diceValues[$i], $modifiers->edgeThreshold, $modifiers->edgeOperator)) {
+                    $edgeTriggers[] = $i;
+                }
+            }
+        }
+
+        // Process edge triggers after all original dice are rolled
+        if (!empty($edgeTriggers) && $modifiers->edgeThreshold !== null && $modifiers->edgeOperator !== null) {
+            foreach ($edgeTriggers as $triggerIndex) {
+                $edgeCount = 0;
+                $currentValue = $diceValues[$triggerIndex];
+                $edgeDice = [];
+
+                // Keep rolling edge dice while threshold is met and limit not reached
+                while ($this->shouldEdge($currentValue, $modifiers->edgeThreshold, $modifiers->edgeOperator)
+                       && $edgeCount < $modifiers->edgeLimit) {
+                    // Roll a new die and add it to the dice pool
+                    $rawEdge = $this->rng->generate(1, $spec->sides);
+                    $edgeDieValue = $this->convertDiceValue($rawEdge, $spec->type);
+                    $edgeDice[] = $edgeDieValue;
+
+                    // Add the new die to the dice values array
+                    $diceValues[] = $edgeDieValue;
+                    $originalDiceValues[] = $edgeDieValue; // Track for critical detection
+
+                    // Check if the new die also triggers edge (cascading)
+                    $currentValue = $edgeDieValue;
+                    $edgeCount++;
+                }
+
+                // Track edge history if any edge dice were added
+                if ($edgeCount > 0) {
+                    if ($edgeHistory === null) {
+                        $edgeHistory = [];
+                    }
+                    $edgeHistory[$triggerIndex] = [
+                        'rolls' => $edgeDice,
+                        'count' => $edgeCount,
+                        'limitReached' => $edgeCount >= $modifiers->edgeLimit,
+                    ];
+                }
+            }
         }
 
         // Handle keep highest/lowest
@@ -144,14 +198,14 @@ class DiceRoller
 
         // Handle success counting mode
         $successCount = null;
-        if ($modifiers->successThreshold !== null && $modifiers->successOperator !== null) {
+        if ($modifiers->successOperator !== null) {
             $successCount = $this->countSuccesses($finalValues, $modifiers->successThreshold, $modifiers->successOperator);
         }
 
         // Calculate total
-        if ($modifiers->successThreshold !== null) {
+        if ($modifiers->successOperator !== null) {
             // In success counting mode, total = success count
-            $total = $successCount ?? 0;
+            $total = $successCount;
         } elseif ($ast !== null) {
             // Evaluate AST with dice results
             $this->setDiceResults($ast, array_sum($finalValues));
@@ -170,6 +224,32 @@ class DiceRoller
             );
         }
 
+        // Check for auto success/failure first (before critical checks)
+        // Auto success/failure means the roll is a success/failure regardless of DC
+        $hasAutoSuccess = false;
+        $hasAutoFailure = false;
+
+        if ($modifiers->autoSuccess !== null) {
+            foreach ($originalDiceValues as $i => $value) {
+                // Auto success uses >= for high values (e.g., auto 20 on d20)
+                // and <= for low values (e.g., auto 1 on d20 for inverted logic)
+                // We determine which to use based on whether the threshold is in the upper or lower half
+                $midpoint = ($spec->sides + 1) / 2;
+                $isAutoSuccess = ($modifiers->autoSuccess >= $midpoint)
+                    ? ($value >= $modifiers->autoSuccess)
+                    : ($value <= $modifiers->autoSuccess);
+
+                if ($isAutoSuccess) {
+                    $hasAutoSuccess = true;
+                    // Override isSuccess if we have a DC comparison
+                    if ($expression->comparisonOperator !== null && $expression->comparisonThreshold !== null) {
+                        $isSuccess = true;
+                    }
+                    break;
+                }
+            }
+        }
+
         // Check for critical success/failure (US9)
         // Criticals are based on ORIGINAL die values (before explosions, after rerolls)
         // Exploded dice DO count as criticals - explosion is a separate mechanic
@@ -181,16 +261,10 @@ class DiceRoller
             foreach ($originalDiceValues as $i => $value) {
                 if ($value >= $modifiers->criticalSuccess) {
                     // If there's a comparison threshold, critical only counts if the roll would hit
-                    // Exception: natural max (e.g., 20 on d20) always hits regardless of threshold
+                    // OR if the roll has auto success
                     if ($expression->comparisonOperator !== null && $expression->comparisonThreshold !== null) {
-                        $isNaturalMax = ($value === $spec->sides);
-                        if ($isNaturalMax) {
-                            // Natural max always hits and is always critical
-                            $isCriticalSuccess = true;
-                            // Override isSuccess for natural max
-                            $isSuccess = true;
-                        } elseif ($isSuccess === true) {
-                            // Roll would hit the threshold, so it's a critical
+                        if ($hasAutoSuccess || $isSuccess === true) {
+                            // Roll would hit the threshold (or has auto success), so it's a critical
                             $isCriticalSuccess = true;
                         }
                         // Otherwise, roll is in crit range but doesn't hit - not a critical
@@ -205,13 +279,29 @@ class DiceRoller
 
         if ($modifiers->criticalFailure !== null) {
             // Check if ANY die rolled the critical failure value (using original values)
+            // Glitch uses <= for low values (e.g., glitch 1 on d20)
+            // and >= for high values (e.g., glitch 20 on d20 for inverted logic)
             foreach ($originalDiceValues as $i => $value) {
-                if ($value <= $modifiers->criticalFailure) {
+                $midpoint = ($spec->sides + 1) / 2;
+                $isCritFailure = ($modifiers->criticalFailure >= $midpoint)
+                    ? ($value >= $modifiers->criticalFailure)
+                    : ($value <= $modifiers->criticalFailure);
+
+                if ($isCritFailure) {
                     $isCriticalFailure = true;
                     break;
                 }
             }
         }
+
+        // Handle groups if present in AST
+        $groups = null;
+        if ($ast !== null) {
+            $groups = $this->extractAndEvaluateGroups($ast, $expression, $diceValues);
+        }
+
+        // Main expression keeps its own tags (don't add group tags to main)
+        $tags = $expression->tags;
 
         return new RollResult(
             expression: $expression,
@@ -224,7 +314,11 @@ class DiceRoller
             isCriticalFailure: $isCriticalFailure,
             isSuccess: $isSuccess,
             rerollHistory: $rerollHistory,
-            explosionHistory: $explosionHistory
+            explosionHistory: $explosionHistory,
+            edgeHistory: $edgeHistory,
+            comment: $expression->comment,
+            groups: $groups,
+            tags: $tags
         );
     }
 
@@ -266,23 +360,42 @@ class DiceRoller
     }
 
     /**
+     * Check if a die value should trigger edge (add additional dice).
+     *
+     * @param int $value Die value
+     * @param int $threshold Edge threshold
+     * @param string $operator Comparison operator (>= or <=)
+     * @return bool True if should trigger edge
+     */
+    private function shouldEdge(int $value, int $threshold, string $operator): bool
+    {
+        return match ($operator) {
+            '>=' => $value >= $threshold,
+            '<=' => $value <= $threshold,
+            default => false,
+        };
+    }
+
+    /**
      * Count successes based on threshold and operator.
      *
      * @param array<int> $diceValues Dice values to check
-     * @param int $threshold Success threshold
-     * @param string $operator Comparison operator (>=, >, <=, <, ==)
+     * @param int|null $threshold Success threshold (null for even/odd)
+     * @param string $operator Comparison operator (>=, >, <=, <, ==, 'even', 'odd')
      * @return int Number of successful dice
      */
-    private function countSuccesses(array $diceValues, int $threshold, string $operator): int
+    private function countSuccesses(array $diceValues, ?int $threshold, string $operator): int
     {
         $count = 0;
         foreach ($diceValues as $value) {
             $matches = match ($operator) {
-                '>=' => $value >= $threshold,
-                '>' => $value > $threshold,
-                '<=' => $value <= $threshold,
-                '<' => $value < $threshold,
-                '==' => $value === $threshold,
+                'even' => $value % 2 === 0,
+                'odd' => $value % 2 !== 0,
+                '>=' => $threshold !== null && $value >= $threshold,
+                '>' => $threshold !== null && $value > $threshold,
+                '<=' => $threshold !== null && $value <= $threshold,
+                '<' => $threshold !== null && $value < $threshold,
+                '==' => $threshold !== null && $value === $threshold,
                 default => false,
             };
             if ($matches) {
@@ -331,15 +444,24 @@ class DiceRoller
         arsort($indexed);
 
         // Take top N
-        $keptIndices = array_slice(array_keys($indexed), 0, $count, true);
-        $discardedIndices = array_slice(array_keys($indexed), $count, null, true);
+        $sortedIndices = array_keys($indexed);
 
+        $keptList = [];
+        $discardedList = [];
         $keptValues = [];
-        foreach ($keptIndices as $index) {
-            $keptValues[] = $diceValues[$index];
+
+        $i = 0;
+        foreach ($sortedIndices as $index) {
+            if ($i < $count) {
+                $keptList[] = $index;
+                $keptValues[] = $diceValues[$index];
+            } else {
+                $discardedList[] = $index;
+            }
+            $i++;
         }
 
-        return [$keptValues, array_values($keptIndices), array_values($discardedIndices)];
+        return [$keptValues, $keptList, $discardedList];
     }
 
     /**
@@ -361,29 +483,39 @@ class DiceRoller
         asort($indexed);
 
         // Take bottom N
-        $keptIndices = array_slice(array_keys($indexed), 0, $count, true);
-        $discardedIndices = array_slice(array_keys($indexed), $count, null, true);
+        $sortedIndices = array_keys($indexed);
 
+        $keptList = [];
+        $discardedList = [];
         $keptValues = [];
-        foreach ($keptIndices as $index) {
-            $keptValues[] = $diceValues[$index];
+
+        $i = 0;
+        foreach ($sortedIndices as $index) {
+            if ($i < $count) {
+                $keptList[] = $index;
+                $keptValues[] = $diceValues[$index];
+            } else {
+                $discardedList[] = $index;
+            }
+            $i++;
         }
 
-        return [$keptValues, array_values($keptIndices), array_values($discardedIndices)];
+        return [$keptValues, $keptList, $discardedList];
     }
 
     /**
      * Convert dice value based on dice type.
      *
      * @param int $rawValue Raw dice value (1 to sides)
-     * @param \PHPDice\Model\DiceType $type Dice type
+     * @param \Codryn\PHPDice\Model\DiceType $type Dice type
      * @return int Converted value
      */
-    private function convertDiceValue(int $rawValue, \PHPDice\Model\DiceType $type): int
+    private function convertDiceValue(int $rawValue, \Codryn\PHPDice\Model\DiceType $type): int
     {
         return match ($type) {
-            \PHPDice\Model\DiceType::FUDGE => $rawValue - 2, // Convert 1,2,3 to -1,0,+1
-            \PHPDice\Model\DiceType::STANDARD, \PHPDice\Model\DiceType::PERCENTILE => $rawValue,
+            \Codryn\PHPDice\Model\DiceType::FUDGE => $rawValue - 2, // Convert 1,2,3 to -1,0,+1
+            \Codryn\PHPDice\Model\DiceType::COIN => $rawValue - 1, // Convert 1,2 to 0,1
+            \Codryn\PHPDice\Model\DiceType::STANDARD, \Codryn\PHPDice\Model\DiceType::PERCENTILE => $rawValue,
         };
     }
 
@@ -397,6 +529,12 @@ class DiceRoller
     {
         if ($node instanceof DiceNode) {
             $node->setRollResult($result);
+        } elseif ($node instanceof DiceExpressionNode) {
+            // DiceExpressionNode will be rolled separately, don't set here
+            return;
+        } elseif ($node instanceof GroupNode) {
+            // Set results on the group's expression
+            $this->setDiceResults($node->getExpression(), $result);
         } elseif ($node instanceof BinaryOpNode) {
             $this->setDiceResults($node->getLeft(), $result);
             $this->setDiceResults($node->getRight(), $result);
@@ -428,14 +566,37 @@ class DiceRoller
     {
         if ($node instanceof DiceNode) {
             $count++;
+        } elseif ($node instanceof DiceExpressionNode) {
+            // Count as a single dice group (even though it may have modifiers)
+            $count++;
         } elseif ($node instanceof BinaryOpNode) {
             $this->countDiceNodes($node->getLeft(), $count);
             $this->countDiceNodes($node->getRight(), $count);
+        } elseif ($node instanceof ComparisonNode) {
+            $this->countDiceNodes($node->getLeft(), $count);
+            $this->countDiceNodes($node->getRight(), $count);
+        } elseif ($node instanceof ConditionalNode) {
+            // Count dice in all branches (we'll only roll one, but we need to know if there are dice)
+            $this->countDiceNodes($node->getCondition(), $count);
+            $this->countDiceNodes($node->getTrueBranch(), $count);
+            $this->countDiceNodes($node->getFalseBranch(), $count);
+        } elseif ($node instanceof SwitchCaseNode) {
+            // Count dice in switch expression and all case expressions
+            $this->countDiceNodes($node->getSwitchExpression(), $count);
+            foreach ($node->getCases() as $case) {
+                $this->countDiceNodes($case['expression'], $count);
+            }
+            if ($node->getDefaultExpression() !== null) {
+                $this->countDiceNodes($node->getDefaultExpression(), $count);
+            }
         } elseif ($node instanceof FunctionNode) {
             // Count dice in all arguments
             foreach ($node->getArguments() as $argument) {
                 $this->countDiceNodes($argument, $count);
             }
+        } elseif ($node instanceof GroupNode) {
+            // Count dice inside the group
+            $this->countDiceNodes($node->getExpression(), $count);
         }
     }
 
@@ -456,10 +617,19 @@ class DiceRoller
         // Evaluate the AST to get the total
         $total = (int) $ast->evaluate();
 
+        // Handle groups if present
+        $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
+
+        // Main expression keeps its own tags (don't add group tags to main)
+        $tags = $expression->tags;
+
         return new RollResult(
             expression: $expression,
             total: $total,
-            diceValues: $allDiceValues
+            diceValues: $allDiceValues,
+            comment: $expression->comment,
+            groups: $groups,
+            tags: $tags
         );
     }
 
@@ -471,7 +641,40 @@ class DiceRoller
      */
     private function rollDiceNode(Node $node, array &$allDiceValues): void
     {
-        if ($node instanceof DiceNode) {
+        if ($node instanceof DiceExpressionNode) {
+            // This is a complete dice expression with modifiers - roll it properly
+            $spec = $node->getSpecification();
+            $modifiers = $node->getModifiers();
+
+            // Create a temporary DiceExpression for rolling
+            // We need statistics even if we don't use them for the final result
+            $calculator = new StatisticalCalculator();
+            $stats = $calculator->calculate($spec, $modifiers, $node->getDiceNode());
+
+            $tempExpression = new DiceExpression(
+                specification: $spec,
+                modifiers: $modifiers,
+                statistics: $stats,
+                originalExpression: '', // Not needed for this context
+                astRoot: $node->getDiceNode()
+            );
+
+            // Roll the dice expression with all modifiers, passing the AST
+            $result = $this->roll($tempExpression, $node->getDiceNode());
+
+            // For success counting, use the success count as the result
+            // Otherwise, use the total
+            if ($modifiers->successOperator !== null) {
+                $node->setRollResult($result->successCount ?? 0);
+            } else {
+                $node->setRollResult($result->total);
+            }
+
+            // Add individual dice values to the collection
+            foreach ($result->diceValues as $value) {
+                $allDiceValues[] = $value;
+            }
+        } elseif ($node instanceof DiceNode) {
             // Roll this dice group
             $diceValues = [];
             for ($i = 0; $i < $node->getCount(); $i++) {
@@ -490,6 +693,49 @@ class DiceRoller
             // Process left and right children
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof ComparisonNode) {
+            // Roll both sides of the comparison
+            $this->rollDiceNode($node->getLeft(), $allDiceValues);
+            $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof ConditionalNode) {
+            // Roll the condition first
+            $this->rollDiceNode($node->getCondition(), $allDiceValues);
+
+            // Evaluate condition to determine which branch to roll
+            $conditionValue = $node->getCondition()->evaluate();
+
+            // Roll the appropriate branch
+            if ($conditionValue != 0) {
+                $this->rollDiceNode($node->getTrueBranch(), $allDiceValues);
+            } else {
+                $this->rollDiceNode($node->getFalseBranch(), $allDiceValues);
+            }
+        } elseif ($node instanceof SwitchCaseNode) {
+            // Roll the switch expression first
+            $this->rollDiceNode($node->getSwitchExpression(), $allDiceValues);
+
+            // Evaluate switch expression to determine which case to roll
+            $switchValue = $node->getSwitchExpression()->evaluate();
+
+            // Find and roll the matching case
+            $matched = false;
+            foreach ($node->getCases() as $case) {
+                foreach ($case['range'] as $value) {
+                    if ($switchValue == $value) {
+                        $this->rollDiceNode($case['expression'], $allDiceValues);
+                        $matched = true;
+                        break 2; // Break out of both foreach loops
+                    }
+                }
+            }
+
+            // If no case matched, roll the default expression
+            if (!$matched && $node->getDefaultExpression() !== null) {
+                $this->rollDiceNode($node->getDefaultExpression(), $allDiceValues);
+            }
+        } elseif ($node instanceof GroupNode) {
+            // Roll dice inside the group
+            $this->rollDiceNode($node->getExpression(), $allDiceValues);
         } elseif ($node instanceof FunctionNode) {
             // Roll dice in all arguments
             foreach ($node->getArguments() as $argument) {
@@ -499,27 +745,111 @@ class DiceRoller
     }
 
     /**
-     * Roll a math-only expression (no dice).
+     * Roll a math-only expression (no top-level dice, but may contain dice in sub-expressions).
      *
      * @param Node|null $ast AST to evaluate
      * @param DiceExpression $expression Original expression
-     * @return RollResult Result with empty dice values and computed total
+     * @return RollResult Result with dice values and computed total
      */
     private function rollMathOnly(?Node $ast, DiceExpression $expression): RollResult
     {
         if ($ast === null) {
-            throw new \PHPDice\Exception\ValidationException('Math-only expression must have an AST', 'expression');
+            throw new \Codryn\PHPDice\Exception\ValidationException('Math-only expression must have an AST', 'expression');
         }
+
+        // Roll any dice nodes in the expression (e.g., inside function arguments)
+        $allDiceValues = [];
+        $this->rollDiceNode($ast, $allDiceValues);
 
         // Evaluate the AST to get the total
         $total = $ast->evaluate();
 
-        // Return result with no dice values
+        // Handle groups if present
+        $groups = $this->extractAndEvaluateGroups($ast, $expression, $allDiceValues);
+
+        // Main expression keeps its own tags (don't add group tags to main)
+        $tags = $expression->tags;
+
+        // Return result with collected dice values
         return new RollResult(
             expression: $expression,
             total: $total,
-            diceValues: []
+            diceValues: $allDiceValues,
+            comment: $expression->comment,
+            groups: $groups,
+            tags: $tags
         );
+    }
+
+    /**
+     * Extract and evaluate all groups from the AST.
+     *
+     * @param Node $ast The full AST
+     * @param DiceExpression $expression Original expression
+     * @param array<int> $diceValues Already rolled dice values
+     * @return array<RollResult>|null Array of group results or null if no groups
+     */
+    private function extractAndEvaluateGroups(Node $ast, DiceExpression $expression, array $diceValues): ?array
+    {
+        $groups = [];
+        $this->findGroups($ast, $groups);
+
+        if (empty($groups)) {
+            return null;
+        }
+
+        $results = [];
+        $diceOffset = 0;
+
+        foreach ($groups as $groupNode) {
+            /** @var GroupNode $groupNode */
+            $groupExpression = $groupNode->getExpression();
+            $groupComment = $groupNode->getComment();
+            $groupTags = $groupNode->getTags();
+
+            // Count how many dice this group needs
+            $diceCount = 0;
+            $this->countDiceNodes($groupExpression, $diceCount);
+
+            // Extract the dice values for this group
+            $groupDiceValues = array_slice($diceValues, $diceOffset, $diceCount);
+            $diceOffset += $diceCount;
+
+            // Evaluate the group expression to get its total
+            // Note: dice have already been rolled and their results set in the nodes
+            $groupTotal = $groupExpression->evaluate();
+
+            // Create a RollResult for this group
+            $results[] = new RollResult(
+                expression: $expression,
+                total: $groupTotal,
+                diceValues: $groupDiceValues,
+                comment: $groupComment,
+                tags: $groupTags
+            );
+        }
+
+        return $results;
+    }
+
+    /**
+     * Find all GroupNodes in the AST.
+     *
+     * @param Node $node Node to traverse
+     * @param array<GroupNode> $groups Array to collect groups
+     */
+    private function findGroups(Node $node, array &$groups): void
+    {
+        if ($node instanceof GroupNode) {
+            $groups[] = $node;
+        } elseif ($node instanceof BinaryOpNode) {
+            $this->findGroups($node->getLeft(), $groups);
+            $this->findGroups($node->getRight(), $groups);
+        } elseif ($node instanceof FunctionNode) {
+            foreach ($node->getArguments() as $argument) {
+                $this->findGroups($argument, $groups);
+            }
+        }
     }
 
 }

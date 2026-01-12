@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPDice\Parser;
+namespace Codryn\PHPDice\Parser;
 
 /**
  * Represents a token in the dice expression.
@@ -15,12 +15,20 @@ class Token
     public const TYPE_OPERATOR = 'OPERATOR';
     public const TYPE_LPAREN = 'LPAREN';
     public const TYPE_RPAREN = 'RPAREN';
+    public const TYPE_LBRACE = 'LBRACE';
+    public const TYPE_RBRACE = 'RBRACE';
+    public const TYPE_LBRACKET = 'LBRACKET';
+    public const TYPE_RBRACKET = 'RBRACKET';
+    public const TYPE_TAGS = 'TAGS';
     public const TYPE_KEYWORD = 'KEYWORD';
     public const TYPE_FUNCTION = 'FUNCTION';
     public const TYPE_COMMA = 'COMMA';
     public const TYPE_PERCENT = 'PERCENT';
     public const TYPE_PLACEHOLDER = 'PLACEHOLDER';
     public const TYPE_COMPARISON = 'COMPARISON';
+    public const TYPE_COMMENT = 'COMMENT';
+    public const TYPE_COLON = 'COLON';
+    public const TYPE_PIPE = 'PIPE';
 
     /**
      * Create a new token.
