@@ -1,19 +1,28 @@
 #!/bin/bash
 set -e
 
-echo "Running D&D 5e examples..."
-php examples/dnd5e.php > /dev/null || { echo "ERROR: dnd5e.php failed"; exit 1; }
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the project root (parent of scripts directory)
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-echo "Running Shadowrun examples..."
-php examples/shadowrun.php > /dev/null || { echo "ERROR: shadowrun.php failed"; exit 1; }
+# Enable nullglob to handle case where no .php files exist
+shopt -s nullglob
 
-echo "Running Savage Worlds examples..."
-php examples/savage-worlds.php > /dev/null || { echo "ERROR: savage-worlds.php failed"; exit 1; }
+# Get all PHP files in the examples directory
+php_files=("$PROJECT_ROOT"/examples/*.php)
 
-echo "Running FATE examples..."
-php examples/fate.php > /dev/null || { echo "ERROR: fate.php failed"; exit 1; }
+# Check if any examples were found
+if [ ${#php_files[@]} -eq 0 ]; then
+    echo "ERROR: No .php files found in examples directory"
+    exit 1
+fi
 
-echo "Running Call of Cthulhu examples..."
-php examples/call-of-cthulhu.php > /dev/null || { echo "ERROR: call-of-cthulhu.php failed"; exit 1; }
+# Loop through all PHP files in the examples directory
+for example in "${php_files[@]}"; do
+    example_name=$(basename "$example")
+    echo "Running $example_name..."
+    php "$example" > /dev/null || { echo "ERROR: $example_name failed"; exit 1; }
+done
 
 echo "✓ All example scripts executed successfully"
