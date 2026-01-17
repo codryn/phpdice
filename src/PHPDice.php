@@ -109,11 +109,13 @@ class PHPDice
         // Create a complete variable set with dummy values for missing vars
         $completeVars = $variables;
         $missingVars = [];
+        $i = 0;
         foreach ($placeholders as $placeholder) {
             if (!array_key_exists($placeholder, $variables)) {
-                // Use a unique placeholder value (we'll use a specific pattern)
-                $completeVars[$placeholder] = PHP_INT_MAX - array_search($placeholder, $placeholders, true);
+                // Use a unique placeholder value based on index
+                $completeVars[$placeholder] = PHP_INT_MAX - $i;
                 $missingVars[$placeholder] = $completeVars[$placeholder];
+                $i++;
             }
         }
 
@@ -158,6 +160,12 @@ class PHPDice
             $left = $this->nodeToString($node->getLeft(), $variables, $partial, $missingVars);
             $right = $this->nodeToString($node->getRight(), $variables, $partial, $missingVars);
             $op = $node->getOperator();
+
+            // Handle addition with negative numbers to format as subtraction
+            if ($op === '+' && str_starts_with($right, '-')) {
+                // Convert "a+-b" to "a-b" for better readability
+                return $left . $right;
+            }
 
             // Add spaces around certain operators for readability
             if (in_array($op, ['+', '-'], true)) {
@@ -233,10 +241,11 @@ class PHPDice
             return null;
         }
 
-        // Try to evaluate
+        // Try to evaluate - only catch specific exceptions that indicate missing data
         try {
             return $node->evaluate();
-        } catch (\Exception $e) {
+        } catch (ParseException $e) {
+            // Missing variable during evaluation
             return null;
         }
     }

@@ -150,7 +150,8 @@ final class EvalTest extends BaseTestCase
 
         $result = $this->phpdice->eval($expression, $variables);
 
-        $this->assertSame('1d20+-2', $result);
+        // Negative values are formatted without the redundant +
+        $this->assertSame('1d20-2', $result);
     }
 
     /**
