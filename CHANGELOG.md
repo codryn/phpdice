@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Expression Evaluation**: New `eval()` method for evaluating dice expressions with placeholder substitution and conditional resolution. This enables character sheet integration and dynamic rule systems. Examples: `eval('if $a$ == 1 : 1d20 | 1d12 + $b$', ['a' => 2, 'b' => 1])` returns `"1d12+1"`, and `eval('1d20+$bonus$', ['bonus' => 5])` returns `"1d20+5"` (#79)
+  - Supports partial evaluation where missing placeholders are preserved: `eval('1d20 + $b$', ['a' => 1], true)` returns `"1d20+$b$"`
+  - Automatically resolves conditional expressions that can be evaluated
+  - Validates expressions and throws on invalid input or missing placeholders
+
 ### Planned
 - Production-ready release
 - Performance optimizations for large dice pools

@@ -92,6 +92,40 @@ $result = $phpdice->roll($expression);
 echo $result->total; // Final result
 ```
 
+#### `eval(string $expression, array $variables, bool $partial = false): string`
+
+Evaluates a dice expression and returns a string with placeholders replaced and conditions resolved.
+
+**Parameters:**
+- `$expression` (string): The dice expression string with placeholders.
+- `$variables` (array): Placeholder values (e.g., ['str' => 3, 'proficiency' => 2]).
+- `$partial` (bool): If true, allows missing placeholders (default: false).
+
+**Returns:** `string` - Evaluated expression string with placeholders replaced.
+
+**Throws:** 
+- `ParseException` - If expression is invalid or placeholders are missing (when partial=false).
+
+**Example:**
+```php
+// Basic evaluation with condition resolution
+$result = $phpdice->eval('if $a$ == 1 : 1d20 | 1d12 + $b$', ['a' => 2, 'b' => 1]);
+echo $result; // "1d12+1"
+
+// Partial evaluation (preserves missing placeholders)
+$result = $phpdice->eval('if $a$ == 1 : 1d20 + $b$ | 1d20', ['a' => 1], true);
+echo $result; // "1d20+$b$"
+
+// Simple placeholder replacement
+$result = $phpdice->eval('1d20+$bonus$', ['bonus' => 5]);
+echo $result; // "1d20+5"
+```
+
+**Use Cases:**
+- Character sheet integration: Store expressions with placeholders and evaluate them with current stats
+- Dynamic rule systems: Define rules with conditionals and resolve them at runtime
+- Template dice expressions: Create reusable templates that can be customized with different parameters
+
 ---
 
 ## Models
