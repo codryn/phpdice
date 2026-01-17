@@ -95,6 +95,14 @@ $result = $dice->eval('if $a$ == 1 : $a$ / 4 | $b$ + 1', ['a' => 1, 'b' => 5], f
 echo "Result: $result\n";
 echo "Explanation: Condition resolves to true, then 1/4 is evaluated to 0.25\n\n";
 
+// Example 11: Unevaluated branch doesn't require placeholders
+echo "Example 11: Placeholders in unevaluated branches\n";
+echo "Expression: if \$a$ == 1 : \$a$ / 4 | \$b$ + 1\n";
+echo "Variables: a=1 (note: \$b$ is missing but it's OK)\n";
+$result = $dice->eval('if $a$ == 1 : $a$ / 4 | $b$ + 1', ['a' => 1], false);
+echo "Result: $result\n";
+echo "Explanation: Since a==1, only true branch is evaluated. \$b$ in false branch is not needed.\n\n";
+
 echo "=== Use Cases ===\n\n";
 echo "1. Character Sheet Integration:\n";
 echo "   Store expressions with placeholders in your game system,\n";

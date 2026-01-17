@@ -192,7 +192,7 @@ final class EvalTest extends BaseTestCase
         $result = $this->phpdice->eval($expression, $variables, true);
 
         // The expression structure is preserved with placeholder
-        // Note: Due to operator precedence, this evaluates as (1+$a$-(4/2))
+        // Note: Parentheses have higher precedence than division
         $this->assertStringContainsString('$a$', $result);
         $this->assertStringContainsString('/', $result);
     }
@@ -212,13 +212,29 @@ final class EvalTest extends BaseTestCase
 
     /**
      * Test eval() with conditional and division.
+     * When condition is true, false branch should not be evaluated.
      */
     public function testEvalConditionalWithDivision(): void
     {
         $expression = 'if $a$ == 1 : $a$ / 4 | $b$ + 1';
         $variables = ['a' => 1];
 
-        // Should throw because $b$ is missing and partial is false
+        // Should NOT throw because $b$ is in the false branch which is not evaluated
+        $result = $this->phpdice->eval($expression, $variables, false);
+
+        // When a==1, true branch is chosen: 1/4 = 0.25
+        $this->assertSame('0.25', $result);
+    }
+
+    /**
+     * Test eval() throws when placeholder in evaluated branch is missing.
+     */
+    public function testEvalThrowsWhenEvaluatedBranchHasMissingPlaceholder(): void
+    {
+        $expression = 'if $a$ == 1 : $b$ / 4 | 10';
+        $variables = ['a' => 1];
+
+        // Should throw because $b$ is in the true branch which IS evaluated
         $this->expectException(ParseException::class);
         $this->expectExceptionMessage('Unbound placeholder');
 

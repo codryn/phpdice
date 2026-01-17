@@ -79,18 +79,34 @@ class PHPDice
      * @return string Evaluated expression string with placeholders replaced
      * @throws ParseException If expression is invalid or placeholders are missing (when partial=false)
      */
+    /**
+     * Evaluate an expression and return string with placeholders replaced.
+     * Resolves conditions that can be evaluated and removes them from output.
+     *
+     * @param string $expression Dice expression with placeholders
+     * @param array<string, int> $variables Placeholder variable values
+     * @param bool $partial If true, allow missing placeholders (default: false)
+     * @return string Evaluated expression string with placeholders replaced
+     * @throws ParseException If expression is invalid or placeholders are missing (when partial=false)
+     */
     public function eval(string $expression, array $variables, bool $partial = false): string
     {
-        if ($partial) {
-            // For partial evaluation, extract all placeholders and substitute missing ones
-            return $this->evalPartial($expression, $variables);
+        // Always use partial parsing to handle conditionals with placeholders in unused branches
+        $result = $this->evalPartial($expression, $variables);
+
+        // If not in partial mode, check if the result still contains unresolved placeholders
+        if (!$partial && preg_match('/\$[a-zA-Z0-9_.]+\$/', $result)) {
+            // Extract the placeholder names
+            preg_match_all('/\$([a-zA-Z0-9_.]+)\$/', $result, $matches);
+            $missingVars = array_unique($matches[1]);
+            $firstMissing = $missingVars[0];
+            throw new ParseException(
+                "Unbound placeholder variable '\${$firstMissing}\$'. Please provide a value for this variable.",
+                0
+            );
         }
 
-        // Parse the expression normally (will throw on missing variables)
-        $parsed = $this->parser->parse($expression, $variables);
-
-        // Convert AST back to string representation with conditions resolved
-        return $this->nodeToString($parsed->astRoot, $variables, false);
+        return $result;
     }
 
     /**
