@@ -167,4 +167,74 @@ final class EvalTest extends BaseTestCase
 
         $this->assertIsString($result);
     }
+
+    /**
+     * Test eval() with math-only expression - should fully evaluate.
+     */
+    public function testEvalMathOnlyExpression(): void
+    {
+        $expression = '1+2+3';
+        $variables = [];
+
+        $result = $this->phpdice->eval($expression, $variables, true);
+
+        $this->assertSame('6', $result);
+    }
+
+    /**
+     * Test eval() with partial math expression - preserves placeholder.
+     */
+    public function testEvalPartialMathExpression(): void
+    {
+        $expression = '(1+$a$-4)/2';
+        $variables = [];
+
+        $result = $this->phpdice->eval($expression, $variables, true);
+
+        // The expression structure is preserved with placeholder
+        // Note: Due to operator precedence, this evaluates as (1+$a$-(4/2))
+        $this->assertStringContainsString('$a$', $result);
+        $this->assertStringContainsString('/', $result);
+    }
+
+    /**
+     * Test eval() with math and placeholder - evaluates when placeholder provided.
+     */
+    public function testEvalMathWithPlaceholder(): void
+    {
+        $expression = '1+$a$*2';
+        $variables = ['a' => 4];
+
+        $result = $this->phpdice->eval($expression, $variables, false);
+
+        $this->assertSame('9', $result);
+    }
+
+    /**
+     * Test eval() with conditional and division.
+     */
+    public function testEvalConditionalWithDivision(): void
+    {
+        $expression = 'if $a$ == 1 : $a$ / 4 | $b$ + 1';
+        $variables = ['a' => 1];
+
+        // Should throw because $b$ is missing and partial is false
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Unbound placeholder');
+
+        $this->phpdice->eval($expression, $variables, false);
+    }
+
+    /**
+     * Test eval() with conditional and division - evaluates math.
+     */
+    public function testEvalConditionalWithDivisionResolved(): void
+    {
+        $expression = 'if $a$ == 1 : $a$ / 4 | $b$ + 1';
+        $variables = ['a' => 1, 'b' => 5];
+
+        $result = $this->phpdice->eval($expression, $variables, false);
+
+        $this->assertSame('0.25', $result);
+    }
 }

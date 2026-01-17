@@ -157,9 +157,25 @@ class PHPDice
         }
 
         if ($node instanceof BinaryOpNode) {
+            // Check if this node can be fully evaluated (no dice, no missing placeholders)
+            if (!$this->nodeHasDice($node) && !$this->nodeUsesMissingVars($node, $missingVars)) {
+                $value = $node->evaluate();
+                return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+            }
+
             $left = $this->nodeToString($node->getLeft(), $variables, $partial, $missingVars);
             $right = $this->nodeToString($node->getRight(), $variables, $partial, $missingVars);
             $op = $node->getOperator();
+
+            // Wrap left operand if it needs grouping for precedence
+            if ($node->getLeft() instanceof BinaryOpNode && $this->needsParentheses($node->getLeft(), $node, true)) {
+                $left = "({$left})";
+            }
+
+            // Wrap right operand if it needs grouping for precedence
+            if ($node->getRight() instanceof BinaryOpNode && $this->needsParentheses($node->getRight(), $node, false)) {
+                $right = "({$right})";
+            }
 
             // Handle addition with negative numbers to format as subtraction
             if ($op === '+' && str_starts_with($right, '-')) {
@@ -167,14 +183,15 @@ class PHPDice
                 return $left . $right;
             }
 
-            // Add spaces around certain operators for readability
-            if (in_array($op, ['+', '-'], true)) {
-                return "{$left}{$op}{$right}";
-            }
-            return "({$left}{$op}{$right})";
+            return "{$left}{$op}{$right}";
         }
 
         if ($node instanceof ComparisonNode) {
+            // Check if comparison can be fully evaluated
+            if (!$this->nodeHasDice($node) && !$this->nodeUsesMissingVars($node, $missingVars)) {
+                $value = $node->evaluate();
+                return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+            }
             $left = $this->nodeToString($node->getLeft(), $variables, $partial, $missingVars);
             $right = $this->nodeToString($node->getRight(), $variables, $partial, $missingVars);
             return "{$left} {$node->getOperator()} {$right}";
@@ -204,6 +221,11 @@ class PHPDice
         }
 
         if ($node instanceof FunctionNode) {
+            // Check if function can be fully evaluated
+            if (!$this->nodeHasDice($node) && !$this->nodeUsesMissingVars($node, $missingVars)) {
+                $value = $node->evaluate();
+                return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+            }
             $args = array_map(
                 fn($arg) => $this->nodeToString($arg, $variables, $partial, $missingVars),
                 $node->getArguments()
@@ -212,6 +234,11 @@ class PHPDice
         }
 
         if ($node instanceof GroupNode) {
+            // Check if the entire group can be fully evaluated
+            if (!$this->nodeHasDice($node) && !$this->nodeUsesMissingVars($node, $missingVars)) {
+                $value = $node->evaluate();
+                return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+            }
             return '(' . $this->nodeToString($node->getExpression(), $variables, $partial, $missingVars) . ')';
         }
 
@@ -302,6 +329,91 @@ class PHPDice
                 }
             }
             return false;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a node contains dice notation.
+     *
+     * @param Node $node Node to check
+     * @return bool True if node contains dice
+     */
+    private function nodeHasDice(Node $node): bool
+    {
+        // DiceNode contains dice
+        if ($node instanceof DiceNode) {
+            return true;
+        }
+
+        // For compound nodes, check recursively
+        if ($node instanceof BinaryOpNode) {
+            return $this->nodeHasDice($node->getLeft())
+                || $this->nodeHasDice($node->getRight());
+        }
+
+        if ($node instanceof ComparisonNode) {
+            return $this->nodeHasDice($node->getLeft())
+                || $this->nodeHasDice($node->getRight());
+        }
+
+        if ($node instanceof ConditionalNode) {
+            return $this->nodeHasDice($node->getCondition())
+                || $this->nodeHasDice($node->getTrueBranch())
+                || $this->nodeHasDice($node->getFalseBranch());
+        }
+
+        if ($node instanceof GroupNode) {
+            return $this->nodeHasDice($node->getExpression());
+        }
+
+        if ($node instanceof FunctionNode) {
+            foreach ($node->getArguments() as $arg) {
+                if ($this->nodeHasDice($arg)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine if a child node needs parentheses when rendered.
+     *
+     * @param BinaryOpNode $child Child node
+     * @param BinaryOpNode $parent Parent node
+     * @param bool $isLeft Whether child is left operand of parent
+     * @return bool True if parentheses are needed
+     */
+    private function needsParentheses(BinaryOpNode $child, BinaryOpNode $parent, bool $isLeft): bool
+    {
+        $precedence = [
+            '+' => 1,
+            '-' => 1,
+            '*' => 2,
+            '/' => 2,
+            '%' => 2,
+            '^' => 3,
+        ];
+
+        $childOp = $child->getOperator();
+        $parentOp = $parent->getOperator();
+
+        $childPrec = $precedence[$childOp] ?? 0;
+        $parentPrec = $precedence[$parentOp] ?? 0;
+
+        // Lower precedence always needs parens
+        if ($childPrec < $parentPrec) {
+            return true;
+        }
+
+        // Same precedence: right operand of left-associative ops needs parens
+        // E.g., "a-(b-c)" not "a-b-c"
+        if ($childPrec === $parentPrec && !$isLeft && in_array($parentOp, ['-', '/', '%'], true)) {
+            return true;
         }
 
         return false;

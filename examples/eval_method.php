@@ -55,13 +55,45 @@ $result = $dice->eval('1d20+$str$+$proficiency$', ['str' => 3, 'proficiency' => 
 echo "Result: $result\n";
 echo "Explanation: Both placeholders are replaced with their values\n\n";
 
-// Example 6: Complex conditional
+// Example 6: Complex conditional with comparison
 echo "Example 6: Complex conditional with comparison\n";
 echo "Expression: if \$level$ >= 5 : 3d6 | 2d6\n";
 echo "Variables: level=5\n";
 $result = $dice->eval('if $level$ >= 5 : 3d6 | 2d6', ['level' => 5]);
 echo "Result: $result\n";
 echo "Explanation: Since level=5 (>= 5), the true branch is chosen: 3d6\n\n";
+
+// Example 7: Math-only expressions are fully evaluated
+echo "Example 7: Math-only expression evaluation\n";
+echo "Expression: 1+2+3\n";
+echo "Variables: none\n";
+$result = $dice->eval('1+2+3', [], true);
+echo "Result: $result\n";
+echo "Explanation: Pure math expressions are fully evaluated\n\n";
+
+// Example 8: Math with placeholders - partial evaluation
+echo "Example 8: Partial math evaluation with placeholder\n";
+echo "Expression: (1+\$a$-4)/2\n";
+echo "Variables: none (partial mode)\n";
+$result = $dice->eval('(1+$a$-4)/2', [], true);
+echo "Result: $result\n";
+echo "Explanation: Expression structure is preserved with placeholder\n\n";
+
+// Example 9: Math with placeholders - full evaluation
+echo "Example 9: Math with placeholder - full evaluation\n";
+echo "Expression: 1+\$a$*2\n";
+echo "Variables: a=4\n";
+$result = $dice->eval('1+$a$*2', ['a' => 4], false);
+echo "Result: $result\n";
+echo "Explanation: When all placeholders are provided, math is fully evaluated (1+4*2=9)\n\n";
+
+// Example 10: Conditional with division
+echo "Example 10: Conditional with division\n";
+echo "Expression: if \$a$ == 1 : \$a$ / 4 | \$b$ + 1\n";
+echo "Variables: a=1, b=5\n";
+$result = $dice->eval('if $a$ == 1 : $a$ / 4 | $b$ + 1', ['a' => 1, 'b' => 5], false);
+echo "Result: $result\n";
+echo "Explanation: Condition resolves to true, then 1/4 is evaluated to 0.25\n\n";
 
 echo "=== Use Cases ===\n\n";
 echo "1. Character Sheet Integration:\n";
