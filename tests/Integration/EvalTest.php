@@ -96,9 +96,7 @@ final class EvalTest extends BaseTestCase
 
         $result = $this->phpdice->eval($expression, $variables, true);
 
-        // Should resolve condition but keep $b$ placeholder
-        $this->assertStringContainsString('1d20', $result);
-        $this->assertStringContainsString('$b$', $result);
+        $this->assertSame('1d20+$b$', $result);
     }
 
     /**
@@ -166,6 +164,7 @@ final class EvalTest extends BaseTestCase
         $result = $this->phpdice->eval($expression, $variables);
 
         $this->assertIsString($result);
+        $this->assertSame('1d20+5', $result);
     }
 
     /**
@@ -191,10 +190,7 @@ final class EvalTest extends BaseTestCase
 
         $result = $this->phpdice->eval($expression, $variables, true);
 
-        // The expression structure is preserved with placeholder
-        // Note: Parentheses have higher precedence than division
-        $this->assertStringContainsString('$a$', $result);
-        $this->assertStringContainsString('/', $result);
+        $this->assertSame('(1+$a$-4)/2', $result);
     }
 
     /**
