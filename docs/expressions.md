@@ -105,12 +105,13 @@ A boolean expression contains a condition and true/false branches in the followi
 if condition: trueBranch | falseBranch
 ```
 
-The condition is a comparison expression using one of the comparison operators: `<`, `<=`, `>`, `>=`, `==`, `!=`.
+The condition is a comparison expression using one of the comparison operators: `<`, `<=`, `>`, `>=`, `==`, `!=`, or a null check `is null`.
 
 The condition can compare any two expressions, including:
 - Math expressions (`if 5 > 3: ...`)
 - Placeholders (`if $crit$ > 0: ...`)
 - Complete dice rolls (`if 1d6 > 3: ...`)
+- Null checks (`if $var$ is null: ...`)
 
 The final result of the roll will be the branch used (true or false).
 
@@ -126,9 +127,28 @@ Examples:
 
 ```if $status$ != 0: 2d6 | 1d4``` - Roll 2d6 if status is not zero, otherwise roll 1d4
 
+### Null Checks
+
+You can check if a placeholder variable is null or missing using the `is null` syntax:
+
+```if $var$ is null: trueBranch | falseBranch```
+
+This is particularly useful for handling optional bonuses or modifiers. The null check returns true if:
+- The variable is not provided in the variables array
+- The variable is explicitly set to `null`
+
+Examples:
+
+```if $var$ is null: 1d20-1 | 1d20+$var$``` - Use 1d20-1 if var is missing, otherwise use 1d20+var
+
+```1d20 + (if $bonus$ is null: 0 | $bonus$)``` - Add optional bonus to roll, or 0 if not provided
+
+```if $damage_bonus$ is null: 1d6 | 1d6+$damage_bonus$``` - Apply damage bonus only if the variable is set
+
 Notes:
 - The condition must evaluate to a comparison expression that results in true (1) or false (0)
 - Only the branch corresponding to the condition result is evaluated (lazy evaluation)
+- With `is null` checks, variables in the unused branch don't need to be provided
 - Conditionals can be nested and combined with other expressions
 - The `if` expression follows standard operator precedence and can be used in parentheses
 
