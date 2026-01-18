@@ -495,38 +495,27 @@ class DiceExpressionParser
     {
         // Check for "$var$ is null" pattern before parsing expression
         // This needs special handling to avoid error when variable is missing
-        if ($this->check(Token::TYPE_PLACEHOLDER)) {
-            // Look ahead to check if this is an "is null" check
-            $placeholderIndex = $this->current;
+        if ($this->isNullCheckPattern()) {
             $variableName = (string)$this->peek()->value;
             
-            // Check if next tokens are "is null"
-            if ($placeholderIndex + 1 < count($this->tokens) &&
-                $this->tokens[$placeholderIndex + 1]->type === Token::TYPE_KEYWORD &&
-                $this->tokens[$placeholderIndex + 1]->value === 'is' &&
-                $placeholderIndex + 2 < count($this->tokens) &&
-                $this->tokens[$placeholderIndex + 2]->type === Token::TYPE_KEYWORD &&
-                $this->tokens[$placeholderIndex + 2]->value === 'null') {
-                
-                // Consume the placeholder, "is", and "null" tokens
-                $this->advance(); // placeholder
-                $this->advance(); // is
-                $this->advance(); // null
-                
-                // Mark this variable as null-checked so we can skip validation later
-                $this->nullCheckedVariables[$variableName] = true;
-                
-                // Check if variable exists and get its value
-                $isSet = array_key_exists($variableName, $this->variables);
-                $value = $isSet ? $this->variables[$variableName] : null;
-                
-                // Track variable usage if it exists
-                if ($isSet) {
-                    $this->usedVariables[$variableName] = $this->variables[$variableName];
-                }
-                
-                return new IsNullNode($value, $isSet);
+            // Consume the placeholder, "is", and "null" tokens
+            $this->advance(); // placeholder
+            $this->advance(); // is
+            $this->advance(); // null
+            
+            // Mark this variable as null-checked so we can skip validation later
+            $this->nullCheckedVariables[$variableName] = true;
+            
+            // Check if variable exists and get its value
+            $isSet = array_key_exists($variableName, $this->variables);
+            $value = $isSet ? $this->variables[$variableName] : null;
+            
+            // Track variable usage if it exists
+            if ($isSet) {
+                $this->usedVariables[$variableName] = $this->variables[$variableName];
             }
+            
+            return new IsNullNode($value, $isSet);
         }
         
         $node = $this->parseExpression();
@@ -688,7 +677,9 @@ class DiceExpressionParser
             if (!array_key_exists($variableName, $this->variables)) {
                 // If this variable is null-checked, allow it to be missing
                 if (array_key_exists($variableName, $this->nullCheckedVariables)) {
-                    // Return 0 as a placeholder value - it won't be evaluated if the null check is true
+                    // Return 0 as a safe placeholder value. This value will never be used in practice
+                    // because lazy evaluation ensures the branch containing this placeholder is only
+                    // evaluated when the null check is false (i.e., when the variable has a value).
                     return new NumberNode(0);
                 }
                 
@@ -698,11 +689,29 @@ class DiceExpressionParser
                 );
             }
 
+            $value = $this->variables[$variableName];
+            
+            // Handle null values for null-checked variables
+            if ($value === null) {
+                // If this variable is null-checked, use 0 as a safe placeholder
+                if (array_key_exists($variableName, $this->nullCheckedVariables)) {
+                    // This value will never be used in practice because lazy evaluation ensures
+                    // the branch containing this placeholder is only evaluated when the null check
+                    // is false (meaning the variable would have a non-null value).
+                    return new NumberNode(0);
+                }
+                
+                throw new ParseException(
+                    "Variable '\${$variableName}\$' is null. Null values can only be used with 'is null' checks.",
+                    $this->previous()->position
+                );
+            }
+
             // Track that this variable was used
-            $this->usedVariables[$variableName] = $this->variables[$variableName];
+            $this->usedVariables[$variableName] = $value;
 
             // Return the numeric value
-            return new NumberNode($this->variables[$variableName]);
+            return new NumberNode($value);
         }
 
         // Plain number
@@ -1453,5 +1462,27 @@ class DiceExpressionParser
         }
 
         return $tag;
+    }
+
+    /**
+     * Check if the current position matches the pattern "$var$ is null".
+     *
+     * @return bool True if the next tokens form an "is null" check
+     */
+    private function isNullCheckPattern(): bool
+    {
+        if (!$this->check(Token::TYPE_PLACEHOLDER)) {
+            return false;
+        }
+
+        $placeholderIndex = $this->current;
+        
+        // Check if next two tokens are "is" and "null"
+        return $placeholderIndex + 1 < count($this->tokens) &&
+            $this->tokens[$placeholderIndex + 1]->type === Token::TYPE_KEYWORD &&
+            $this->tokens[$placeholderIndex + 1]->value === 'is' &&
+            $placeholderIndex + 2 < count($this->tokens) &&
+            $this->tokens[$placeholderIndex + 2]->type === Token::TYPE_KEYWORD &&
+            $this->tokens[$placeholderIndex + 2]->value === 'null';
     }
 }
