@@ -139,6 +139,9 @@ class PHPDice
         $parsed = $this->parser->parse($expression, $completeVars);
 
         // Convert AST back to string, preserving missing placeholders
+        if ($parsed->astRoot === null) {
+            return $expression;
+        }
         return $this->nodeToString($parsed->astRoot, $completeVars, true, $missingVars);
     }
 
@@ -243,7 +246,7 @@ class PHPDice
                 return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
             }
             $args = array_map(
-                fn($arg) => $this->nodeToString($arg, $variables, $partial, $missingVars),
+                fn ($arg) => $this->nodeToString($arg, $variables, $partial, $missingVars),
                 $node->getArguments()
             );
             return $node->getName() . '(' . implode(', ', $args) . ')';

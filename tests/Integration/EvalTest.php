@@ -19,7 +19,7 @@ final class EvalTest extends BaseTestCase
     /**
      * Test basic eval() with conditional that resolves.
      * Example from issue: if $a$ == 1 : 1d20 | 1d12 + $b$
-     * With a=2, b=1, should return "1d12+1"
+     * With a=2, b=1, should return "1d12+1".
      */
     public function testEvalWithConditionalResolved(): void
     {
@@ -87,7 +87,7 @@ final class EvalTest extends BaseTestCase
     /**
      * Test eval() with partial=true allows missing placeholders.
      * Example from issue: if $a$ == 1 : 1d20 + $b$ | 1d20
-     * With a=1, should return "1d20 + $b$"
+     * With a=1, should return "1d20 + $b$".
      */
     public function testEvalPartialAllowsMissingPlaceholders(): void
     {
