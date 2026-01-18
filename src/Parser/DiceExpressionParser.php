@@ -16,6 +16,7 @@ use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
 use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\IsNullNode;
 use Codryn\PHPDice\Parser\AST\Node;
 use Codryn\PHPDice\Parser\AST\NumberNode;
 use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
@@ -38,6 +39,8 @@ class DiceExpressionParser
     private array $usedVariables = [];
     /** @var int Group nesting depth (0 = not in group, 1 = in group) */
     private int $groupDepth = 0;
+    /** @var array<string, bool> Track variables that have "is null" checks */
+    private array $nullCheckedVariables = [];
 
     public function __construct(
         private readonly Validator $validator = new Validator(),
@@ -484,13 +487,64 @@ class DiceExpressionParser
     }
 
     /**
-     * Parse a comparison expression (left > right, left >= right, etc.).
+     * Parse a comparison expression (left > right, left >= right, etc., or $var$ is null).
      *
      * @return Node Comparison or expression node
      */
     private function parseComparison(): Node
     {
+        // Check for "$var$ is null" pattern before parsing expression
+        // This needs special handling to avoid error when variable is missing
+        if ($this->check(Token::TYPE_PLACEHOLDER)) {
+            // Look ahead to check if this is an "is null" check
+            $placeholderIndex = $this->current;
+            $variableName = (string)$this->peek()->value;
+            
+            // Check if next tokens are "is null"
+            if ($placeholderIndex + 1 < count($this->tokens) &&
+                $this->tokens[$placeholderIndex + 1]->type === Token::TYPE_KEYWORD &&
+                $this->tokens[$placeholderIndex + 1]->value === 'is' &&
+                $placeholderIndex + 2 < count($this->tokens) &&
+                $this->tokens[$placeholderIndex + 2]->type === Token::TYPE_KEYWORD &&
+                $this->tokens[$placeholderIndex + 2]->value === 'null') {
+                
+                // Consume the placeholder, "is", and "null" tokens
+                $this->advance(); // placeholder
+                $this->advance(); // is
+                $this->advance(); // null
+                
+                // Mark this variable as null-checked so we can skip validation later
+                $this->nullCheckedVariables[$variableName] = true;
+                
+                // Check if variable exists and get its value
+                $isSet = array_key_exists($variableName, $this->variables);
+                $value = $isSet ? $this->variables[$variableName] : null;
+                
+                // Track variable usage if it exists
+                if ($isSet) {
+                    $this->usedVariables[$variableName] = $this->variables[$variableName];
+                }
+                
+                return new IsNullNode($value, $isSet);
+            }
+        }
+        
         $node = $this->parseExpression();
+
+        // Check for "is null" after expression (for cases where expression was already parsed)
+        if ($this->match(Token::TYPE_KEYWORD, ['is'])) {
+            if (!$this->match(Token::TYPE_KEYWORD, ['null'])) {
+                throw new ParseException(
+                    "Expected 'null' after 'is' keyword",
+                    $this->getCurrentPosition()
+                );
+            }
+            
+            throw new ParseException(
+                "'is null' can only be used with placeholder variables directly (e.g., '\$var\$ is null')",
+                $this->getCurrentPosition()
+            );
+        }
 
         // Check for comparison operators
         if ($this->check(Token::TYPE_COMPARISON)) {
@@ -630,8 +684,14 @@ class DiceExpressionParser
         if ($this->match(Token::TYPE_PLACEHOLDER)) {
             $variableName = (string)$this->previous()->value;
 
-            // Check if variable is provided
+            // Check if variable is provided (skip validation if it's null-checked)
             if (!array_key_exists($variableName, $this->variables)) {
+                // If this variable is null-checked, allow it to be missing
+                if (array_key_exists($variableName, $this->nullCheckedVariables)) {
+                    // Return 0 as a placeholder value - it won't be evaluated if the null check is true
+                    return new NumberNode(0);
+                }
+                
                 throw new ParseException(
                     "Unbound placeholder variable '\${$variableName}\$'. Please provide a value for this variable.",
                     $this->previous()->position
