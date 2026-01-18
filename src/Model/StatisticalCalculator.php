@@ -10,6 +10,7 @@ use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
 use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\IsNullNode;
 use Codryn\PHPDice\Parser\AST\Node;
 use Codryn\PHPDice\Parser\AST\NumberNode;
 
@@ -792,6 +793,12 @@ class StatisticalCalculator
         if ($node instanceof NumberNode) {
             $value = $node->getValue();
             return new StatisticalData($value, $value, (float)$value, 0.0, 0.0);
+        }
+
+        if ($node instanceof IsNullNode) {
+            // IsNullNode returns 1 if null, 0 if not null
+            // Since we don't know the condition at parse time, we assume 50/50 probability
+            return new StatisticalData(0, 1, 0.5, null, null);
         }
 
         if ($node instanceof DiceNode) {

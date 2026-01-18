@@ -15,6 +15,7 @@ use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
 use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\IsNullNode;
 use Codryn\PHPDice\Parser\AST\Node;
 use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
 
@@ -576,6 +577,9 @@ class DiceRoller
         } elseif ($node instanceof ComparisonNode) {
             $this->countDiceNodes($node->getLeft(), $count);
             $this->countDiceNodes($node->getRight(), $count);
+        } elseif ($node instanceof IsNullNode) {
+            // IsNullNode doesn't contain any dice, just a value check
+            // No dice to count
         } elseif ($node instanceof ConditionalNode) {
             // Count dice in all branches (we'll only roll one, but we need to know if there are dice)
             $this->countDiceNodes($node->getCondition(), $count);
@@ -698,6 +702,9 @@ class DiceRoller
             // Roll both sides of the comparison
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof IsNullNode) {
+            // IsNullNode doesn't roll any dice, just evaluates to 0 or 1
+            // No dice to roll
         } elseif ($node instanceof ConditionalNode) {
             // Roll the condition first
             $this->rollDiceNode($node->getCondition(), $allDiceValues);
