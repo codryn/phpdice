@@ -1292,21 +1292,6 @@ class DiceExpressionParser
     }
 
     /**
-     * Check if next token is of given type.
-     *
-     * @param string $type Token type
-     * @return bool True if matches
-     */
-    private function checkNext(string $type): bool
-    {
-        if ($this->current + 1 >= count($this->tokens)) {
-            return false;
-        }
-
-        return $this->tokens[$this->current + 1]->type === $type;
-    }
-
-    /**
      * Advance to next token.
      *
      * @return Token Previous token
