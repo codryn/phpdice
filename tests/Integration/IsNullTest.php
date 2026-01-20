@@ -134,19 +134,15 @@ class IsNullTest extends BaseTestCaseMock
         // 1d20 + (if $bonus$ is null : 0 | $bonus$)
         $expression = '1d20 + (if $bonus$ is null : 0 | $bonus$)';
 
-        // When $bonus$ is null, should add 0
-        $this->mockRng->expects($this->once())
+        $this->mockRng->expects($this->exactly(2))
             ->method('generate')
-            ->willReturn(10);
+            ->willReturnOnConsecutiveCalls(10, 10);
 
+        // When $bonus$ is null, should add 0
         $result = $this->phpdice->roll($expression, []);
         $this->assertEquals(10, $result->total); // 10+0
 
         // When $bonus$ is 5, should add 5
-        $this->mockRng->expects($this->once())
-            ->method('generate')
-            ->willReturn(10);
-
         $result = $this->phpdice->roll($expression, ['bonus' => 5]);
         $this->assertEquals(15, $result->total); // 10+5
     }

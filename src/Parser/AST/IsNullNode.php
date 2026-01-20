@@ -23,7 +23,7 @@ class IsNullNode extends Node
         if (!$this->isSet || $this->value === null) {
             return 1;
         }
-        
+
         return 0;
     }
 
