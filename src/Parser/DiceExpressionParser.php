@@ -602,6 +602,86 @@ class DiceExpressionParser
             return $this->parseFactor();
         }
 
+        // Parse primary expression (could be a number, parenthesized expression, etc.)
+        $primaryExpr = $this->parsePrimary();
+
+        // Check if this is dice notation (expression d expression)
+        if ($this->check(Token::TYPE_DICE)) {
+            $diceToken = $this->advance();
+            $diceValue = (string)$diceToken->value;
+
+            // Ensure the count expression doesn't contain dice rolls
+            if ($this->findDiceNode($primaryExpr) !== null) {
+                throw new ParseException(
+                    "Dice count cannot contain dice rolls. Use pure mathematical expressions only.",
+                    $this->getCurrentPosition()
+                );
+            }
+
+            // Evaluate the count expression to get a concrete number
+            // This must not contain dice rolls, only pure math
+            $countValue = $primaryExpr->evaluate();
+
+            // Validate count is an integer
+            if (!is_int($countValue) && $countValue != floor($countValue)) {
+                throw new ParseException(
+                    "Dice count must be an integer, got " . $countValue,
+                    $this->getCurrentPosition()
+                );
+            }
+            $count = (int)$countValue;
+
+            // Handle special dice types
+            if ($diceValue === 'dF') {
+                // Fudge dice: count is specified, sides is always 3 (representing -1, 0, +1)
+                $diceNode = new DiceNode($count, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
+            } elseif ($diceValue === 'd%') {
+                // Percentile dice: count is specified, sides is always 100
+                $diceNode = new DiceNode($count, 100, \Codryn\PHPDice\Model\DiceType::PERCENTILE);
+            } elseif ($diceValue === 'C') {
+                // Coin dice: count is specified, sides is always 2 (representing 0, 1)
+                $diceNode = new DiceNode($count, 2, \Codryn\PHPDice\Model\DiceType::COIN);
+            } else {
+                // Standard dice: parse and evaluate the sides expression
+                $sidesExpr = $this->parsePrimary();
+
+                // Ensure the sides expression doesn't contain dice rolls
+                if ($this->findDiceNode($sidesExpr) !== null) {
+                    throw new ParseException(
+                        "Dice sides cannot contain dice rolls. Use pure mathematical expressions only.",
+                        $this->getCurrentPosition()
+                    );
+                }
+
+                $sidesValue = $sidesExpr->evaluate();
+
+                // Validate sides is an integer
+                if (!is_int($sidesValue) && $sidesValue != floor($sidesValue)) {
+                    throw new ParseException(
+                        "Dice sides must be an integer, got " . $sidesValue,
+                        $this->getCurrentPosition()
+                    );
+                }
+                $sides = (int)$sidesValue;
+
+                $diceNode = new DiceNode($count, $sides);
+            }
+
+            // Check if modifiers follow (for use in function arguments)
+            return $this->tryParseModifiersForDiceNode($diceNode);
+        }
+
+        // Not dice notation, return the primary expression
+        return $primaryExpr;
+    }
+
+    /**
+     * Parse a primary expression (numbers, parentheses, functions, placeholders, groups).
+     *
+     * @return Node Primary expression node
+     */
+    private function parsePrimary(): Node
+    {
         // Function call
         if ($this->match(Token::TYPE_FUNCTION)) {
             return $this->parseFunction();
@@ -617,32 +697,6 @@ class DiceExpressionParser
         // Grouped expression { expression # comment }
         if ($this->match(Token::TYPE_LBRACE)) {
             return $this->parseGroup();
-        }
-
-        // Dice notation (XdY) - Check for modifiers and wrap in DiceExpressionNode if present
-        if ($this->check(Token::TYPE_NUMBER) && $this->checkNext(Token::TYPE_DICE)) {
-            $count = $this->consumeNumber();
-            $diceToken = $this->advance();
-            $diceValue = (string)$diceToken->value;
-
-            // Check for special dice types
-            if ($diceValue === 'dF') {
-                // Fudge dice: count is specified, sides is always 3 (representing -1, 0, +1)
-                $diceNode = new DiceNode($count, 3, \Codryn\PHPDice\Model\DiceType::FUDGE);
-            } elseif ($diceValue === 'd%') {
-                // Percentile dice: count is specified, sides is always 100
-                $diceNode = new DiceNode($count, 100, \Codryn\PHPDice\Model\DiceType::PERCENTILE);
-            } elseif ($diceValue === 'C') {
-                // Coin dice: count is specified, sides is always 2 (representing 0, 1)
-                $diceNode = new DiceNode($count, 2, \Codryn\PHPDice\Model\DiceType::COIN);
-            } else {
-                // Standard dice: get the sides
-                $sides = $this->consumeNumber();
-                $diceNode = new DiceNode($count, $sides);
-            }
-
-            // Check if modifiers follow (for use in function arguments)
-            return $this->tryParseModifiersForDiceNode($diceNode);
         }
 
         // Standalone d% or dF (equivalent to 1d% or 1dF)

@@ -149,4 +149,59 @@ class DiceExpressionParserTest extends TestCase
         $this->assertSame('>=', $expression->comparisonOperator);
         $this->assertSame(15, $expression->comparisonThreshold);
     }
+
+    public function testParseMathInDiceExpression(): void
+    {
+        $expression = $this->parser->parse('(1+2)d(10-2)');
+
+        $this->assertSame(3, $expression->specification->count);
+        $this->assertSame(8, $expression->specification->sides);
+        $this->assertSame(DiceType::STANDARD, $expression->specification->type);
+    }
+
+    public function testParseMathInDiceCount(): void
+    {
+        $expression = $this->parser->parse('(2*2)d6');
+
+        $this->assertSame(4, $expression->specification->count);
+        $this->assertSame(6, $expression->specification->sides);
+    }
+
+    public function testParseMathInDiceSides(): void
+    {
+        $expression = $this->parser->parse('3d(3+3)');
+
+        $this->assertSame(3, $expression->specification->count);
+        $this->assertSame(6, $expression->specification->sides);
+    }
+
+    public function testParseSimpleParenthesesInDice(): void
+    {
+        $expression = $this->parser->parse('(1)d(6)');
+
+        $this->assertSame(1, $expression->specification->count);
+        $this->assertSame(6, $expression->specification->sides);
+    }
+
+    public function testParseComplexMathInDice(): void
+    {
+        $expression = $this->parser->parse('(2+1)d(4*3)');
+
+        $this->assertSame(3, $expression->specification->count);
+        $this->assertSame(12, $expression->specification->sides);
+    }
+
+    public function testParseDiceInCountThrowsException(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Dice count cannot contain dice rolls');
+        $this->parser->parse('(1d6)d6');
+    }
+
+    public function testParseDiceInSidesThrowsException(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Dice sides cannot contain dice rolls');
+        $this->parser->parse('3d(1d6)');
+    }
 }
