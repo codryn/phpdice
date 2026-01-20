@@ -33,9 +33,9 @@ class DiceExpressionParser
     private array $tokens = [];
     private int $current = 0;
     private ?Node $astRoot = null;
-    /** @var array<string, int> Placeholder values */
+    /** @var array<string, int|null> Placeholder values */
     private array $variables = [];
-    /** @var array<string, int> Track which variables were actually used */
+    /** @var array<string, int|null> Track which variables were actually used */
     private array $usedVariables = [];
     /** @var int Group nesting depth (0 = not in group, 1 = in group) */
     private int $groupDepth = 0;
@@ -52,7 +52,7 @@ class DiceExpressionParser
      * Parse a dice expression.
      *
      * @param string $expression Dice expression to parse (e.g., "3d6", "1d20+5")
-     * @param array<string, int> $variables Optional placeholder variables
+     * @param array<string, int|null> $variables Optional placeholder variables
      * @return DiceExpression Parsed expression
      * @throws ParseException If parsing fails
      */

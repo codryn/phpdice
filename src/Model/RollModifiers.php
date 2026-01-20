@@ -31,7 +31,7 @@ class RollModifiers
      * @param int|null $criticalSuccess Flag critical success on this value
      * @param int|null $criticalFailure Flag critical failure on this value
      * @param int|null $autoSuccess Automatic success on this value (regardless of DC)
-     * @param array<string, int> $resolvedVariables Placeholder values (name => value)
+     * @param array<string, int|null> $resolvedVariables Placeholder values (name => value)
      */
     public function __construct(
         public readonly ?string $arithmeticExpression = null,
