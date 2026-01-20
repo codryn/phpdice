@@ -618,14 +618,13 @@ class DiceExpressionParser
                 );
             }
 
-            // Evaluate the count expression to get a concrete number
-            // This must not contain dice rolls, only pure math
+            // Evaluate the mathematical expression to get the dice count value
             $countValue = $primaryExpr->evaluate();
 
             // Validate count is an integer
             if (!is_int($countValue) && $countValue !== (float)(int)$countValue) {
                 throw new ParseException(
-                    "Dice count must be an integer, got " . $countValue,
+                    "Dice count must be an integer",
                     $this->getCurrentPosition()
                 );
             }
@@ -658,7 +657,7 @@ class DiceExpressionParser
                 // Validate sides is an integer
                 if (!is_int($sidesValue) && $sidesValue !== (float)(int)$sidesValue) {
                     throw new ParseException(
-                        "Dice sides must be an integer, got " . $sidesValue,
+                        "Dice sides must be an integer",
                         $this->getCurrentPosition()
                     );
                 }
