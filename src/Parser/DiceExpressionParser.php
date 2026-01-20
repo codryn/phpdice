@@ -622,7 +622,7 @@ class DiceExpressionParser
             $countValue = $primaryExpr->evaluate();
 
             // Validate count is an integer
-            if (!is_int($countValue) && $countValue !== (float)(int)$countValue) {
+            if (!$this->isIntegerValue($countValue)) {
                 throw new ParseException(
                     "Dice count must be an integer",
                     $this->getCurrentPosition()
@@ -655,7 +655,7 @@ class DiceExpressionParser
                 $sidesValue = $sidesExpr->evaluate();
 
                 // Validate sides is an integer
-                if (!is_int($sidesValue) && $sidesValue !== (float)(int)$sidesValue) {
+                if (!$this->isIntegerValue($sidesValue)) {
                     throw new ParseException(
                         "Dice sides must be an integer",
                         $this->getCurrentPosition()
@@ -1537,5 +1537,23 @@ class DiceExpressionParser
             $placeholderIndex + 2 < count($this->tokens) &&
             $this->tokens[$placeholderIndex + 2]->type === Token::TYPE_KEYWORD &&
             $this->tokens[$placeholderIndex + 2]->value === 'null';
+    }
+
+    /**
+     * Check if a value represents an integer (including floats that are whole numbers).
+     *
+     * @param int|float $value Value to check
+     * @return bool True if the value is an integer or a float that equals its integer cast
+     */
+    private function isIntegerValue(int|float $value): bool
+    {
+        // If already an int type, it's valid
+        if (is_int($value)) {
+            return true;
+        }
+
+        // For floats, check if the value equals its integer cast
+        // This works correctly for negative numbers unlike floor()
+        return $value === (float)(int)$value;
     }
 }
