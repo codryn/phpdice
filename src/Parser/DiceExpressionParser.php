@@ -613,7 +613,7 @@ class DiceExpressionParser
             // Ensure the count expression doesn't contain dice rolls
             if ($this->findDiceNode($primaryExpr) !== null) {
                 throw new ParseException(
-                    "Dice count cannot contain dice rolls",
+                    'Dice count cannot contain dice rolls',
                     $this->getCurrentPosition()
                 );
             }
@@ -624,7 +624,7 @@ class DiceExpressionParser
             // Validate count is an integer
             if (!$this->isIntegerValue($countValue)) {
                 throw new ParseException(
-                    "Dice count must be an integer",
+                    'Dice count must be an integer',
                     $this->getCurrentPosition()
                 );
             }
@@ -647,7 +647,7 @@ class DiceExpressionParser
                 // Ensure the sides expression doesn't contain dice rolls
                 if ($this->findDiceNode($sidesExpr) !== null) {
                     throw new ParseException(
-                        "Dice sides cannot contain dice rolls",
+                        'Dice sides cannot contain dice rolls',
                         $this->getCurrentPosition()
                     );
                 }
@@ -657,7 +657,7 @@ class DiceExpressionParser
                 // Validate sides is an integer
                 if (!$this->isIntegerValue($sidesValue)) {
                     throw new ParseException(
-                        "Dice sides must be an integer",
+                        'Dice sides must be an integer',
                         $this->getCurrentPosition()
                     );
                 }

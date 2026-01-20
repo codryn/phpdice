@@ -156,6 +156,17 @@ class MathInDiceExpressionTest extends BaseTestCaseMock
     }
 
     /**
+     * Test math with coin toss.
+     */
+    public function testMathWithCoinToss(): void
+    {
+        $expression = $this->phpdice->parse('(1+0)C');
+        $this->assertSame(1, $expression->specification->count);
+        $this->assertSame(2, $expression->specification->sides);
+        $this->assertSame(DiceType::COIN, $expression->specification->type);
+    }
+
+    /**
      * Test that dice in count throws exception.
      */
     public function testDiceInCountThrowsException(): void
