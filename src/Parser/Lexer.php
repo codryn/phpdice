@@ -243,7 +243,7 @@ class Lexer
         }
 
         // Check for advantage/disadvantage/success/reroll/explode/edge/critical/dc/if/switch keywords
-        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'edge', 'crit', 'glitch', 'dc', 'count', 'auto', 'even', 'odd', 'if', 'switch', 'case', 'default'];
+        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'edge', 'crit', 'glitch', 'dc', 'count', 'auto', 'even', 'odd', 'if', 'switch', 'case', 'default', 'is', 'null'];
         if (in_array($lower, $keywords, true)) {
             return new Token(Token::TYPE_KEYWORD, $lower, $start);
         }
