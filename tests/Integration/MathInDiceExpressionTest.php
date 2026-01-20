@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Codryn\PHPDice\Tests\Integration;
 
 use Codryn\PHPDice\Exception\ParseException;
+use Codryn\PHPDice\Exception\ValidationException;
 use Codryn\PHPDice\Model\DiceType;
 use Codryn\PHPDice\PHPDice;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -181,7 +182,7 @@ class MathInDiceExpressionTest extends BaseTestCaseMock
      */
     public function testValidationCountMinimum(): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(ValidationException::class);
         $this->expectExceptionMessageMatches('/Dice count must be at least 1/');
 
         $this->phpdice->parse('(1-2)d6');
@@ -192,7 +193,7 @@ class MathInDiceExpressionTest extends BaseTestCaseMock
      */
     public function testValidationSidesMinimum(): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(ValidationException::class);
         $this->expectExceptionMessageMatches('/Dice must have at least 2 sides/');
 
         $this->phpdice->parse('3d(2-1)');

@@ -623,7 +623,7 @@ class DiceExpressionParser
             $countValue = $primaryExpr->evaluate();
 
             // Validate count is an integer
-            if (!is_int($countValue) && $countValue != floor($countValue)) {
+            if (!is_int($countValue) && $countValue !== floor($countValue)) {
                 throw new ParseException(
                     "Dice count must be an integer, got " . $countValue,
                     $this->getCurrentPosition()
@@ -656,7 +656,7 @@ class DiceExpressionParser
                 $sidesValue = $sidesExpr->evaluate();
 
                 // Validate sides is an integer
-                if (!is_int($sidesValue) && $sidesValue != floor($sidesValue)) {
+                if (!is_int($sidesValue) && $sidesValue !== floor($sidesValue)) {
                     throw new ParseException(
                         "Dice sides must be an integer, got " . $sidesValue,
                         $this->getCurrentPosition()
