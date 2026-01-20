@@ -204,4 +204,18 @@ class DiceExpressionParserTest extends TestCase
         $this->expectExceptionMessage('Dice sides cannot contain dice rolls');
         $this->parser->parse('3d(1d6)');
     }
+
+    public function testParseNonIntegerCountThrowsException(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Dice count must be an integer');
+        $this->parser->parse('(1.5+0)d6');
+    }
+
+    public function testParseNonIntegerSidesThrowsException(): void
+    {
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Dice sides must be an integer');
+        $this->parser->parse('3d(2.5+0)');
+    }
 }
