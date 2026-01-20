@@ -613,7 +613,7 @@ class DiceExpressionParser
             // Ensure the count expression doesn't contain dice rolls
             if ($this->findDiceNode($primaryExpr) !== null) {
                 throw new ParseException(
-                    "Dice count cannot contain dice rolls. Use pure mathematical expressions only.",
+                    "Dice count cannot contain dice rolls",
                     $this->getCurrentPosition()
                 );
             }
@@ -648,7 +648,7 @@ class DiceExpressionParser
                 // Ensure the sides expression doesn't contain dice rolls
                 if ($this->findDiceNode($sidesExpr) !== null) {
                     throw new ParseException(
-                        "Dice sides cannot contain dice rolls. Use pure mathematical expressions only.",
+                        "Dice sides cannot contain dice rolls",
                         $this->getCurrentPosition()
                     );
                 }
