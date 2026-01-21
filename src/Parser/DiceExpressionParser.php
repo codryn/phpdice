@@ -1386,7 +1386,7 @@ class DiceExpressionParser
         // Replace all $variable$ placeholders with their resolved values
         $result = preg_replace_callback(
             '/\$([a-zA-Z0-9_.]+)\$/',
-            function ($matches) {
+            function (array $matches): string {
                 $variableName = $matches[1];
                 if (array_key_exists($variableName, $this->variables)) {
                     return (string)$this->variables[$variableName];
