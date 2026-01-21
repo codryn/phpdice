@@ -20,42 +20,42 @@ class FunctionNode extends Node
      */
     public function __construct(
         private readonly string $name,
-        Node|array $argument
+        Node|array $argument,
     ) {
         // Support both single argument (for backward compatibility) and multiple arguments
-        $this->arguments = is_array($argument) ? $argument : [$argument];
+        $this->arguments = \is_array($argument) ? $argument : [$argument];
     }
 
     public function evaluate(): int|float
     {
-        $lowerName = strtolower($this->name);
+        $lowerName = \strtolower($this->name);
 
         // For single-argument functions
-        if (in_array($lowerName, ['floor', 'ceil', 'round', 'abs'], true)) {
-            if (count($this->arguments) !== 1) {
-                throw new ValidationException("Function '{$this->name}' expects exactly 1 argument, got " . count($this->arguments), 'function');
+        if (\in_array($lowerName, ['floor', 'ceil', 'round', 'abs'], true)) {
+            if (\count($this->arguments) !== 1) {
+                throw new ValidationException("Function '{$this->name}' expects exactly 1 argument, got " . \count($this->arguments), 'function');
             }
             $value = $this->arguments[0]->evaluate();
 
             return match ($lowerName) {
-                'floor' => floor($value),
-                'ceil' => ceil($value),
-                'round' => round($value),
-                'abs' => (int)abs($value),
+                'floor' => \floor($value),
+                'ceil' => \ceil($value),
+                'round' => \round($value),
+                'abs' => (int) \abs($value),
             };
         }
 
         // For multi-argument functions (min, max)
-        if (in_array($lowerName, ['min', 'max'], true)) {
-            if (count($this->arguments) < 2) {
-                throw new ValidationException("Function '{$this->name}' expects at least 2 arguments, got " . count($this->arguments), 'function');
+        if (\in_array($lowerName, ['min', 'max'], true)) {
+            if (\count($this->arguments) < 2) {
+                throw new ValidationException("Function '{$this->name}' expects at least 2 arguments, got " . \count($this->arguments), 'function');
             }
 
-            $values = array_map(fn (Node $arg) => $arg->evaluate(), $this->arguments);
+            $values = \array_map(fn (Node $arg) => $arg->evaluate(), $this->arguments);
 
             return match ($lowerName) {
-                'min' => min(...$values),
-                'max' => max(...$values),
+                'min' => \min(...$values),
+                'max' => \max(...$values),
             };
         }
 

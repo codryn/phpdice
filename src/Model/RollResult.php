@@ -43,7 +43,7 @@ class RollResult
         public readonly ?array $edgeHistory = null,
         public readonly ?string $comment = null,
         public readonly ?array $groups = null,
-        public readonly ?array $tags = null
+        public readonly ?array $tags = null,
     ) {
     }
 }

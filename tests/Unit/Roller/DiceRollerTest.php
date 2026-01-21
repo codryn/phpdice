@@ -34,7 +34,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(3, 6),
             new RollModifiers(),
             new StatisticalData(3, 18, 10.5),
-            '3d6'
+            '3d6',
         );
 
         $result = $roller->roll($expression);
@@ -57,7 +57,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(3, 6),
             new RollModifiers(),
             new StatisticalData(3, 18, 10.5),
-            '3d6'
+            '3d6',
         );
 
         $result = $roller->roll($expression);
@@ -82,7 +82,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(4, 6),
             new RollModifiers(),
             new StatisticalData(4, 24, 14.0),
-            '4d6'
+            '4d6',
         );
 
         $result = $roller->roll($expression);
@@ -109,10 +109,10 @@ class DiceRollerTest extends TestCase
             new RollModifiers(
                 rerollThreshold: 2,
                 rerollOperator: '<=',
-                rerollLimit: 10
+                rerollLimit: 10,
             ),
             new StatisticalData(3, 6, 4.5),
-            '1d6 reroll <=2'
+            '1d6 reroll <=2',
         );
 
         $result = $roller->roll($expression);
@@ -142,10 +142,10 @@ class DiceRollerTest extends TestCase
             new RollModifiers(
                 rerollThreshold: 2,
                 rerollOperator: '<=',
-                rerollLimit: 3
+                rerollLimit: 3,
             ),
             new StatisticalData(3, 6, 4.5),
-            '1d6 reroll 3 <=2'
+            '1d6 reroll 3 <=2',
         );
 
         $result = $roller->roll($expression);
@@ -175,10 +175,10 @@ class DiceRollerTest extends TestCase
             new RollModifiers(
                 explosionThreshold: 6,
                 explosionOperator: '>=',
-                explosionLimit: 10
+                explosionLimit: 10,
             ),
             new StatisticalData(1, 60, 7.2),
-            '1d6 explode'
+            '1d6 explode',
         );
 
         $result = $roller->roll($expression);
@@ -208,10 +208,10 @@ class DiceRollerTest extends TestCase
             new RollModifiers(
                 explosionThreshold: 6,
                 explosionOperator: '>=',
-                explosionLimit: 2
+                explosionLimit: 2,
             ),
             new StatisticalData(1, 18, 7.2),
-            '1d6 explode 2'
+            '1d6 explode 2',
         );
 
         $result = $roller->roll($expression);
@@ -240,10 +240,10 @@ class DiceRollerTest extends TestCase
             new RollModifiers(
                 explosionThreshold: 5,
                 explosionOperator: '>=',
-                explosionLimit: 10
+                explosionLimit: 10,
             ),
             new StatisticalData(1, 60, 8.0),
-            '1d6 explode >=5'
+            '1d6 explode >=5',
         );
 
         $result = $roller->roll($expression);
@@ -270,7 +270,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(4, 6),
             new RollModifiers(keepHighest: 3),
             new StatisticalData(3, 18, 12.25),
-            '4d6 keep 3 highest'
+            '4d6 keep 3 highest',
         );
 
         $result = $roller->roll($expression);
@@ -300,7 +300,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(4, 6),
             new RollModifiers(keepLowest: 2),
             new StatisticalData(2, 12, 4.25),
-            '4d6 keep 2 lowest'
+            '4d6 keep 2 lowest',
         );
 
         $result = $roller->roll($expression);
@@ -329,10 +329,10 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(1, 20),
             new RollModifiers(
                 advantageCount: 1,
-                keepHighest: 1
+                keepHighest: 1,
             ),
             new StatisticalData(1, 20, 13.82),
-            '1d20 advantage'
+            '1d20 advantage',
         );
 
         $result = $roller->roll($expression);
@@ -357,10 +357,10 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(1, 20),
             new RollModifiers(
                 advantageCount: 1,
-                keepLowest: 1
+                keepLowest: 1,
             ),
             new StatisticalData(1, 20, 7.18),
-            '1d20 disadvantage'
+            '1d20 disadvantage',
         );
 
         $result = $roller->roll($expression);
@@ -385,10 +385,10 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(5, 6),
             new RollModifiers(
                 successThreshold: 5,
-                successOperator: '>='
+                successOperator: '>=',
             ),
             new StatisticalData(0, 5, 1.67),
-            '5d6 >=5'
+            '5d6 >=5',
         );
 
         $result = $roller->roll($expression);
@@ -414,10 +414,10 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(5, 6),
             new RollModifiers(
                 successThreshold: 5,
-                successOperator: '>'
+                successOperator: '>',
             ),
             new StatisticalData(0, 5, 0.83),
-            '5d6 >5'
+            '5d6 >5',
         );
 
         $result = $roller->roll($expression);
@@ -438,7 +438,7 @@ class DiceRollerTest extends TestCase
             ->willReturnOnConsecutiveCalls(
                 1,  // Initial roll - triggers reroll
                 6,  // Reroll result - triggers explosion
-                4   // Explosion result - stops
+                4,   // Explosion result - stops
             );
 
         $roller = new DiceRoller($mockRng);
@@ -451,10 +451,10 @@ class DiceRollerTest extends TestCase
                 rerollLimit: 10,
                 explosionThreshold: 6,
                 explosionOperator: '>=',
-                explosionLimit: 10
+                explosionLimit: 10,
             ),
             new StatisticalData(3, 60, 8.0),
-            '1d6 reroll <=2 explode'
+            '1d6 reroll <=2 explode',
         );
 
         $result = $roller->roll($expression);
@@ -482,7 +482,7 @@ class DiceRollerTest extends TestCase
                 4,  // Die 0: after reroll
                 6,  // Die 1: explodes
                 6,  // Die 1: explodes again
-                2   // Die 1: stops
+                2,   // Die 1: stops
             );
 
         $roller = new DiceRoller($mockRng);
@@ -495,10 +495,10 @@ class DiceRollerTest extends TestCase
                 rerollLimit: 10,
                 explosionThreshold: 6,
                 explosionOperator: '>=',
-                explosionLimit: 10
+                explosionLimit: 10,
             ),
             new StatisticalData(6, 120, 16.0),
-            '2d6 reroll <=2 explode'
+            '2d6 reroll <=2 explode',
         );
 
         $result = $roller->roll($expression);
@@ -530,7 +530,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(4, 6),
             new RollModifiers(keepHighest: 3),
             new StatisticalData(3, 18, 12.25),
-            '4d6 keep 3 highest'
+            '4d6 keep 3 highest',
         );
 
         $result = $roller->roll($expression);
@@ -557,7 +557,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(1, 20),
             new RollModifiers(),
             new StatisticalData(1, 20, 10.5),
-            '1d20'
+            '1d20',
         );
 
         $result = $roller->roll($expression);
@@ -586,10 +586,10 @@ class DiceRollerTest extends TestCase
             new RollModifiers(
                 explosionThreshold: 2,
                 explosionOperator: '<=',
-                explosionLimit: 10
+                explosionLimit: 10,
             ),
             new StatisticalData(1, 60, 8.0),
-            '1d6 explode <=2'
+            '1d6 explode <=2',
         );
 
         $result = $roller->roll($expression);
@@ -616,10 +616,10 @@ class DiceRollerTest extends TestCase
             new RollModifiers(
                 rerollThreshold: 3,
                 rerollOperator: '==',
-                rerollLimit: 10
+                rerollLimit: 10,
             ),
             new StatisticalData(1, 6, 3.6),
-            '1d6 reroll ==3'
+            '1d6 reroll ==3',
         );
 
         $result = $roller->roll($expression);
@@ -645,7 +645,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(1, 20),
             new RollModifiers(),
             new StatisticalData(1, 20, 10.5),
-            '1d20'
+            '1d20',
         );
 
         $result = $roller->roll($expression);
@@ -670,7 +670,7 @@ class DiceRollerTest extends TestCase
             new DiceSpecification(1, 20),
             new RollModifiers(),
             new StatisticalData(1, 20, 10.5),
-            '1d20'
+            '1d20',
         );
 
         $result = $roller->roll($expression);

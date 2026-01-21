@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Codryn\PHPDice\Roller;
 
 use Codryn\PHPDice\Model\DiceExpression;
+use Codryn\PHPDice\Model\RollModifiers;
 use Codryn\PHPDice\Model\RollResult;
 use Codryn\PHPDice\Model\StatisticalCalculator;
 use Codryn\PHPDice\Parser\AST\BinaryOpNode;
@@ -14,6 +15,7 @@ use Codryn\PHPDice\Parser\AST\DiceExpressionNode;
 use Codryn\PHPDice\Parser\AST\DiceNode;
 use Codryn\PHPDice\Parser\AST\FunctionNode;
 use Codryn\PHPDice\Parser\AST\GroupNode;
+use Codryn\PHPDice\Parser\AST\IsNullNode;
 use Codryn\PHPDice\Parser\AST\Node;
 use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
 
@@ -23,7 +25,7 @@ use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
 class DiceRoller
 {
     public function __construct(
-        private readonly RandomNumberGenerator $rng = new RandomNumberGenerator()
+        private readonly RandomNumberGenerator $rng = new RandomNumberGenerator(),
     ) {
     }
 
@@ -208,10 +210,10 @@ class DiceRoller
             $total = $successCount;
         } elseif ($ast !== null) {
             // Evaluate AST with dice results
-            $this->setDiceResults($ast, array_sum($finalValues));
+            $this->setDiceResults($ast, \array_sum($finalValues));
             $total = $ast->evaluate();
         } else {
-            $total = array_sum($finalValues) + $modifiers->arithmeticModifier;
+            $total = \array_sum($finalValues) + $modifiers->arithmeticModifier;
         }
 
         // Evaluate expression-level comparison for success rolls (US8)
@@ -220,7 +222,7 @@ class DiceRoller
             $isSuccess = $this->evaluateComparison(
                 $total,
                 $expression->comparisonThreshold,
-                $expression->comparisonOperator
+                $expression->comparisonOperator,
             );
         }
 
@@ -318,7 +320,7 @@ class DiceRoller
             edgeHistory: $edgeHistory,
             comment: $expression->comment,
             groups: $groups,
-            tags: $tags
+            tags: $tags,
         );
     }
 
@@ -402,6 +404,7 @@ class DiceRoller
                 $count++;
             }
         }
+
         return $count;
     }
 
@@ -441,10 +444,10 @@ class DiceRoller
         }
 
         // Sort by value descending, maintaining indices
-        arsort($indexed);
+        \arsort($indexed);
 
         // Take top N
-        $sortedIndices = array_keys($indexed);
+        $sortedIndices = \array_keys($indexed);
 
         $keptList = [];
         $discardedList = [];
@@ -480,10 +483,10 @@ class DiceRoller
         }
 
         // Sort by value ascending, maintaining indices
-        asort($indexed);
+        \asort($indexed);
 
         // Take bottom N
-        $sortedIndices = array_keys($indexed);
+        $sortedIndices = \array_keys($indexed);
 
         $keptList = [];
         $discardedList = [];
@@ -553,6 +556,7 @@ class DiceRoller
     {
         $diceCount = 0;
         $this->countDiceNodes($node, $diceCount);
+
         return $diceCount > 1;
     }
 
@@ -575,6 +579,9 @@ class DiceRoller
         } elseif ($node instanceof ComparisonNode) {
             $this->countDiceNodes($node->getLeft(), $count);
             $this->countDiceNodes($node->getRight(), $count);
+        } elseif ($node instanceof IsNullNode) {
+            // IsNullNode doesn't contain any dice, just a value check
+            // No dice to count
         } elseif ($node instanceof ConditionalNode) {
             // Count dice in all branches (we'll only roll one, but we need to know if there are dice)
             $this->countDiceNodes($node->getCondition(), $count);
@@ -629,7 +636,7 @@ class DiceRoller
             diceValues: $allDiceValues,
             comment: $expression->comment,
             groups: $groups,
-            tags: $tags
+            tags: $tags,
         );
     }
 
@@ -656,7 +663,7 @@ class DiceRoller
                 modifiers: $modifiers,
                 statistics: $stats,
                 originalExpression: '', // Not needed for this context
-                astRoot: $node->getDiceNode()
+                astRoot: $node->getDiceNode(),
             );
 
             // Roll the dice expression with all modifiers, passing the AST
@@ -683,7 +690,7 @@ class DiceRoller
             }
 
             // Store the sum in the node for evaluation
-            $node->setRollResult(array_sum($diceValues));
+            $node->setRollResult(\array_sum($diceValues));
 
             // Add individual values to the collection
             foreach ($diceValues as $value) {
@@ -697,6 +704,9 @@ class DiceRoller
             // Roll both sides of the comparison
             $this->rollDiceNode($node->getLeft(), $allDiceValues);
             $this->rollDiceNode($node->getRight(), $allDiceValues);
+        } elseif ($node instanceof IsNullNode) {
+            // IsNullNode doesn't roll any dice, just evaluates to 0 or 1
+            // No dice to roll
         } elseif ($node instanceof ConditionalNode) {
             // Roll the condition first
             $this->rollDiceNode($node->getCondition(), $allDiceValues);
@@ -777,7 +787,7 @@ class DiceRoller
             diceValues: $allDiceValues,
             comment: $expression->comment,
             groups: $groups,
-            tags: $tags
+            tags: $tags,
         );
     }
 
@@ -812,20 +822,38 @@ class DiceRoller
             $this->countDiceNodes($groupExpression, $diceCount);
 
             // Extract the dice values for this group
-            $groupDiceValues = array_slice($diceValues, $diceOffset, $diceCount);
+            $groupDiceValues = \array_slice($diceValues, $diceOffset, $diceCount);
             $diceOffset += $diceCount;
 
             // Evaluate the group expression to get its total
             // Note: dice have already been rolled and their results set in the nodes
             $groupTotal = $groupExpression->evaluate();
 
+            // Calculate statistics for this group's expression
+            $calculator = new StatisticalCalculator();
+            $groupStats = $calculator->calculateFromAst($groupExpression);
+
+            // Create a DiceExpression for this group with its own statistics
+            // Groups don't have a single dice specification or top-level modifiers,
+            // as they contain a complete sub-expression that may have multiple dice
+            // and operators. The statistics are calculated from the group's AST.
+            $groupDiceExpression = new DiceExpression(
+                specification: null, // Groups don't have a single dice specification
+                modifiers: new RollModifiers(), // Groups don't have top-level modifiers
+                statistics: $groupStats,
+                originalExpression: '', // Not needed for groups
+                astRoot: $groupExpression,
+                comment: $groupComment,
+                tags: $groupTags,
+            );
+
             // Create a RollResult for this group
             $results[] = new RollResult(
-                expression: $expression,
+                expression: $groupDiceExpression,
                 total: $groupTotal,
                 diceValues: $groupDiceValues,
                 comment: $groupComment,
-                tags: $groupTags
+                tags: $groupTags,
             );
         }
 
@@ -851,5 +879,4 @@ class DiceRoller
             }
         }
     }
-
 }

@@ -13,7 +13,7 @@ class ConditionalNode extends Node
     public function __construct(
         private readonly Node $condition,
         private readonly Node $trueBranch,
-        private readonly Node $falseBranch
+        private readonly Node $falseBranch,
     ) {
     }
 

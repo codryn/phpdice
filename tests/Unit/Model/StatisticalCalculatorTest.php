@@ -311,7 +311,7 @@ class StatisticalCalculatorTest extends TestCase
         $this->assertSame(10.5, $stats->expected);
 
         // Verify string representation has 3 decimals
-        $expectedString = number_format($stats->expected, 3, '.', '');
+        $expectedString = \number_format($stats->expected, 3, '.', '');
         $this->assertSame('10.500', $expectedString);
     }
 

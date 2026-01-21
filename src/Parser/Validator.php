@@ -25,7 +25,7 @@ class Validator
         if ($spec->count < 1) {
             throw new ValidationException(
                 "Dice count must be at least 1, got {$spec->count}",
-                'count'
+                'count',
             );
         }
 
@@ -33,7 +33,7 @@ class Validator
         if ($spec->sides < 2) {
             throw new ValidationException(
                 "Dice must have at least 2 sides, got {$spec->sides}",
-                'sides'
+                'sides',
             );
         }
 
@@ -41,7 +41,7 @@ class Validator
         if ($spec->count > 100) {
             throw new ValidationException(
                 "Cannot roll more than 100 dice, got {$spec->count}",
-                'count'
+                'count',
             );
         }
 
@@ -49,7 +49,7 @@ class Validator
         if ($spec->sides > 100) {
             throw new ValidationException(
                 "Dice cannot have more than 100 sides, got {$spec->sides}",
-                'sides'
+                'sides',
             );
         }
     }
@@ -63,7 +63,7 @@ class Validator
     public function validateExpression(string $expression): void
     {
         // FR-026: Reject invalid syntax
-        $trimmed = trim($expression);
+        $trimmed = \trim($expression);
 
         if (empty($trimmed)) {
             throw new ValidationException('Expression cannot be empty', 'expression');
@@ -80,7 +80,7 @@ class Validator
     {
         $count = 0;
 
-        for ($i = 0; $i < strlen($expression); $i++) {
+        for ($i = 0; $i < \strlen($expression); $i++) {
             if ($expression[$i] === '(') {
                 $count++;
             } elseif ($expression[$i] === ')') {
@@ -108,7 +108,7 @@ class Validator
         if ($modifiers->keepHighest !== null && $modifiers->keepLowest !== null) {
             throw new ValidationException(
                 'Cannot have both keep highest and keep lowest',
-                'modifiers'
+                'modifiers',
             );
         }
     }
@@ -151,7 +151,7 @@ class Validator
         if ($coversAll) {
             throw new ValidationException(
                 "Reroll condition '{$operator} {$threshold}' would trigger on all possible die values (1-{$maxValue}), preventing termination",
-                'reroll'
+                'reroll',
             );
         }
     }
@@ -172,7 +172,7 @@ class Validator
         if ($threshold < 0) {
             throw new ValidationException(
                 "Explosion treshold '{$threshold}' is negative",
-                'explode'
+                'explode',
             );
         }
 
@@ -200,7 +200,7 @@ class Validator
         if ($coversAll) {
             throw new ValidationException(
                 "Explosion condition '{$operator} {$threshold}' would trigger on all possible die values (1-{$maxValue}), preventing termination",
-                'explode'
+                'explode',
             );
         }
     }
@@ -221,7 +221,7 @@ class Validator
         if ($threshold < 0) {
             throw new ValidationException(
                 "Edge threshold '{$threshold}' is negative",
-                'edge'
+                'edge',
             );
         }
 
@@ -249,7 +249,7 @@ class Validator
         if ($coversAll) {
             throw new ValidationException(
                 "Edge condition '{$operator} {$threshold}' would trigger on all possible die values (1-{$maxValue}), preventing termination",
-                'edge'
+                'edge',
             );
         }
     }
@@ -274,9 +274,10 @@ class Validator
                 'auto' => 'Auto success',
                 default => 'Critical',
             };
+
             throw new ValidationException(
                 "{$label} threshold {$threshold} is outside die range ({$minValue}-{$maxValue})",
-                'critical'
+                'critical',
             );
         }
     }

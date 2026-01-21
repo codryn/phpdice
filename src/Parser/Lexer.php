@@ -12,6 +12,7 @@ use Codryn\PHPDice\Exception\ParseException;
 class Lexer
 {
     private int $position = 0;
+
     private int $length;
 
     /**
@@ -21,7 +22,7 @@ class Lexer
      */
     public function __construct(private readonly string $input)
     {
-        $this->length = strlen($input);
+        $this->length = \strlen($input);
     }
 
     /**
@@ -44,7 +45,7 @@ class Lexer
             $char = $this->input[$this->position];
 
             // Numbers
-            if (ctype_digit($char)) {
+            if (\ctype_digit($char)) {
                 $tokens[] = $this->readNumber();
                 continue;
             }
@@ -56,7 +57,7 @@ class Lexer
             }
 
             // Keywords and function names (letters)
-            if (ctype_alpha($char)) {
+            if (\ctype_alpha($char)) {
                 $tokens[] = $this->readKeywordOrFunction();
                 continue;
             }
@@ -68,7 +69,7 @@ class Lexer
             }
 
             // Operators
-            if (in_array($char, ['+', '-', '*', '/', '%', '^'], true)) {
+            if (\in_array($char, ['+', '-', '*', '/', '%', '^'], true)) {
                 $tokens[] = new Token(Token::TYPE_OPERATOR, $char, $this->position);
                 $this->position++;
                 continue;
@@ -140,6 +141,7 @@ class Lexer
                     $this->position += 2;
                     continue;
                 }
+
                 // Standalone ! is not supported
                 throw new ParseException("Unexpected character '!'", $this->position);
             }
@@ -158,7 +160,7 @@ class Lexer
      */
     private function skipWhitespace(): void
     {
-        while ($this->position < $this->length && ctype_space($this->input[$this->position])) {
+        while ($this->position < $this->length && \ctype_space($this->input[$this->position])) {
             $this->position++;
         }
     }
@@ -174,7 +176,7 @@ class Lexer
         $number = '';
         $hasDecimal = false;
 
-        while ($this->position < $this->length && ctype_digit($this->input[$this->position])) {
+        while ($this->position < $this->length && \ctype_digit($this->input[$this->position])) {
             $number .= $this->input[$this->position];
             $this->position++;
         }
@@ -182,20 +184,20 @@ class Lexer
         // Check for decimal point
         if ($this->position < $this->length && $this->input[$this->position] === '.') {
             // Look ahead to ensure there's a digit after the decimal point
-            if ($this->position + 1 < $this->length && ctype_digit($this->input[$this->position + 1])) {
+            if ($this->position + 1 < $this->length && \ctype_digit($this->input[$this->position + 1])) {
                 $hasDecimal = true;
                 $number .= '.';
                 $this->position++; // Consume the decimal point
 
                 // Read decimal digits
-                while ($this->position < $this->length && ctype_digit($this->input[$this->position])) {
+                while ($this->position < $this->length && \ctype_digit($this->input[$this->position])) {
                     $number .= $this->input[$this->position];
                     $this->position++;
                 }
             }
         }
 
-        return new Token(Token::TYPE_NUMBER, $hasDecimal ? (float)$number : (int)$number, $start);
+        return new Token(Token::TYPE_NUMBER, $hasDecimal ? (float) $number : (int) $number, $start);
     }
 
     /**
@@ -208,12 +210,12 @@ class Lexer
         $start = $this->position;
         $text = '';
 
-        while ($this->position < $this->length && ctype_alpha($this->input[$this->position])) {
+        while ($this->position < $this->length && \ctype_alpha($this->input[$this->position])) {
             $text .= $this->input[$this->position];
             $this->position++;
         }
 
-        $lower = strtolower($text);
+        $lower = \strtolower($text);
 
         // Check for dF (fudge dice) - must check before 'd' alone
         if ($lower === 'df') {
@@ -230,21 +232,23 @@ class Lexer
             // Check for d% (percentile dice)
             if ($this->position < $this->length && $this->input[$this->position] === '%') {
                 $this->position++; // Consume '%'
+
                 return new Token(Token::TYPE_DICE, 'd%', $start);
             }
+
             // Regular d notation
             return new Token(Token::TYPE_DICE, 'd', $start);
         }
 
         // Check if it's a known function
         $functions = ['floor', 'ceil', 'round', 'abs', 'min', 'max'];
-        if (in_array($lower, $functions, true)) {
+        if (\in_array($lower, $functions, true)) {
             return new Token(Token::TYPE_FUNCTION, $lower, $start);
         }
 
         // Check for advantage/disadvantage/success/reroll/explode/edge/critical/dc/if/switch keywords
-        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'edge', 'crit', 'glitch', 'dc', 'count', 'auto', 'even', 'odd', 'if', 'switch', 'case', 'default'];
-        if (in_array($lower, $keywords, true)) {
+        $keywords = ['advantage', 'disadvantage', 'keep', 'highest', 'lowest', 'success', 'threshold', 'reroll', 'explode', 'edge', 'crit', 'glitch', 'dc', 'count', 'auto', 'even', 'odd', 'if', 'switch', 'case', 'default', 'is', 'null'];
+        if (\in_array($lower, $keywords, true)) {
             return new Token(Token::TYPE_KEYWORD, $lower, $start);
         }
 
@@ -283,7 +287,7 @@ class Lexer
                 return new Token(Token::TYPE_PLACEHOLDER, $name, $start);
             }
 
-            if (ctype_alnum($char) || $char === '_' || $char === '.') {
+            if (\ctype_alnum($char) || $char === '_' || $char === '.') {
                 $name .= $char;
                 $this->position++;
             } else {
@@ -320,7 +324,7 @@ class Lexer
         }
 
         // Trim leading and trailing whitespace from comment
-        $comment = trim($comment);
+        $comment = \trim($comment);
 
         return new Token(Token::TYPE_COMMENT, $comment, $start);
     }
@@ -345,6 +349,7 @@ class Lexer
             // Found closing bracket
             if ($char === ']') {
                 $this->position++; // Consume ]
+
                 return new Token(Token::TYPE_TAGS, $content, $start);
             }
 
