@@ -662,7 +662,7 @@ Combine multiple mechanics in one expression.
 
 Examples:
 
-```1d20 crit 20 glitch 1 advantage + 5 dc >= 15``` - Roll d20 (crit and glitch) with advantage, add 5, check against DC 15
+```1d20 advantage crit 20 glitch 1 + 5 dc >= 15``` - Roll d20 (crit and glitch) with advantage, add 5, check against DC 15
 
 ```12d6 reroll <=1 count >=5``` - Roll 12d6, reroll any 1s, count successes of 5 or higher
 
