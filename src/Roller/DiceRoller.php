@@ -25,7 +25,7 @@ use Codryn\PHPDice\Parser\AST\SwitchCaseNode;
 class DiceRoller
 {
     public function __construct(
-        private readonly RandomNumberGenerator $rng = new RandomNumberGenerator()
+        private readonly RandomNumberGenerator $rng = new RandomNumberGenerator(),
     ) {
     }
 
@@ -210,10 +210,10 @@ class DiceRoller
             $total = $successCount;
         } elseif ($ast !== null) {
             // Evaluate AST with dice results
-            $this->setDiceResults($ast, array_sum($finalValues));
+            $this->setDiceResults($ast, \array_sum($finalValues));
             $total = $ast->evaluate();
         } else {
-            $total = array_sum($finalValues) + $modifiers->arithmeticModifier;
+            $total = \array_sum($finalValues) + $modifiers->arithmeticModifier;
         }
 
         // Evaluate expression-level comparison for success rolls (US8)
@@ -222,7 +222,7 @@ class DiceRoller
             $isSuccess = $this->evaluateComparison(
                 $total,
                 $expression->comparisonThreshold,
-                $expression->comparisonOperator
+                $expression->comparisonOperator,
             );
         }
 
@@ -320,7 +320,7 @@ class DiceRoller
             edgeHistory: $edgeHistory,
             comment: $expression->comment,
             groups: $groups,
-            tags: $tags
+            tags: $tags,
         );
     }
 
@@ -404,6 +404,7 @@ class DiceRoller
                 $count++;
             }
         }
+
         return $count;
     }
 
@@ -443,10 +444,10 @@ class DiceRoller
         }
 
         // Sort by value descending, maintaining indices
-        arsort($indexed);
+        \arsort($indexed);
 
         // Take top N
-        $sortedIndices = array_keys($indexed);
+        $sortedIndices = \array_keys($indexed);
 
         $keptList = [];
         $discardedList = [];
@@ -482,10 +483,10 @@ class DiceRoller
         }
 
         // Sort by value ascending, maintaining indices
-        asort($indexed);
+        \asort($indexed);
 
         // Take bottom N
-        $sortedIndices = array_keys($indexed);
+        $sortedIndices = \array_keys($indexed);
 
         $keptList = [];
         $discardedList = [];
@@ -555,6 +556,7 @@ class DiceRoller
     {
         $diceCount = 0;
         $this->countDiceNodes($node, $diceCount);
+
         return $diceCount > 1;
     }
 
@@ -634,7 +636,7 @@ class DiceRoller
             diceValues: $allDiceValues,
             comment: $expression->comment,
             groups: $groups,
-            tags: $tags
+            tags: $tags,
         );
     }
 
@@ -661,7 +663,7 @@ class DiceRoller
                 modifiers: $modifiers,
                 statistics: $stats,
                 originalExpression: '', // Not needed for this context
-                astRoot: $node->getDiceNode()
+                astRoot: $node->getDiceNode(),
             );
 
             // Roll the dice expression with all modifiers, passing the AST
@@ -688,7 +690,7 @@ class DiceRoller
             }
 
             // Store the sum in the node for evaluation
-            $node->setRollResult(array_sum($diceValues));
+            $node->setRollResult(\array_sum($diceValues));
 
             // Add individual values to the collection
             foreach ($diceValues as $value) {
@@ -785,7 +787,7 @@ class DiceRoller
             diceValues: $allDiceValues,
             comment: $expression->comment,
             groups: $groups,
-            tags: $tags
+            tags: $tags,
         );
     }
 
@@ -820,7 +822,7 @@ class DiceRoller
             $this->countDiceNodes($groupExpression, $diceCount);
 
             // Extract the dice values for this group
-            $groupDiceValues = array_slice($diceValues, $diceOffset, $diceCount);
+            $groupDiceValues = \array_slice($diceValues, $diceOffset, $diceCount);
             $diceOffset += $diceCount;
 
             // Evaluate the group expression to get its total
@@ -842,7 +844,7 @@ class DiceRoller
                 originalExpression: '', // Not needed for groups
                 astRoot: $groupExpression,
                 comment: $groupComment,
-                tags: $groupTags
+                tags: $groupTags,
             );
 
             // Create a RollResult for this group
@@ -851,7 +853,7 @@ class DiceRoller
                 total: $groupTotal,
                 diceValues: $groupDiceValues,
                 comment: $groupComment,
-                tags: $groupTags
+                tags: $groupTags,
             );
         }
 
@@ -877,5 +879,4 @@ class DiceRoller
             }
         }
     }
-
 }

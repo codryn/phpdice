@@ -15,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 abstract class BaseTestCaseMock extends TestCase
 {
     protected PHPDice $phpdice;
+
     protected RandomNumberGenerator | MockObject $mockRng;
 
     protected function setUp(): void

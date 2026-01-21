@@ -213,10 +213,10 @@ class SpecialDiceTest extends BaseTestCase
         }
 
         // Should have values in all quartiles
-        $hasLow = count(array_filter($results, fn ($v) => $v >= 1 && $v <= 25)) > 0;
-        $hasMidLow = count(array_filter($results, fn ($v) => $v >= 26 && $v <= 50)) > 0;
-        $hasMidHigh = count(array_filter($results, fn ($v) => $v >= 51 && $v <= 75)) > 0;
-        $hasHigh = count(array_filter($results, fn ($v) => $v >= 76 && $v <= 100)) > 0;
+        $hasLow = \count(\array_filter($results, fn ($v) => $v >= 1 && $v <= 25)) > 0;
+        $hasMidLow = \count(\array_filter($results, fn ($v) => $v >= 26 && $v <= 50)) > 0;
+        $hasMidHigh = \count(\array_filter($results, fn ($v) => $v >= 51 && $v <= 75)) > 0;
+        $hasHigh = \count(\array_filter($results, fn ($v) => $v >= 76 && $v <= 100)) > 0;
 
         $this->assertTrue($hasLow, 'Should have values in 1-25 range');
         $this->assertTrue($hasMidLow, 'Should have values in 26-50 range');
@@ -280,6 +280,7 @@ class SpecialDiceTest extends BaseTestCase
                 foreach ($result->diceValues as $value) {
                     $this->assertGreaterThanOrEqual(0, $value, 'Rerolled fudge dice should not have -1');
                 }
+
                 return; // Test passed
             }
         }
@@ -317,7 +318,7 @@ class SpecialDiceTest extends BaseTestCase
         $this->assertCount(1, $result->diceValues);
         $this->assertGreaterThanOrEqual(0, $result->total);
         $this->assertLessThanOrEqual(1, $result->total);
-        $this->assertTrue(in_array($result->total, [0, 1]), 'Coin flip must be 0 or 1');
+        $this->assertTrue(\in_array($result->total, [0, 1], true), 'Coin flip must be 0 or 1');
     }
 
     /**
@@ -330,7 +331,7 @@ class SpecialDiceTest extends BaseTestCase
         $this->assertCount(1, $result->diceValues);
         $this->assertGreaterThanOrEqual(0, $result->total);
         $this->assertLessThanOrEqual(1, $result->total);
-        $this->assertTrue(in_array($result->total, [0, 1]), 'Coin flip must be 0 or 1');
+        $this->assertTrue(\in_array($result->total, [0, 1], true), 'Coin flip must be 0 or 1');
     }
 
     /**
@@ -346,7 +347,7 @@ class SpecialDiceTest extends BaseTestCase
         foreach ($result->diceValues as $value) {
             $this->assertGreaterThanOrEqual(0, $value);
             $this->assertLessThanOrEqual(1, $value);
-            $this->assertTrue(in_array($value, [0, 1]), 'Each coin flip must be 0 or 1');
+            $this->assertTrue(\in_array($value, [0, 1], true), 'Each coin flip must be 0 or 1');
         }
 
         // Total should be between 0 and 5
@@ -478,7 +479,7 @@ class SpecialDiceTest extends BaseTestCase
         // But both have the same span
         $this->assertSame(
             $statsCoin->maximum - $statsCoin->minimum,
-            $stats1d2->maximum - $stats1d2->minimum
+            $stats1d2->maximum - $stats1d2->minimum,
         );
     }
 }

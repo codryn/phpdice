@@ -12,7 +12,7 @@ class IsNullNode extends Node
 {
     public function __construct(
         private readonly int|float|null $value,
-        private readonly bool $isSet
+        private readonly bool $isSet,
     ) {
     }
 

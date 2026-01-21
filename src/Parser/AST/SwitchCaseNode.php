@@ -18,7 +18,7 @@ class SwitchCaseNode extends Node
     public function __construct(
         private readonly Node $switchExpression,
         private readonly array $cases,
-        private readonly ?Node $defaultExpression = null
+        private readonly ?Node $defaultExpression = null,
     ) {
     }
 
@@ -43,7 +43,7 @@ class SwitchCaseNode extends Node
         // No case matched and no default provided
         throw new \Codryn\PHPDice\Exception\ParseException(
             "Switch expression value {$switchValue} does not match any case and no default case is provided",
-            0
+            0,
         );
     }
 

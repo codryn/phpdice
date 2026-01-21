@@ -25,6 +25,7 @@ use Codryn\PHPDice\Roller\RandomNumberGenerator;
 class PHPDice
 {
     private readonly DiceExpressionParser $parser;
+
     private readonly DiceRoller $roller;
 
     public function __construct(RandomNumberGenerator $rng = new RandomNumberGenerator())
@@ -55,6 +56,7 @@ class PHPDice
     public function roll(string $expression, array $variables = []): RollResult
     {
         $parsed = $this->parse($expression, $variables);
+
         return $this->roller->roll($parsed, $parsed->astRoot);
     }
 
@@ -95,14 +97,15 @@ class PHPDice
         $result = $this->evalPartial($expression, $variables);
 
         // If not in partial mode, check if the result still contains unresolved placeholders
-        if (!$partial && preg_match('/\$[a-zA-Z0-9_.]+\$/', $result)) {
+        if (!$partial && \preg_match('/\$[a-zA-Z0-9_.]+\$/', $result)) {
             // Extract the placeholder names
-            preg_match_all('/\$([a-zA-Z0-9_.]+)\$/', $result, $matches);
-            $missingVars = array_unique($matches[1]);
+            \preg_match_all('/\$([a-zA-Z0-9_.]+)\$/', $result, $matches);
+            $missingVars = \array_unique($matches[1]);
             $firstMissing = $missingVars[0];
+
             throw new ParseException(
                 "Unbound placeholder variable '\${$firstMissing}\$'. Please provide a value for this variable.",
-                0
+                0,
             );
         }
 
@@ -119,15 +122,15 @@ class PHPDice
     private function evalPartial(string $expression, array $variables): string
     {
         // Extract all placeholders from the expression
-        preg_match_all('/\$([a-zA-Z0-9_.]+)\$/', $expression, $matches);
-        $placeholders = array_unique($matches[1]);
+        \preg_match_all('/\$([a-zA-Z0-9_.]+)\$/', $expression, $matches);
+        $placeholders = \array_unique($matches[1]);
 
         // Create a complete variable set with dummy values for missing vars
         $completeVars = $variables;
         $missingVars = [];
         $i = 0;
         foreach ($placeholders as $placeholder) {
-            if (!array_key_exists($placeholder, $variables)) {
+            if (!\array_key_exists($placeholder, $variables)) {
                 // Use a unique placeholder value based on index
                 $completeVars[$placeholder] = PHP_INT_MAX - $i;
                 $missingVars[$placeholder] = $completeVars[$placeholder];
@@ -142,6 +145,7 @@ class PHPDice
         if ($parsed->astRoot === null) {
             return $expression;
         }
+
         return $this->nodeToString($parsed->astRoot, $completeVars, true, $missingVars);
     }
 
@@ -164,6 +168,7 @@ class PHPDice
             if ($conditionValue !== null) {
                 // Condition can be resolved, return the appropriate branch
                 $branch = $conditionValue != 0 ? $node->getTrueBranch() : $node->getFalseBranch();
+
                 return $this->nodeToString($branch, $variables, $partial, $missingVars);
             } else {
                 // Condition cannot be fully resolved (missing variables in partial mode)
@@ -171,6 +176,7 @@ class PHPDice
                 $condStr = $this->nodeToString($condition, $variables, $partial, $missingVars);
                 $trueStr = $this->nodeToString($node->getTrueBranch(), $variables, $partial, $missingVars);
                 $falseStr = $this->nodeToString($node->getFalseBranch(), $variables, $partial, $missingVars);
+
                 return "if {$condStr} : {$trueStr} | {$falseStr}";
             }
         }
@@ -179,7 +185,8 @@ class PHPDice
             // Check if this node can be fully evaluated (no dice, no missing placeholders)
             if (!$this->nodeHasDice($node) && !$this->nodeUsesMissingVars($node, $missingVars)) {
                 $value = $node->evaluate();
-                return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+
+                return \is_int($value) ? (string) $value : \rtrim(\rtrim((string) $value, '0'), '.');
             }
 
             $left = $this->nodeToString($node->getLeft(), $variables, $partial, $missingVars);
@@ -197,7 +204,7 @@ class PHPDice
             }
 
             // Handle addition with negative numbers to format as subtraction
-            if ($op === '+' && str_starts_with($right, '-')) {
+            if ($op === '+' && \str_starts_with($right, '-')) {
                 // Convert "a+-b" to "a-b" for better readability
                 return $left . $right;
             }
@@ -209,10 +216,12 @@ class PHPDice
             // Check if comparison can be fully evaluated
             if (!$this->nodeHasDice($node) && !$this->nodeUsesMissingVars($node, $missingVars)) {
                 $value = $node->evaluate();
-                return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+
+                return \is_int($value) ? (string) $value : \rtrim(\rtrim((string) $value, '0'), '.');
             }
             $left = $this->nodeToString($node->getLeft(), $variables, $partial, $missingVars);
             $right = $this->nodeToString($node->getRight(), $variables, $partial, $missingVars);
+
             return "{$left} {$node->getOperator()} {$right}";
         }
 
@@ -230,12 +239,13 @@ class PHPDice
             }
 
             // Format number appropriately
-            return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+            return \is_int($value) ? (string) $value : \rtrim(\rtrim((string) $value, '0'), '.');
         }
 
         if ($node instanceof DiceNode) {
             $count = $node->getCount();
             $sides = $node->getSides();
+
             return "{$count}d{$sides}";
         }
 
@@ -243,27 +253,32 @@ class PHPDice
             // Check if function can be fully evaluated
             if (!$this->nodeHasDice($node) && !$this->nodeUsesMissingVars($node, $missingVars)) {
                 $value = $node->evaluate();
-                return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+
+                return \is_int($value) ? (string) $value : \rtrim(\rtrim((string) $value, '0'), '.');
             }
-            $args = array_map(
+            $args = \array_map(
                 fn ($arg) => $this->nodeToString($arg, $variables, $partial, $missingVars),
-                $node->getArguments()
+                $node->getArguments(),
             );
-            return $node->getName() . '(' . implode(', ', $args) . ')';
+
+            return $node->getName() . '(' . \implode(', ', $args) . ')';
         }
 
         if ($node instanceof GroupNode) {
             // Check if the entire group can be fully evaluated
             if (!$this->nodeHasDice($node) && !$this->nodeUsesMissingVars($node, $missingVars)) {
                 $value = $node->evaluate();
-                return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+
+                return \is_int($value) ? (string) $value : \rtrim(\rtrim((string) $value, '0'), '.');
             }
+
             return '(' . $this->nodeToString($node->getExpression(), $variables, $partial, $missingVars) . ')';
         }
 
         // Fallback: try to evaluate and return as number
         $value = $node->evaluate();
-        return is_int($value) ? (string)$value : rtrim(rtrim((string)$value, '0'), '.');
+
+        return \is_int($value) ? (string) $value : \rtrim(\rtrim((string) $value, '0'), '.');
     }
 
     /**
@@ -317,6 +332,7 @@ class PHPDice
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -347,6 +363,7 @@ class PHPDice
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -393,6 +410,7 @@ class PHPDice
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -431,7 +449,7 @@ class PHPDice
 
         // Same precedence: right operand of left-associative ops needs parens
         // E.g., "a-(b-c)" not "a-b-c"
-        if ($childPrec === $parentPrec && !$isLeft && in_array($parentOp, ['-', '/', '%'], true)) {
+        if ($childPrec === $parentPrec && !$isLeft && \in_array($parentOp, ['-', '/', '%'], true)) {
             return true;
         }
 

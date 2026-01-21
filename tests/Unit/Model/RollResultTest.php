@@ -28,7 +28,7 @@ class RollResultTest extends TestCase
             new DiceSpecification(3, 6, DiceType::STANDARD),
             new RollModifiers(),
             new StatisticalData(3, 18, 10.5),
-            '3d6'
+            '3d6',
         );
     }
 
@@ -37,7 +37,7 @@ class RollResultTest extends TestCase
         $result = new RollResult(
             expression: $this->expression,
             total: 12,
-            diceValues: [4, 5, 3]
+            diceValues: [4, 5, 3],
         );
 
         $this->assertSame($this->expression, $result->expression);
@@ -60,7 +60,7 @@ class RollResultTest extends TestCase
             total: 11,
             diceValues: [6, 5, 2, 3],
             keptDice: [0, 1, 3],
-            discardedDice: [2]
+            discardedDice: [2],
         );
 
         $this->assertSame([0, 1, 3], $result->keptDice);
@@ -73,7 +73,7 @@ class RollResultTest extends TestCase
             expression: $this->expression,
             total: 2,
             diceValues: [5, 6, 3],
-            successCount: 2
+            successCount: 2,
         );
 
         $this->assertSame(2, $result->successCount);
@@ -85,7 +85,7 @@ class RollResultTest extends TestCase
             expression: $this->expression,
             total: 20,
             diceValues: [20],
-            isCriticalSuccess: true
+            isCriticalSuccess: true,
         );
 
         $this->assertTrue($result->isCriticalSuccess);
@@ -98,7 +98,7 @@ class RollResultTest extends TestCase
             expression: $this->expression,
             total: 1,
             diceValues: [1],
-            isCriticalFailure: true
+            isCriticalFailure: true,
         );
 
         $this->assertFalse($result->isCriticalSuccess);
@@ -111,7 +111,7 @@ class RollResultTest extends TestCase
             expression: $this->expression,
             total: 15,
             diceValues: [15],
-            isSuccess: true
+            isSuccess: true,
         );
 
         $this->assertTrue($result->isSuccess);
@@ -127,7 +127,7 @@ class RollResultTest extends TestCase
             expression: $this->expression,
             total: 10,
             diceValues: [4, 3, 3],
-            rerollHistory: $rerollHistory
+            rerollHistory: $rerollHistory,
         );
 
         $this->assertSame($rerollHistory, $result->rerollHistory);
@@ -148,7 +148,7 @@ class RollResultTest extends TestCase
             expression: $this->expression,
             total: 20,
             diceValues: [15, 2, 3],
-            explosionHistory: $explosionHistory
+            explosionHistory: $explosionHistory,
         );
 
         $this->assertSame($explosionHistory, $result->explosionHistory);

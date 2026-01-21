@@ -401,13 +401,13 @@ final class ComparisonTest extends BaseTestCaseMock
             $this->assertSame(
                 $testCase['operator'],
                 $expr->comparisonOperator,
-                "Expected operator {$testCase['operator']} for expression {$testCase['expression']}"
+                "Expected operator {$testCase['operator']} for expression {$testCase['expression']}",
             );
 
             $this->assertSame(
                 $testCase['threshold'],
                 $expr->comparisonThreshold,
-                "Expected threshold {$testCase['threshold']} for expression {$testCase['expression']}"
+                "Expected threshold {$testCase['threshold']} for expression {$testCase['expression']}",
             );
         }
     }
@@ -431,13 +431,13 @@ final class ComparisonTest extends BaseTestCaseMock
             $this->assertSame(
                 $testCase['operator'],
                 $expr->comparisonOperator,
-                "Expected operator {$testCase['operator']} for expression {$testCase['expression']}"
+                "Expected operator {$testCase['operator']} for expression {$testCase['expression']}",
             );
 
             $this->assertSame(
                 $testCase['threshold'],
                 $expr->comparisonThreshold,
-                "Expected threshold {$testCase['threshold']} for expression {$testCase['expression']}"
+                "Expected threshold {$testCase['threshold']} for expression {$testCase['expression']}",
             );
         }
     }

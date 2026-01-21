@@ -33,7 +33,7 @@ class DiceExpression
         public readonly ?string $comparisonOperator = null,
         public readonly ?int $comparisonThreshold = null,
         public readonly ?string $comment = null,
-        public readonly ?array $tags = null
+        public readonly ?array $tags = null,
     ) {
     }
 

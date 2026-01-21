@@ -7,23 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Expression Evaluation**: New `eval()` method for evaluating dice expressions with placeholder substitution and conditional resolution. This enables character sheet integration and dynamic rule systems. Examples: `eval('if $a$ == 1 : 1d20 | 1d12 + $b$', ['a' => 2, 'b' => 1])` returns `"1d12+1"`, and `eval('1d20+$bonus$', ['bonus' => 5])` returns `"1d20+5"` (#79)
-  - Supports partial evaluation where missing placeholders are preserved: `eval('1d20 + $b$', ['a' => 1], true)` returns `"1d20+$b$"`
-  - Automatically resolves conditional expressions that can be evaluated
-  - Validates expressions and throws on invalid input or missing placeholders
-
 ### Planned
 - Production-ready release
 - Performance optimizations for large dice pools
 - Extended test coverage to 90%+
+
+## [0.4.0] - 2026-01-21
+
+### Added
+- **Expression Evaluation**: New `eval()` method for evaluating dice expressions with placeholder substitution and conditional resolution. This enables character sheet integration and dynamic rule systems. Examples: `eval('if $a$ == 1 : 1d20 | 1d12 + $b$', ['a' => 2, 'b' => 1])` returns `"1d12+1"`, and `eval('1d20+$bonus$', ['bonus' => 5])` returns `"1d20+5"` (#79, #80)
+  - Supports partial evaluation where missing placeholders are preserved: `eval('1d20 + $b$', ['a' => 1], true)` returns `"1d20+$b$"`
+  - Automatically resolves conditional expressions that can be evaluated
+  - Validates expressions and throws on invalid input or missing placeholders
+- **Switch Case Expressions**: New `switch` statement for multi-way branching based on dice roll or placeholder value. Supports ranges, individual values, and default cases. Example: `switch 1d6 case 1: 42 | case 2-5: 23 | case 6: 0` (#63, #64)
+  - Supports negative values and ranges in cases
+  - Can be used in arithmetic expressions
+  - Supports nested dice in case result expressions
+- **Coin Flip Dice**: New `C` notation for coin flips that return 0 (tails) or 1 (heads). Example: `5C` flips 5 coins, `1C + 3` for initiative with modifier (#59)
+  - Works with all standard modifiers (success counting, comparison, etc.)
+  - Includes proper statistical analysis (minimum, maximum, expected value)
+- **Is Null Check**: New `is null` operator for checking if a placeholder variable is missing or null. Enables optional parameters and flexible conditional logic. Example: `if $bonus$ is null : 1d20 | 1d20+$bonus$` (#82)
+  - Supports lazy evaluation - only the relevant branch is evaluated
+  - Works with complex nested conditionals
+- **Boolean Algebra**: Enhanced conditional expressions with comprehensive comparison operator support and improved test coverage (#47, #61)
+  - All comparison operators (`<`, `<=`, `>`, `>=`, `==`, `!=`) now work consistently
+  - Improved documentation with Boolean Algebra section
+  - Better error messages and validation
+
+### Changed
+- **BREAKING**: Namespace changed from `PHPDice` to `Codryn\PHPDice` across entire package. Update all imports: `use Codryn\PHPDice\PHPDice;` (#60)
+- Improved statistics calculation for groups and conditionals to handle complex expressions (#75)
+- Enhanced example runner script to work from any directory and handle all examples dynamically (#77)
+
+### Fixed
+- Added explicit type hints to closure in `expandPlaceholdersInComment()` to satisfy PHPStan strict type checking on PHP 8.5 (#84)
+- Fixed statistics calculation for math-only expressions with constant operands (#74)
+- Fixed integer validation for negative floats with proper error handling (#84)
+- PHPStan analysis now passes at level 10 strict on all PHP versions including 8.5
 
 ## [0.3.0] - 2026-01-11
 
 ### Added
 - **Roll Comments**: Users can now add descriptive comments to dice rolls using the `#` character. Comments support placeholder expansion and are available in both `DiceExpression` and `RollResult` objects. Examples: `1d20 + 5 # Attack roll`, `1d20 + $str$ # Strength check (+$str$)` (#46)
 - **Auto Success Mechanic**: New `auto N` keyword for automatic success/failure regardless of DC. This enables D&D/Pathfinder behavior where natural 20 is always a success. Example: `1d20 auto 20 crit 19 glitch 1 + 1 dc >= 25` (#39)
-- **Roll Groups**: Support for multiple independent dice expressions in a single roll using the `;` separator. Each group is evaluated separately with its own result. Example: `1d20+5; 2d6+3; 1d4` for D&D attack, damage, and bonus damage (#50)
+- **Roll Groups**: Support for groups in a roll using `{}`. Each group is evaluated separately with its own result and the overall roll result is returned normally. Example: `{ 2d6+3 } + {1d4}` for D&D damage with physical and fire in seperate groups (#50)
 - **Roll Tags**: Ability to tag dice expressions with custom labels using `[tag]` syntax for categorization and filtering. Example: `1d20+5 [attack]; 2d6 [damage]` (#54)
 - **Count Even/Odd**: New `count even` and `count odd` modifiers to count dice showing even or odd numbers. Useful for specialized game mechanics. Example: `6d6 count even` (#57)
 - **Dice in Function Arguments**: Dice expressions can now be used inside mathematical function arguments. Example: `max(1d6, 2d4)`, `min(3d6, 10)` (#43)
@@ -163,6 +190,7 @@ N/A - Initial release
 
 ## Version History
 
+- **0.4.0** (2026-01-21): Expression evaluation, switch case, coin flips, is null checks, namespace change
 - **0.3.0** (2026-01-11): Roll comments, auto success, roll groups, tags, even/odd counting, edge mechanics
 - **0.2.1** (2026-01-07): Math mode, decimal numbers, exponentiation, modulo, comparison fixes
 - **0.2.0** (2024-01-06): Initial test release with initial game system support
@@ -177,7 +205,8 @@ N/A - Initial release
 
 ---
 
-[unreleased]: https://github.com/codryn/phpdice/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/codryn/phpdice/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/codryn/phpdice/releases/tag/v0.4.0
 [0.3.0]: https://github.com/codryn/phpdice/releases/tag/v0.3.0
 [0.2.1]: https://github.com/codryn/phpdice/releases/tag/v0.2.1
 [0.2.0]: https://github.com/codryn/phpdice/releases/tag/v0.2.0

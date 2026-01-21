@@ -53,9 +53,9 @@ class PerformanceTest extends BaseTestCase
                               'round((100d100) ^ 1.5) + abs(100d100 - 5000) + ' .
                               'min(100d100, 100d100, 100d100) + max(100d100, 100d100, 100d100)) % 1000';
 
-        $startTime = microtime(true);
+        $startTime = \microtime(true);
         $expression = $this->phpdice->parse($worstCaseExpression);
-        $parseTime = (microtime(true) - $startTime) * 1000; // Convert to milliseconds
+        $parseTime = (\microtime(true) - $startTime) * 1000; // Convert to milliseconds
 
         // Assert parsing was successful
         $this->assertNotNull($expression);
@@ -65,11 +65,11 @@ class PerformanceTest extends BaseTestCase
         $this->assertLessThan(
             self::MAX_PARSE_TIME_MS,
             $parseTime,
-            sprintf('Parsing took %.2fms, expected less than %dms', $parseTime, self::MAX_PARSE_TIME_MS)
+            \sprintf('Parsing took %.2fms, expected less than %dms', $parseTime, self::MAX_PARSE_TIME_MS),
         );
 
         // Output timing information for reference
-        fwrite(STDERR, sprintf("\nWorst-case expression parse time: %.2fms\n", $parseTime));
+        \fwrite(STDERR, \sprintf("\nWorst-case expression parse time: %.2fms\n", $parseTime));
     }
 
     /**
@@ -83,14 +83,14 @@ class PerformanceTest extends BaseTestCase
         // Use a complex but more realistic expression for rolling tests
         $expression = '10d20 keep 5 highest + 10d10 + 5d6 * 2 + floor(3d8 / 2)';
 
-        $startTime = microtime(true);
+        $startTime = \microtime(true);
         $results = [];
 
         for ($i = 0; $i < self::PERFORMANCE_ITERATIONS; $i++) {
             $results[] = $this->phpdice->roll($expression);
         }
 
-        $totalTime = (microtime(true) - $startTime) * 1000; // Convert to milliseconds
+        $totalTime = (\microtime(true) - $startTime) * 1000; // Convert to milliseconds
         $avgTimePerRoll = $totalTime / self::PERFORMANCE_ITERATIONS;
 
         // Assert all rolls completed successfully
@@ -101,14 +101,14 @@ class PerformanceTest extends BaseTestCase
         }
 
         // Output timing information for reference
-        fwrite(
+        \fwrite(
             STDERR,
-            sprintf(
+            \sprintf(
                 "\nroll() loop: %d iterations in %.2fms (avg %.2fms per iteration)\n",
                 self::PERFORMANCE_ITERATIONS,
                 $totalTime,
-                $avgTimePerRoll
-            )
+                $avgTimePerRoll,
+            ),
         );
     }
 
@@ -126,14 +126,14 @@ class PerformanceTest extends BaseTestCase
         // Parse once before the loop
         $expression = $this->phpdice->parse($expressionString);
 
-        $startTime = microtime(true);
+        $startTime = \microtime(true);
         $results = [];
 
         for ($i = 0; $i < self::PERFORMANCE_ITERATIONS; $i++) {
             $results[] = $this->phpdice->rollExpression($expression);
         }
 
-        $totalTime = (microtime(true) - $startTime) * 1000; // Convert to milliseconds
+        $totalTime = (\microtime(true) - $startTime) * 1000; // Convert to milliseconds
         $avgTimePerRoll = $totalTime / self::PERFORMANCE_ITERATIONS;
 
         // Assert all rolls completed successfully
@@ -147,22 +147,22 @@ class PerformanceTest extends BaseTestCase
         $this->assertLessThan(
             self::MAX_ROLL_TIME_MS,
             $avgTimePerRoll,
-            sprintf(
+            \sprintf(
                 'Average roll time was %.2fms, expected less than %dms',
                 $avgTimePerRoll,
-                self::MAX_ROLL_TIME_MS
-            )
+                self::MAX_ROLL_TIME_MS,
+            ),
         );
 
         // Output timing information for reference
-        fwrite(
+        \fwrite(
             STDERR,
-            sprintf(
+            \sprintf(
                 "\nrollExpression() loop: %d iterations in %.2fms (avg %.2fms per iteration)\n",
                 self::PERFORMANCE_ITERATIONS,
                 $totalTime,
-                $avgTimePerRoll
-            )
+                $avgTimePerRoll,
+            ),
         );
     }
 
@@ -178,20 +178,20 @@ class PerformanceTest extends BaseTestCase
         $iterations = self::PERFORMANCE_ITERATIONS;
 
         // Test roll() (with parsing on each iteration)
-        $rollStartTime = microtime(true);
+        $rollStartTime = \microtime(true);
         for ($i = 0; $i < $iterations; $i++) {
             $this->phpdice->roll($expressionString);
         }
-        $rollTotalTime = (microtime(true) - $rollStartTime) * 1000;
+        $rollTotalTime = (\microtime(true) - $rollStartTime) * 1000;
         $rollAvgTime = $rollTotalTime / $iterations;
 
         // Test rollExpression() (parse once, roll multiple times)
         $expression = $this->phpdice->parse($expressionString);
-        $rollExpressionStartTime = microtime(true);
+        $rollExpressionStartTime = \microtime(true);
         for ($i = 0; $i < $iterations; $i++) {
             $this->phpdice->rollExpression($expression);
         }
-        $rollExpressionTotalTime = (microtime(true) - $rollExpressionStartTime) * 1000;
+        $rollExpressionTotalTime = (\microtime(true) - $rollExpressionStartTime) * 1000;
         $rollExpressionAvgTime = $rollExpressionTotalTime / $iterations;
 
         // Calculate speedup factor
@@ -201,13 +201,13 @@ class PerformanceTest extends BaseTestCase
         $this->assertGreaterThan(
             1.0,
             $speedupFactor,
-            'rollExpression() should be faster than roll() when reusing parsed expressions'
+            'rollExpression() should be faster than roll() when reusing parsed expressions',
         );
 
         // Output comparison results
-        fwrite(
+        \fwrite(
             STDERR,
-            sprintf(
+            \sprintf(
                 "\nPerformance Comparison (%d iterations):\n" .
                 "  roll()           : %.2fms total (avg %.2fms)\n" .
                 "  rollExpression() : %.2fms total (avg %.2fms)\n" .
@@ -220,8 +220,8 @@ class PerformanceTest extends BaseTestCase
                 $rollExpressionAvgTime,
                 $speedupFactor,
                 $rollTotalTime - $rollExpressionTotalTime,
-                (($rollTotalTime - $rollExpressionTotalTime) / $rollTotalTime) * 100
-            )
+                (($rollTotalTime - $rollExpressionTotalTime) / $rollTotalTime) * 100,
+            ),
         );
     }
 
@@ -234,39 +234,39 @@ class PerformanceTest extends BaseTestCase
     public function testVariousComplexityLevels(): void
     {
         $expressions = [
-            'simple'     => '3d6',
-            'moderate'   => '3d6 + 1d20 + 5',
-            'complex'    => '(10d20 keep 5 highest) + (5d10 explode >=9) + 3d6',
+            'simple' => '3d6',
+            'moderate' => '3d6 + 1d20 + 5',
+            'complex' => '(10d20 keep 5 highest) + (5d10 explode >=9) + 3d6',
             'very_complex' => 'max((20d20 keep 10 highest), 50d10 + 100) + min(10d100, 500) + floor(25d6 * 1.5)',
         ];
 
-        fwrite(STDERR, "\nPerformance by expression complexity:\n");
+        \fwrite(STDERR, "\nPerformance by expression complexity:\n");
 
         foreach ($expressions as $complexity => $expressionString) {
             // Measure parse time
-            $parseStart = microtime(true);
+            $parseStart = \microtime(true);
             $expression = $this->phpdice->parse($expressionString);
-            $parseTime = (microtime(true) - $parseStart) * 1000;
+            $parseTime = (\microtime(true) - $parseStart) * 1000;
 
             // Measure roll time (pre-parsed)
-            $rollStart = microtime(true);
+            $rollStart = \microtime(true);
             $iterations = 50;
             for ($i = 0; $i < $iterations; $i++) {
                 $this->phpdice->rollExpression($expression);
             }
-            $rollTime = ((microtime(true) - $rollStart) * 1000) / $iterations;
+            $rollTime = ((\microtime(true) - $rollStart) * 1000) / $iterations;
 
             $this->assertNotNull($expression);
 
             // Output results
-            fwrite(
+            \fwrite(
                 STDERR,
-                sprintf(
+                \sprintf(
                     "  %-15s: parse %.2fms, roll avg %.2fms\n",
                     $complexity,
                     $parseTime,
-                    $rollTime
-                )
+                    $rollTime,
+                ),
             );
         }
     }
@@ -282,14 +282,14 @@ class PerformanceTest extends BaseTestCase
         $expression = '100d100';
 
         // Measure parse time
-        $parseStart = microtime(true);
+        $parseStart = \microtime(true);
         $parsedExpression = $this->phpdice->parse($expression);
-        $parseTime = (microtime(true) - $parseStart) * 1000;
+        $parseTime = (\microtime(true) - $parseStart) * 1000;
 
         // Measure roll time
-        $rollStart = microtime(true);
+        $rollStart = \microtime(true);
         $result = $this->phpdice->rollExpression($parsedExpression);
-        $rollTime = (microtime(true) - $rollStart) * 1000;
+        $rollTime = (\microtime(true) - $rollStart) * 1000;
 
         // Verify result
         $this->assertCount(100, $result->diceValues);
@@ -300,23 +300,23 @@ class PerformanceTest extends BaseTestCase
         $this->assertLessThan(
             self::MAX_PARSE_TIME_MS,
             $parseTime,
-            sprintf('Parse time %.2fms exceeds limit %dms', $parseTime, self::MAX_PARSE_TIME_MS)
+            \sprintf('Parse time %.2fms exceeds limit %dms', $parseTime, self::MAX_PARSE_TIME_MS),
         );
 
         $this->assertLessThan(
             self::MAX_ROLL_TIME_MS,
             $rollTime,
-            sprintf('Roll time %.2fms exceeds limit %dms', $rollTime, self::MAX_ROLL_TIME_MS)
+            \sprintf('Roll time %.2fms exceeds limit %dms', $rollTime, self::MAX_ROLL_TIME_MS),
         );
 
         // Output results
-        fwrite(
+        \fwrite(
             STDERR,
-            sprintf(
+            \sprintf(
                 "\n100d100 performance: parse %.2fms, roll %.2fms\n",
                 $parseTime,
-                $rollTime
-            )
+                $rollTime,
+            ),
         );
     }
 }

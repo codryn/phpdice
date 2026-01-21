@@ -29,7 +29,7 @@ class DiceExpressionTest extends TestCase
             $specification,
             $modifiers,
             $statistics,
-            $originalExpression
+            $originalExpression,
         );
 
         $this->assertSame($specification, $expression->specification);
@@ -54,7 +54,7 @@ class DiceExpressionTest extends TestCase
             $originalExpression,
             null, // astRoot
             '>=',
-            15
+            15,
         );
 
         $this->assertSame('>=', $expression->comparisonOperator);
@@ -68,7 +68,7 @@ class DiceExpressionTest extends TestCase
             new DiceSpecification(2, 6, DiceType::STANDARD),
             new RollModifiers(),
             $statistics,
-            '2d6'
+            '2d6',
         );
 
         $result = $expression->getStatistics();

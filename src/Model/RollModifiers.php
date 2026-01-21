@@ -53,7 +53,7 @@ class RollModifiers
         public readonly ?int $criticalSuccess = null,
         public readonly ?int $criticalFailure = null,
         public readonly ?int $autoSuccess = null,
-        public readonly array $resolvedVariables = []
+        public readonly array $resolvedVariables = [],
     ) {
     }
 }

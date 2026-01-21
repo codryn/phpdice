@@ -10,24 +10,43 @@ namespace Codryn\PHPDice\Parser;
 class Token
 {
     public const TYPE_NUMBER = 'NUMBER';
+
     public const TYPE_DICE = 'DICE';
+
     public const TYPE_EOF = 'EOF';
+
     public const TYPE_OPERATOR = 'OPERATOR';
+
     public const TYPE_LPAREN = 'LPAREN';
+
     public const TYPE_RPAREN = 'RPAREN';
+
     public const TYPE_LBRACE = 'LBRACE';
+
     public const TYPE_RBRACE = 'RBRACE';
+
     public const TYPE_LBRACKET = 'LBRACKET';
+
     public const TYPE_RBRACKET = 'RBRACKET';
+
     public const TYPE_TAGS = 'TAGS';
+
     public const TYPE_KEYWORD = 'KEYWORD';
+
     public const TYPE_FUNCTION = 'FUNCTION';
+
     public const TYPE_COMMA = 'COMMA';
+
     public const TYPE_PERCENT = 'PERCENT';
+
     public const TYPE_PLACEHOLDER = 'PLACEHOLDER';
+
     public const TYPE_COMPARISON = 'COMPARISON';
+
     public const TYPE_COMMENT = 'COMMENT';
+
     public const TYPE_COLON = 'COLON';
+
     public const TYPE_PIPE = 'PIPE';
 
     /**
@@ -40,7 +59,7 @@ class Token
     public function __construct(
         public readonly string $type,
         public readonly string|int|float|null $value = null,
-        public readonly int $position = 0
+        public readonly int $position = 0,
     ) {
     }
 }

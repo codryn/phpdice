@@ -71,7 +71,7 @@ class ExplodingDiceTest extends BaseTestCaseMock
             $this->assertLessThanOrEqual(2, $history['count']);
 
             // Total rolls = original + explosions
-            $this->assertLessThanOrEqual(3, count($history['rolls'])); // 1 original + 2 explosions max
+            $this->assertLessThanOrEqual(3, \count($history['rolls'])); // 1 original + 2 explosions max
         }
     }
 
@@ -140,7 +140,7 @@ class ExplodingDiceTest extends BaseTestCaseMock
             $history = $result->explosionHistory[0];
 
             // Cumulative total should be sum of all rolls
-            $expectedTotal = array_sum($history['rolls']);
+            $expectedTotal = \array_sum($history['rolls']);
             $this->assertEquals($expectedTotal, $history['cumulativeTotal']);
 
             // Die value should equal cumulative total

@@ -115,7 +115,7 @@ class RerollTest extends BaseTestCaseMock
         for ($i = 0; $i < 20; $i++) {
             $result = $this->phpdice->roll('6d6 reroll <= 3');
 
-            if ($result->rerollHistory !== null && count($result->rerollHistory) > 0) {
+            if ($result->rerollHistory !== null && \count($result->rerollHistory) > 0) {
                 $foundHistory = true;
 
                 foreach ($result->rerollHistory as $dieIndex => $history) {
@@ -128,11 +128,11 @@ class RerollTest extends BaseTestCaseMock
                     $this->assertLessThanOrEqual(3, $history['rolls'][0]);
 
                     // Last roll should be the final value
-                    $lastRoll = end($history['rolls']);
+                    $lastRoll = \end($history['rolls']);
                     $this->assertEquals($result->diceValues[$dieIndex], $lastRoll);
 
                     // Count should match array size - 1
-                    $this->assertEquals(count($history['rolls']) - 1, $history['count']);
+                    $this->assertEquals(\count($history['rolls']) - 1, $history['count']);
                 }
                 break;
             }

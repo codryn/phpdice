@@ -229,7 +229,7 @@ class ConditionalTest extends BaseTestCaseMock
             $this->assertEquals(
                 $expected ? 1 : 0,
                 $result->total,
-                "Failed for: {$left} {$op} {$right}"
+                "Failed for: {$left} {$op} {$right}",
             );
         }
     }

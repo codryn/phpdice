@@ -289,7 +289,7 @@ class EdgeDiceTest extends BaseTestCaseMock
         foreach ($result->keptDice as $index) {
             $keptValues[] = $result->diceValues[$index];
         }
-        $this->assertEquals(array_sum($keptValues), $result->total);
+        $this->assertEquals(\array_sum($keptValues), $result->total);
     }
 
     /**

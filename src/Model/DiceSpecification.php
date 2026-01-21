@@ -19,7 +19,7 @@ class DiceSpecification
     public function __construct(
         public readonly int $count,
         public readonly int $sides,
-        public readonly DiceType $type = DiceType::STANDARD
+        public readonly DiceType $type = DiceType::STANDARD,
     ) {
     }
 }

@@ -42,7 +42,7 @@ class AdvantageTest extends BaseTestCaseMock
         $this->assertEquals(0, $result->discardedDice[0]);
 
         // Total should be the highest rolled value
-        $highest = max($result->diceValues);
+        $highest = \max($result->diceValues);
         $this->assertEquals($highest, $result->total);
 
         // Verify kept die is the highest
@@ -73,7 +73,7 @@ class AdvantageTest extends BaseTestCaseMock
         $this->assertEquals(1, $result->discardedDice[0]);
 
         // Total should be the lowest rolled value
-        $lowest = min($result->diceValues);
+        $lowest = \min($result->diceValues);
         $this->assertEquals($lowest, $result->total);
 
         // Verify kept die is the lowest
@@ -102,7 +102,7 @@ class AdvantageTest extends BaseTestCaseMock
 
         // Total should be sum of 3 highest
         $sorted = $result->diceValues;
-        rsort($sorted);
+        \rsort($sorted);
         $expectedTotal = $sorted[0] + $sorted[1] + $sorted[2];
         $this->assertEquals($expectedTotal, $result->total);
 
@@ -111,7 +111,7 @@ class AdvantageTest extends BaseTestCaseMock
         foreach ($result->keptDice as $index) {
             $keptValues[] = $result->diceValues[$index];
         }
-        rsort($keptValues);
+        \rsort($keptValues);
         $this->assertEquals([$sorted[0], $sorted[1], $sorted[2]], $keptValues);
     }
 
@@ -135,7 +135,7 @@ class AdvantageTest extends BaseTestCaseMock
         $this->assertCount(3, $result->discardedDice ?? []);
 
         // Total should be the lowest value
-        $lowest = min($result->diceValues);
+        $lowest = \min($result->diceValues);
         $this->assertEquals($lowest, $result->total);
     }
 
@@ -217,7 +217,7 @@ class AdvantageTest extends BaseTestCaseMock
 
         // Should roll 2 dice, keep highest, add 5
         $this->assertCount(2, $result->diceValues);
-        $highest = max($result->diceValues);
+        $highest = \max($result->diceValues);
         $this->assertEquals($highest + 5, $result->total);
     }
 
@@ -235,7 +235,7 @@ class AdvantageTest extends BaseTestCaseMock
 
         // Should roll 2 dice, keep lowest, subtract 2
         $this->assertCount(2, $result->diceValues);
-        $lowest = min($result->diceValues);
+        $lowest = \min($result->diceValues);
         $this->assertEquals($lowest - 2, $result->total);
     }
 
@@ -279,6 +279,6 @@ class AdvantageTest extends BaseTestCaseMock
         $this->assertEmpty($result->discardedDice ?? []);
 
         // Total should be sum of all dice
-        $this->assertEquals(array_sum($result->diceValues), $result->total);
+        $this->assertEquals(\array_sum($result->diceValues), $result->total);
     }
 }
