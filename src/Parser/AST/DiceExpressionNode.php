@@ -17,7 +17,7 @@ class DiceExpressionNode extends Node
 
     public function __construct(
         private readonly DiceNode $diceNode,
-        private readonly RollModifiers $modifiers
+        private readonly RollModifiers $modifiers,
     ) {
     }
 
@@ -49,7 +49,7 @@ class DiceExpressionNode extends Node
         return new DiceSpecification(
             count: $this->diceNode->getCount(),
             sides: $this->diceNode->getSides(),
-            type: $this->diceNode->getType()
+            type: $this->diceNode->getType(),
         );
     }
 }

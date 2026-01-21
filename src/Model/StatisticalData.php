@@ -23,7 +23,7 @@ class StatisticalData
         public readonly int|float $maximum,
         public readonly float $expected,
         public readonly ?float $variance = null,
-        public readonly ?float $standardDeviation = null
+        public readonly ?float $standardDeviation = null,
     ) {
     }
 }

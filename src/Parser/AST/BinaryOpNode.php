@@ -14,7 +14,7 @@ class BinaryOpNode extends Node
     public function __construct(
         private readonly Node $left,
         private readonly string $operator,
-        private readonly Node $right
+        private readonly Node $right,
     ) {
     }
 
@@ -27,7 +27,7 @@ class BinaryOpNode extends Node
             '+' => $leftValue + $rightValue,
             '-' => $leftValue - $rightValue,
             '*' => $leftValue * $rightValue,
-            '^' => pow($leftValue, $rightValue),
+            '^' => \pow($leftValue, $rightValue),
             '/' => $this->divide($leftValue, $rightValue),
             '%' => $this->modulo($leftValue, $rightValue),
             default => throw new ValidationException("Unknown operator: {$this->operator}", 'operator'),

@@ -15,7 +15,7 @@ class ComparisonNode extends Node
     public function __construct(
         private readonly Node $left,
         private readonly string $operator,
-        private readonly Node $right
+        private readonly Node $right,
     ) {
     }
 

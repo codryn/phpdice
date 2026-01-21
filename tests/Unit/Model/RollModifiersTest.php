@@ -40,7 +40,7 @@ class RollModifiersTest extends TestCase
     {
         $modifiers = new RollModifiers(
             advantageCount: 2,
-            keepHighest: 2
+            keepHighest: 2,
         );
 
         $this->assertSame(2, $modifiers->advantageCount);
@@ -51,7 +51,7 @@ class RollModifiersTest extends TestCase
     {
         $modifiers = new RollModifiers(
             successThreshold: 5,
-            successOperator: '>='
+            successOperator: '>=',
         );
 
         $this->assertSame(5, $modifiers->successThreshold);
@@ -63,7 +63,7 @@ class RollModifiersTest extends TestCase
         $modifiers = new RollModifiers(
             explosionThreshold: 6,
             explosionOperator: '>=',
-            explosionLimit: 10
+            explosionLimit: 10,
         );
 
         $this->assertSame(6, $modifiers->explosionThreshold);
@@ -76,7 +76,7 @@ class RollModifiersTest extends TestCase
         $modifiers = new RollModifiers(
             rerollThreshold: 1,
             rerollOperator: '==',
-            rerollLimit: 5
+            rerollLimit: 5,
         );
 
         $this->assertSame(1, $modifiers->rerollThreshold);
@@ -95,7 +95,7 @@ class RollModifiersTest extends TestCase
     {
         $modifiers = new RollModifiers(
             criticalSuccess: 20,
-            criticalFailure: 1
+            criticalFailure: 1,
         );
 
         $this->assertSame(20, $modifiers->criticalSuccess);

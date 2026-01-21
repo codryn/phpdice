@@ -29,7 +29,7 @@ class EvenOddCountingTest extends BaseTestCase
         $this->assertCount(6, $result->diceValues);
 
         // Total should be success count, not sum
-        $this->assertNotEquals(array_sum($result->diceValues), $result->total);
+        $this->assertNotEquals(\array_sum($result->diceValues), $result->total);
 
         // Success count should match manual count
         $manualCount = 0;
@@ -58,7 +58,7 @@ class EvenOddCountingTest extends BaseTestCase
         $this->assertCount(12, $result->diceValues);
 
         // Total should be success count, not sum
-        $this->assertNotEquals(array_sum($result->diceValues), $result->total);
+        $this->assertNotEquals(\array_sum($result->diceValues), $result->total);
 
         // Success count should match manual count
         $manualCount = 0;

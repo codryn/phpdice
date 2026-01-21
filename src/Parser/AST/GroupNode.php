@@ -17,7 +17,7 @@ class GroupNode extends Node
     public function __construct(
         private readonly Node $expression,
         private readonly ?string $comment = null,
-        private readonly ?array $tags = null
+        private readonly ?array $tags = null,
     ) {
     }
 

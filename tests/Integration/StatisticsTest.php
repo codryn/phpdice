@@ -286,7 +286,7 @@ class StatisticsTest extends BaseTestCase
         $stats = $expression->getStatistics();
 
         // Expected value should be rounded to 3 decimal places
-        $expectedString = number_format($stats->expected, 3, '.', '');
+        $expectedString = \number_format($stats->expected, 3, '.', '');
         $this->assertSame('10.500', $expectedString);
     }
 

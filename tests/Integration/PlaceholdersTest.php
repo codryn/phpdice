@@ -108,8 +108,8 @@ final class PlaceholdersTest extends BaseTestCase
         }
 
         // We should see variation in results (very unlikely to roll same number 50 times)
-        $uniqueResults = array_unique($results);
-        $this->assertGreaterThan(1, count($uniqueResults));
+        $uniqueResults = \array_unique($results);
+        $this->assertGreaterThan(1, \count($uniqueResults));
 
         // All results should be in valid range (1d20 + 5)
         foreach ($results as $total) {

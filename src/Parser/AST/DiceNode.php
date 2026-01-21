@@ -16,7 +16,7 @@ class DiceNode extends Node
     public function __construct(
         private readonly int $count,
         private readonly int $sides,
-        private readonly DiceType $type = DiceType::STANDARD
+        private readonly DiceType $type = DiceType::STANDARD,
     ) {
     }
 
